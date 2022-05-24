@@ -14,16 +14,17 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
       switch call.method {
           case "initModels":
             let argurments = call.arguments as! Dictionary<String, Any>
-            let fastSpeechModel = argurments["fastSpeechModel"]
-            let melganModel = argurments["melganModel"]
+            let fastSpeechModel = argurments["fastSpeechModel"] as! String
+            let melganModel = argurments["melganModel"] as! String
+            tts.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melganModel)
             break
           case "speakText":
               let argurments = call.arguments as! Dictionary<String, Any>
-              let fastSpeechModel = argurments["fastSpeechModel"]
-              let melganModel = argurments["melganModel"]
+              let fastSpeechModel = argurments["fastSpeechModel"] as! String
+              let melganModel = argurments["melganModel"] as! String
               let text = argurments["text"] as! String
               let speed = argurments["speed"] as! NSNumber
-              tts.speak(string: text)
+              tts.speak(fastSpeechModel: fastSpeechModel, melGanModel: melganModel, string: text)
               result(nil)
             break
           default :

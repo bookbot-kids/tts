@@ -10,11 +10,10 @@ import AVFoundation
 
 @available(iOS 13.0, *)
 public class TTS {
+    var fastSpeech2: FastSpeech2?
+    var mbMelGan: MBMelGan?
     var rate: Float = 1.0
-
-    private let fastSpeech2 = try! FastSpeech2(url: Bundle.main.url(forResource: "fastspeech2_quant", withExtension: "tflite")!)
-
-    private let mbMelGan = try! MBMelGan(url: Bundle.main.url(forResource: "mbmelgan", withExtension: "tflite")!)
+    private var modelMap = [String:Bool]()
 
     /// Mel spectrogram hop size
     public let hopSize = 256
@@ -29,13 +28,28 @@ public class TTS {
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
     }
+    
+    public func initModel(fastSpeechModel:String, melGanModel: String) {
+        let key  = fastSpeechModel + melGanModel
+        if(modelMap[key] == nil) {
+            modelMap.removeAll()
+            fastSpeech2 = try? FastSpeech2(url: Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")!)
+            mbMelGan = try? MBMelGan(url: Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")!)
+            modelMap[key] = true
+        }
+    }
 
-    public func speak(string: String) {
+    public func speak(fastSpeechModel:String, melGanModel: String, string: String) {
         let input_ids = text_to_sequence(string)
-
+        initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
+        
+        guard let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+            print("model initialzed failed")
+            return
+        }
+        
         do {
             let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: input_ids, speedRatio: 2 - rate)
-
             let data = try mbMelGan.getAudio(input: melSpectrogram)
             print(data)
 
