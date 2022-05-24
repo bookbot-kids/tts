@@ -50,7 +50,7 @@ public class TTS {
         
         do {
             let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: input_ids, speedRatio: 2 - rate)
-            let data = try mbMelGan.getAudio(input: melSpectrogram)
+            let data = try mbMelGan.getAudio(input: melSpectrogram[0])
             print(data)
 
             let blockBuffer = try CMBlockBuffer(length: data.count)

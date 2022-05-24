@@ -23,7 +23,7 @@ class FastSpeech2 {
         interpreter = try Interpreter(modelPath: url.path, options: options)
     }
     
-    func getMelSpectrogram(inputIds: [Int32], speedRatio: Float) throws -> Tensor {
+    func getMelSpectrogram(inputIds: [Int32], speedRatio: Float) throws -> [Tensor] {
         try interpreter.resizeInput(at: 0, to: [1, inputIds.count])
         try interpreter.allocateTensors()
         
@@ -39,6 +39,6 @@ class FastSpeech2 {
         try interpreter.invoke()
         print("fastspeech2: \(Date().timeIntervalSince(t0))s")
         
-        return try interpreter.output(at: 1)
+        return [try interpreter.output(at: 1), try interpreter.output(at: 2)]
     }
 }
