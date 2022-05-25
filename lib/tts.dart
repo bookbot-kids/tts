@@ -36,9 +36,15 @@ class Tts {
     return TtsPlatform.instance.initModels(fastSpeechModel, melganModel);
   }
 
-  List<int> searchInputIds(String ipa, {String language = 'en'}) {
+  List<int> searchInputIds(List<String> ipas, {String language = 'en'}) {
     final map = ipa2InputIds.putIfAbsent(language, () => {});
-    return map[ipa] ?? [];
+    final result = <int>[];
+    for (final ipa in ipas) {
+      final inputIds = map[ipa] ?? [];
+      result.addAll(inputIds);
+    }
+
+    return result;
   }
 
   Future<void> loadMapping(String mappingAsset,
