@@ -11,8 +11,6 @@ import TensorFlowLite
 class FastSpeech2 {
     let interpreter: Interpreter
     
-    var speakerId: Int32 = 0
-    
     var f0Ratio: Float = 1
     
     var energyRatio: Float = 1
@@ -23,13 +21,14 @@ class FastSpeech2 {
         interpreter = try Interpreter(modelPath: url.path, options: options)
     }
     
-    func getMelSpectrogram(inputIds: [Int32], speedRatio: Float) throws -> [Tensor] {
+    func getMelSpectrogram(inputIds: [Int32], speedRatio: Float, speakerId: Int32 = 0) throws -> [Tensor] {
         try interpreter.resizeInput(at: 0, to: [1, inputIds.count])
         try interpreter.allocateTensors()
+        var speaker = speakerId
         
         let data = inputIds.withUnsafeBufferPointer(Data.init)
         try interpreter.copy(data, toInputAt: 0)
-        try interpreter.copy(Data(bytes: &speakerId, count: 4), toInputAt: 1)
+        try interpreter.copy(Data(bytes: &speaker, count: 4), toInputAt: 1)
         var speedRatio = speedRatio
         try interpreter.copy(Data(bytes: &speedRatio, count: 4), toInputAt: 2)
         try interpreter.copy(Data(bytes: &f0Ratio, count: 4), toInputAt: 3)

@@ -23,17 +23,15 @@ abstract class TtsPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<void> speakText(
-      String fastSpeechModel, String melganModel, String text,
-      {double speed = 1.0}) async {
-    await _instance.speakText(fastSpeechModel, melganModel, text, speed: speed);
-  }
-
-  Future<void> speakPhoneme(
-      String fastSpeechModel, String melganModel, List<String> phonemes,
-      {double speed = 1.0}) async {
-    await _instance.speakPhoneme(fastSpeechModel, melganModel, phonemes,
-        speed: speed);
+  Future<List> speakText(
+    String fastSpeechModel,
+    String melganModel,
+    List<int> inputIds, {
+    double speed = 1.0,
+    int speakerId = 0,
+  }) async {
+    return await _instance.speakText(fastSpeechModel, melganModel, inputIds,
+        speed: speed, speakerId: speakerId);
   }
 
   Future<void> initModels(String fastSpeechModel, String melganModel) async {

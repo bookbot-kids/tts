@@ -15,13 +15,11 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-enum TTSMode { text, phoneme }
-
 class _MyAppState extends State<MyApp> {
   final _ttsPlugin = Tts();
   bool _isRunning = false;
-  final _textController = TextEditingController();
-  var _mode = TTSMode.text;
+  final _textController = TextEditingController()
+    ..text = '53 20 64 70 91 45 64 37'; // hello world
 
   @override
   void initState() {
@@ -35,14 +33,16 @@ class _MyAppState extends State<MyApp> {
     });
 
     try {
-      if (_mode == TTSMode.text) {
-        await _ttsPlugin.speakText(
-            'fastspeech2_quant.tflite', 'mbmelgan.tflite', _textController.text,
-            speed: 0.6);
-      } else {
-        await _ttsPlugin.speakPhoneme('fastspeech2_quant.tflite',
-            'mbmelgan.tflite', _textController.text.split(','));
-      }
+      final output = await _ttsPlugin.speakText(
+          'fastspeech2_quant.tflite',
+          'mbmelgan.tflite',
+          _textController.text
+              .split(' ')
+              .map((e) => int.parse(e.trim()))
+              .toList(),
+          speed: 1);
+      // ignore: avoid_print
+      print('output: $output');
     } on PlatformException {
       // ignore: avoid_print
       print('Failed to run TTS');
@@ -67,34 +67,6 @@ class _MyAppState extends State<MyApp> {
           children: [
             Visibility(
                 visible: _isRunning, child: const CircularProgressIndicator()),
-            ListTile(
-              title: const Text('Text'),
-              leading: Radio<TTSMode>(
-                value: TTSMode.text,
-                groupValue: _mode,
-                onChanged: (TTSMode? value) {
-                  if (value != null) {
-                    setState(() {
-                      _mode = value;
-                    });
-                  }
-                },
-              ),
-            ),
-            ListTile(
-              title: const Text('Phoneme'),
-              leading: Radio<TTSMode>(
-                value: TTSMode.phoneme,
-                groupValue: _mode,
-                onChanged: (TTSMode? value) {
-                  if (value != null) {
-                    setState(() {
-                      _mode = value;
-                    });
-                  }
-                },
-              ),
-            ),
             TextField(
               controller: _textController,
             ),

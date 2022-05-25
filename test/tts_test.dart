@@ -7,23 +7,13 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockTtsPlatform with MockPlatformInterfaceMixin implements TtsPlatform {
   @override
   Future<void> initModels(String fastSpeechModel, String melganModel) {
-    // TODO: implement initModels
     throw UnimplementedError();
   }
 
   @override
-  Future<void> speakPhoneme(
-      String fastSpeechModel, String melganModel, List<String> phonemes,
-      {double speed = 1.0}) {
-    // TODO: implement speakPhoneme
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> speakText(
-      String fastSpeechModel, String melganModel, String text,
-      {double speed = 1.0}) {
-    // TODO: implement speakText
+  Future<List> speakText(
+      String fastSpeechModel, String melganModel, List<int> inputIds,
+      {double speed = 1.0, int speakerId = 0}) {
     throw UnimplementedError();
   }
 }

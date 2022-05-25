@@ -7,19 +7,20 @@
 
 import Foundation
 import AVFoundation
+import TensorFlowLite
+import Flutter
 
 @available(iOS 13.0, *)
 public class TTS {
     var fastSpeech2: FastSpeech2?
     var mbMelGan: MBMelGan?
-    var rate: Float = 1.0
     private var modelMap = [String:Bool]()
 
     /// Mel spectrogram hop size
-    public let hopSize = 256
+    public let hopSize = 512
 
     /// Vocoder sample rate
-    let sampleRate = 22_050
+    let sampleRate = 44_100
 
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
@@ -39,8 +40,7 @@ public class TTS {
         }
     }
 
-    public func speak(fastSpeechModel:String, melGanModel: String, string: String) {
-        let input_ids = text_to_sequence(string)
+    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, result: @escaping FlutterResult) {
         initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
         
         guard let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
@@ -49,7 +49,9 @@ public class TTS {
         }
         
         do {
-            let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: input_ids, speedRatio: 2 - rate)
+            let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
+            let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
+            result(duration)
             let data = try mbMelGan.getAudio(input: melSpectrogram[0])
             print(data)
 
@@ -77,26 +79,6 @@ public class TTS {
             print(error)
         }
     }
-
-    lazy var eos_id = symbolIds["eos"]!
-
-    lazy var symbolIds: [String: Int32] = try! loadMapper(url: Bundle.main.url(forResource: "ljspeech_mapper", withExtension: "json")!).symbol_to_id
-
-    public func text_to_sequence(_ text: String) -> [Int32] {
-        var sequence: [Int32] = []
-        sequence += symbols_to_sequence(text)
-        sequence.append(eos_id)
-        return sequence
-    }
-
-    func symbols_to_sequence(_ text: String) -> [Int32] {
-        return text.unicodeScalars.compactMap { symbolIds[String($0)] }
-    }
-
-    func loadMapper(url: URL) throws -> Mapper {
-        let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(Mapper.self, from: data)
-    }
 }
 
 @available(iOS 13.0, *)
@@ -109,4 +91,19 @@ public struct Mapper: Codable {
     public let id_to_symbol: [String: String]
     public let speakers_map: [String: Int32]
     public let processor_name: String
+}
+
+extension Array {
+  /// Creates a new array from the bytes of the given unsafe data.
+  ///
+  /// - Warning: The array's `Element` type must be trivial in that it can be copied bit for bit
+  ///     with no indirection or reference-counting operations; otherwise, copying the raw bytes in
+  ///     the `unsafeData`'s buffer to a new array returns an unsafe copy.
+  /// - Note: Returns `nil` if `unsafeData.count` is not a multiple of
+  ///     `MemoryLayout<Element>.stride`.
+  /// - Parameter unsafeData: The data containing the bytes to turn into an array.
+  init?(unsafeData: Data) {
+    guard unsafeData.count % MemoryLayout<Element>.stride == 0 else { return nil }
+    self = unsafeData.withUnsafeBytes { .init($0.bindMemory(to: Element.self)) }
+  }
 }

@@ -10,26 +10,15 @@ class MethodChannelTts extends TtsPlatform {
   final methodChannel = const MethodChannel('tts');
 
   @override
-  Future<void> speakText(
-      String fastSpeechModel, String melganModel, String text,
-      {double speed = 1.0}) async {
-    await methodChannel.invokeMethod('speakText', {
+  Future<List> speakText(
+      String fastSpeechModel, String melganModel, List<int> inputIds,
+      {double speed = 1.0, int speakerId = 0}) async {
+    return await methodChannel.invokeMethod('speakText', {
       'fastSpeechModel': fastSpeechModel,
       'melganModel': melganModel,
-      'text': text,
-      'speed': speed
-    });
-  }
-
-  @override
-  Future<void> speakPhoneme(
-      String fastSpeechModel, String melganModel, List<String> phonemes,
-      {double speed = 1.0}) async {
-    await methodChannel.invokeMethod('speakText', {
-      'fastSpeechModel': fastSpeechModel,
-      'melganModel': melganModel,
-      'text': phonemes.join(' '),
-      'speed': speed
+      'inputIds': inputIds,
+      'speed': speed,
+      'speakerId': speakerId,
     });
   }
 
