@@ -34,8 +34,15 @@ public class TTS {
         let key  = fastSpeechModel + melGanModel
         if(modelMap[key] == nil) {
             modelMap.removeAll()
-            fastSpeech2 = try? FastSpeech2(url: Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")!)
-            mbMelGan = try? MBMelGan(url: Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")!)
+            let fastSpeechUrl = MlProcessorStrategy.shared().delegate?.url(for: fastSpeechModel) ?? Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")
+            let melganUrl = MlProcessorStrategy.shared().delegate?.url(for: melGanModel) ?? Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")
+            guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
+                print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                return
+            }
+            
+            fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
+            mbMelGan = try? MBMelGan(url: melganUrl)
             modelMap[key] = true
         }
     }
