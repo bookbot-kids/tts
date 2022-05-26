@@ -20,7 +20,7 @@ internal class TtsPlayer {
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build(),
         AudioFormat.Builder()
-            .setSampleRate(22050)
+            .setSampleRate(SAMPLE_RATE)
             .setEncoding(FORMAT)
             .setChannelMask(CHANNEL)
             .build(),
@@ -30,7 +30,7 @@ internal class TtsPlayer {
     private val mAudioQueue = LinkedBlockingQueue<AudioData>()
     private var mCurrentAudioData: AudioData? = null
     fun play(audioData: AudioData) {
-        Log.d(TAG, "add audio data to queue: " + audioData.text)
+        Log.d(TAG, "add audio data to queue: " + audioData.inputIds)
         mAudioQueue.offer(audioData)
     }
 
@@ -41,7 +41,7 @@ internal class TtsPlayer {
         }
     }
 
-    internal class AudioData(val text: String, val audio: FloatArray) {
+    internal class AudioData(val inputIds: List<Int>, val audio: FloatArray) {
         var isInterrupt = false
         fun interrupt() {
             isInterrupt = true
@@ -51,9 +51,10 @@ internal class TtsPlayer {
     companion object {
         private const val TAG = "TtsPlayer"
         private const val FORMAT = AudioFormat.ENCODING_PCM_FLOAT
-        private const val SAMPLERATE = 22050
+        public const val SAMPLE_RATE = 44100
+        public const val HOP_SIZE = 521
         private const val CHANNEL = AudioFormat.CHANNEL_OUT_MONO
-        private val BUFFER_SIZE = AudioTrack.getMinBufferSize(SAMPLERATE, CHANNEL, FORMAT)
+        private val BUFFER_SIZE = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT)
     }
 
     init {
@@ -63,7 +64,7 @@ internal class TtsPlayer {
                 try {
                     mCurrentAudioData = mAudioQueue.take()
                     val currentAudioData = mCurrentAudioData ?: return@execute
-                    Log.d(TAG, "playing: " + currentAudioData.text)
+                    Log.d(TAG, "playing: " + currentAudioData.inputIds)
                     var index = 0
                     while (index < currentAudioData.audio.size && !currentAudioData.isInterrupt) {
                         val buffer = min(BUFFER_SIZE, currentAudioData.audio.size - index)

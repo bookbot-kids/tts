@@ -2,9 +2,11 @@ package com.tensorspeech.tensorflowtts.tts
 
 import android.content.Context
 import android.util.Log
+import com.bookbot.tts.ProcessorHolder
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
+import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
 
@@ -20,8 +22,8 @@ class TtsManager {
         if(workerMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
-                    val fastspeech = copyFile(context, fastSpeechModel)
-                    val vocoder = copyFile(context, melganModel)
+                    val fastspeech = ProcessorHolder.processorStrategy?.initModel(fastSpeechModel) ?: copyFile(context, fastSpeechModel)
+                    val vocoder = ProcessorHolder.processorStrategy?.initModel(melganModel) ?: copyFile(context, melganModel)
                     for(worker in workerMap.values) {
                         worker?.interrupt()
                     }
@@ -38,7 +40,7 @@ class TtsManager {
 
             TtsStateDispatcher.instance.addListener(object : OnTtsStateListener {
                 override fun onTtsReady() {}
-                override fun onTtsStart(text: String?) {}
+                override fun onTtsStart(inputIds: List<Int>) {}
                 override fun onTtsStop() {}
             })
         } else {
@@ -80,17 +82,15 @@ class TtsManager {
         mWorker?.interrupt()
     }
 
-    fun speak(inputText: String?, speed: Float, interrupt: Boolean) {
+    fun speak(inputIds: List<Int>, speed: Float, interrupt: Boolean, speakerId: Int = 0, result: MethodChannel.Result) {
         if (interrupt) {
             stopTts()
         }
-        ThreadPoolManager.instance.execute { inputText?.let { mWorker?.processInput(it, speed) } }
+        ThreadPoolManager.instance.execute { mWorker?.processInput(inputIds, speed, speakerId, result) }
     }
 
     companion object {
         private const val TAG = "TtsManager"
         var instance: TtsManager = TtsManager()
-        private const val FASTSPEECH2_MODULE = "fastspeech2_quant.tflite"
-        private const val MELGAN_MODULE = "mbmelgan.tflite"
     }
 }

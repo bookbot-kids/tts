@@ -43,7 +43,7 @@ class MBMelGan(modulePath: String) : AbstractModule() {
                             " dtype:" + inputTensor.dataType()
                 )
             }
-            val output = mModule.getOutputTensorCount()
+            val output = mModule.outputTensorCount
             for (i in 0 until output) {
                 val outputTensor = mModule.getOutputTensor(i)
                 Log.d(

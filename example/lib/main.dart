@@ -1,3 +1,4 @@
+import 'package:duration/duration.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -20,6 +21,7 @@ class _MyAppState extends State<MyApp> {
   bool _isRunning = false;
   final _textController = TextEditingController()
     ..text = '53 20 64 70 91 45 64 37'; // hello world
+  var _result = '';
 
   @override
   void initState() {
@@ -30,9 +32,11 @@ class _MyAppState extends State<MyApp> {
   Future<void> _speak() async {
     setState(() {
       _isRunning = true;
+      _result = '';
     });
 
     try {
+      final startTime = DateTime.now().millisecondsSinceEpoch;
       final output = await _ttsPlugin.speakText(
           'fastspeech2_quant.tflite',
           'mbmelgan.tflite',
@@ -41,8 +45,16 @@ class _MyAppState extends State<MyApp> {
               .map((e) => int.parse(e.trim()))
               .toList(),
           speed: 1);
+      final totalTime = DateTime.now().millisecondsSinceEpoch - startTime;
       // ignore: avoid_print
       print('output: $output');
+      setState(() {
+        _result = 'Duration: ${output.join(', ')}\nExecute in ${printDuration(
+          Duration(milliseconds: totalTime),
+          tersity: DurationTersity.millisecond,
+          abbreviated: false,
+        )}';
+      });
     } on PlatformException {
       // ignore: avoid_print
       print('Failed to run TTS');
@@ -66,7 +78,12 @@ class _MyAppState extends State<MyApp> {
             child: Column(
           children: [
             Visibility(
-                visible: _isRunning, child: const CircularProgressIndicator()),
+              visible: _isRunning,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: true,
+              child: const CircularProgressIndicator(),
+            ),
             TextField(
               controller: _textController,
             ),
@@ -76,6 +93,7 @@ class _MyAppState extends State<MyApp> {
                 _speak();
               },
             ),
+            Text(_result)
           ],
         )),
       ),

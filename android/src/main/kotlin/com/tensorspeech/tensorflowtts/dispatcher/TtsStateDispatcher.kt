@@ -32,11 +32,11 @@ class TtsStateDispatcher {
         }
     }
 
-    fun onTtsStart(text: String?) {
+    fun onTtsStart(inputIds: List<Int>) {
         Log.d(TAG, "onTtsStart: ")
         if (!mListeners.isEmpty()) {
             for (listener in mListeners) {
-                handler.post { listener.onTtsStart(text) }
+                handler.post { listener.onTtsStart(inputIds) }
             }
         }
     }

@@ -6,6 +6,6 @@ package com.tensorspeech.tensorflowtts.dispatcher
  */
 interface OnTtsStateListener {
     fun onTtsReady()
-    fun onTtsStart(text: String?)
+    fun onTtsStart(inputIds: List<Int>)
     fun onTtsStop()
 }

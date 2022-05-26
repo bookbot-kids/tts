@@ -7,6 +7,7 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.File
 import java.nio.FloatBuffer
+import java.nio.IntBuffer
 import java.util.*
 
 /**
@@ -15,21 +16,23 @@ import java.util.*
  */
 class FastSpeech2(modulePath: String) : AbstractModule() {
     private lateinit var mModule: Interpreter
-    fun getMelSpectrogram(inputIds: IntArray, speed: Float): TensorBuffer {
+    fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int): Pair<TensorBuffer, IntArray> {
         Log.d(TAG, "input id length: " + inputIds.size)
         mModule.resizeInput(0, intArrayOf(1, inputIds.size))
         mModule.allocateTensors()
         @SuppressLint("UseSparseArrays") val outputMap: MutableMap<Int, Any> = HashMap()
         val outputBuffer = FloatBuffer.allocate(350000)
+        val outputBuffer3 = IntBuffer.allocate(inputIds.size)
         outputMap[0] = outputBuffer
+        outputMap[2] = outputBuffer3
         val inputs = Array(1) { IntArray(inputIds.size) }
         inputs[0] = inputIds
         val time = System.currentTimeMillis()
+
         mModule.runForMultipleInputsOutputs(
             arrayOf<Any>(
                 inputs,
-                Array(1) { IntArray(1) },
-                intArrayOf(0),
+                intArrayOf(speakerId),
                 floatArrayOf(speed),
                 floatArrayOf(1f),
                 floatArrayOf(1f)
@@ -39,12 +42,14 @@ class FastSpeech2(modulePath: String) : AbstractModule() {
         Log.d(TAG, "time cost: " + (System.currentTimeMillis() - time))
         val size = mModule.getOutputTensor(0).shape()[2]
         val shape = intArrayOf(1, outputBuffer.position() / size, size)
-        val spectrogram = TensorBuffer.createFixedSize(shape, DataType.FLOAT32)
+        val spectrogram1 = TensorBuffer.createFixedSize(shape, DataType.FLOAT32)
         val outputArray = FloatArray(outputBuffer.position())
         outputBuffer.rewind()
         outputBuffer[outputArray]
-        spectrogram.loadArray(outputArray)
-        return spectrogram
+        spectrogram1.loadArray(outputArray)
+        outputBuffer3.position()
+        val duration = outputBuffer3.array()
+        return spectrogram1 to duration
     }
 
     companion object {
@@ -64,7 +69,7 @@ class FastSpeech2(modulePath: String) : AbstractModule() {
                             " dtype:" + inputTensor.dataType()
                 )
             }
-            val output = mModule.getOutputTensorCount()
+            val output = mModule.outputTensorCount
             for (i in 0 until output) {
                 val outputTensor = mModule.getOutputTensor(i)
                 Log.d(

@@ -25,6 +25,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
     pluginBinding = flutterPluginBinding
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when(call.method){
       "initModels" -> {
@@ -42,11 +43,11 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           val fastSpeechModel = args["fastSpeechModel"] as String
           val melganModel = args["melganModel"] as String
-          val text = args["text"] as String
+          val inputIds = args["inputIds"] as List<*>
           val speed = args["speed"] as Double
+          val speakerId = args["speakerId"] as Int
           TtsManager.instance.init(context, fastSpeechModel, melganModel) {
-            TtsManager.instance.speak(text, speed.toFloat(), true)
-            result.success(null)
+            TtsManager.instance.speak(inputIds as List<Int>, speed.toFloat(), true, speakerId, result)
           }
         }
       }

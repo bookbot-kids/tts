@@ -10,7 +10,7 @@ abstract class AbstractModule {
     val option: Interpreter.Options
         get() {
             val options = Interpreter.Options()
-            options.numThreads = 5
+            options.numThreads = 6
             return options
         }
 }
