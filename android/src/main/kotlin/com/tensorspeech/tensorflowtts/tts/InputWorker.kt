@@ -39,7 +39,7 @@ internal class InputWorker(fastspeech: String, vocoder: String) {
         fun proceed() {
             val time = System.currentTimeMillis()
             val output = mFastSpeech2.getMelSpectrogram(inputIds.toIntArray(), SPEED, speakerId)
-            result.success(output.second)
+            result.success(output.second.map { it.toDouble() })
             if (isInterrupt) {
                 Log.d(TAG, "proceed: interrupt")
                 return

@@ -4,20 +4,33 @@ import 'package:flutter/services.dart';
 
 import 'tts_platform_interface.dart';
 
+class MappingData {
+  final String ipa;
+  final String arpabet;
+  final List<int> inputIds;
+  final List<String> visemes;
+
+  MappingData(this.ipa, this.arpabet, this.inputIds, this.visemes);
+}
+
 class Tts {
-  Map<String, Map<String, List<int>>> ipa2InputIds = {};
+  Map<String, Map<String, MappingData>> mapping = {};
   Map<String, Set<String>> allIPAs = {};
   static const eos = 95; // end of sentence
   static const dot = 7; // dot (.)
+  static const hopSize = 512;
+  static const sampleRate = 44100;
+  static const silent = '_';
 
   Future<List> speakText(
     String fastSpeechModel,
     String melganModel,
-    List<int> inputIds, {
+    List<int> inputIds,
+    List<String> visemes, {
     double speed = 1.0,
     int speakerId = 0,
     bool useDot = true,
-  }) {
+  }) async {
     if (inputIds.isEmpty) {
       inputIds.add(eos);
     } else {
@@ -28,24 +41,41 @@ class Tts {
       inputIds.add(eos);
     }
 
-    return TtsPlatform.instance.speakText(
+    final output = await TtsPlatform.instance.speakText(
         fastSpeechModel, melganModel, inputIds,
         speed: speed, speakerId: speakerId);
+    final result = [];
+    var dur = 0.0;
+    for (var i = 0; i < output.length; i++) {
+      final token = i < visemes.length ? visemes[i] : silent;
+      result.add({
+        'duration': dur * hopSize / sampleRate,
+        'token': token,
+      });
+      dur += output[i];
+    }
+    return result;
   }
 
   Future<void> initModels(String fastSpeechModel, String melganModel) {
     return TtsPlatform.instance.initModels(fastSpeechModel, melganModel);
   }
 
-  List<int> searchInputIds(List<String> ipas, {String language = 'en'}) {
-    final map = ipa2InputIds.putIfAbsent(language, () => {});
-    final result = <int>[];
+  /// Search inputIds & visemes in mapping
+  /// return a map with inputIds, visemes keys
+  Map<String, dynamic> search(List<String> ipas, {String language = 'en'}) {
+    final map = mapping.putIfAbsent(language, () => {});
+    final inputIds = <int>[];
+    final visemes = <String>[];
     for (final ipa in ipas) {
-      final inputIds = map[ipa] ?? [];
-      result.addAll(inputIds);
+      inputIds.addAll(map[ipa]?.inputIds ?? []);
+      visemes.addAll(map[ipa]?.visemes ?? []);
     }
 
-    return result;
+    return {
+      'inputIds': inputIds,
+      'visemes': visemes,
+    };
   }
 
   Future<void> loadMapping(String mappingAsset,
@@ -65,16 +95,26 @@ class Tts {
 
     final allRows = converter.convert(csvData);
     allRows.skip(1).forEach((row) {
-      final map = ipa2InputIds.putIfAbsent(language, () => {});
+      final map = mapping.putIfAbsent(language, () => {});
+      String ipa = row[0];
+      String arpabet = row[1];
       String ids = row[2];
-      map[row[0]] = ids
-          .split(' ')
-          .where((element) => element.trim().isNotEmpty)
-          .map((id) => int.parse(id.trim()))
-          .toList();
+      String visemes = row[3];
+      map[ipa] = MappingData(
+          ipa,
+          arpabet,
+          ids
+              .split(' ')
+              .where((element) => element.trim().isNotEmpty)
+              .map((id) => int.parse(id.trim()))
+              .toList(),
+          visemes
+              .split(' ')
+              .where((element) => element.trim().isNotEmpty)
+              .toList());
     });
 
-    final map = ipa2InputIds.putIfAbsent(language, () => {});
+    final map = mapping.putIfAbsent(language, () => {});
     allIPAs[language] = map.keys.toSet();
   }
 }

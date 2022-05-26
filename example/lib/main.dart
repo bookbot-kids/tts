@@ -19,8 +19,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _ttsPlugin = Tts();
   bool _isRunning = false;
+  // '53 20 64 70 91 45 64 37'
   final _textController = TextEditingController()
-    ..text = '53 20 64 70 91 45 64 37'; // hello world
+    ..text = 'h ə l oʊ   w ɝ r l d'; // hello world
   var _result = '';
 
   @override
@@ -37,14 +38,18 @@ class _MyAppState extends State<MyApp> {
 
     try {
       final startTime = DateTime.now().millisecondsSinceEpoch;
+      final ipas = _textController.text
+          .split(' ')
+          .map((e) => e.trim())
+          .where((element) => element.isNotEmpty)
+          .toList();
+      final map = _ttsPlugin.search(ipas);
+      final inputIds = map['inputIds'] as List<int>;
+      final visemes = map['visemes'] as List<String>;
       final output = await _ttsPlugin.speakText(
-          'fastspeech2_quant.tflite',
-          'mbmelgan.tflite',
-          _textController.text
-              .split(' ')
-              .map((e) => int.parse(e.trim()))
-              .toList(),
+          'fastspeech2_quant.tflite', 'mbmelgan.tflite', inputIds, visemes,
           speed: 1);
+
       final totalTime = DateTime.now().millisecondsSinceEpoch - startTime;
       // ignore: avoid_print
       print('output: $output');
@@ -65,7 +70,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> initPlatformState() async {}
+  Future<void> initPlatformState() async {
+    await _ttsPlugin.loadMapping('assets/tts_mapping.csv');
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -58,7 +58,8 @@ public class TTS {
         do {
             let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
             let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-            result(duration)
+            let arr = duration.map( { Double($0) })
+            result(arr)
             let data = try mbMelGan.getAudio(input: melSpectrogram[0])
             print(data)
 
