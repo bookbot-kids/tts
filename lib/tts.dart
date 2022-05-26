@@ -6,8 +6,9 @@ import 'tts_platform_interface.dart';
 
 class Tts {
   Map<String, Map<String, List<int>>> ipa2InputIds = {};
-  static const eos = 95;
-  static const dot = 7;
+  Map<String, Set<String>> allIPAs = {};
+  static const eos = 95; // end of sentence
+  static const dot = 7; // dot (.)
 
   Future<List> speakText(
     String fastSpeechModel,
@@ -72,5 +73,8 @@ class Tts {
           .map((id) => int.parse(id.trim()))
           .toList();
     });
+
+    final map = ipa2InputIds.putIfAbsent(language, () => {});
+    allIPAs[language] = map.keys.toSet();
   }
 }
