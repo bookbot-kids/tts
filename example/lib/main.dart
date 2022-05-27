@@ -1,5 +1,8 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
+import 'package:csv/csv.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -36,6 +39,64 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     init();
+  }
+
+  Future<void> convert() async {
+    final allWords = await _storeRef.find(_db);
+    print('there are ${allWords.length} words');
+
+    List<List<dynamic>> rows = [];
+    List<dynamic> row = [];
+    row.add("id");
+    row.add("word");
+    row.add("plural");
+    row.add("syllable");
+    row.add("syllablePlural");
+    row.add("ukipa");
+    row.add("usipa");
+    row.add("ukipaPlural");
+    row.add("usipaPlural");
+    row.add("inUse");
+    row.add("pluralInUse");
+
+    rows.add(row);
+    for (var i = 0; i < allWords.length; i++) {
+      final item = allWords[i].value;
+      if (item == null) continue;
+      List<dynamic> row = [];
+      final id = item['id'];
+      final word = item['word'] ?? '';
+      final plural = item['plural'] ?? '';
+      final syllable = item['syllable'] ?? '';
+      final syllablePlural = item['syllablePlural'] ?? '';
+      final ukipa = item['ukipa'] ?? '';
+      final usipa = item['usipa'] ?? '';
+      final ukipaPlural = item['ukipaPlural'] ?? '';
+      final usipaPlural = item['usipaPlural'] ?? '';
+      final inUse = item['inUse'] ?? false;
+      final pluralInUse = item['pluralInUse'] ?? false;
+
+      row.add(id);
+      row.add(word);
+      row.add(plural);
+      row.add(syllable);
+      row.add(syllablePlural);
+      row.add(ukipa);
+      row.add(usipa);
+      row.add(ukipaPlural);
+      row.add(usipaPlural);
+      row.add(inUse);
+      row.add(pluralInUse);
+      rows.add(row);
+
+      print('Listing word $word ($i)');
+    }
+
+    Directory dir = await getTemporaryDirectory();
+    final file = File(p.join(dir.path, 'words.csv'));
+    String csv = const ListToCsvConverter().convert(rows);
+    await file.writeAsString(csv);
+    print('done');
   }
 
   Future<List<String>> _findIPA(String word) async {
