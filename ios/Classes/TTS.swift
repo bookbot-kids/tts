@@ -25,9 +25,11 @@ public class TTS {
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
     private let sampleBufferAudioRenderer = AVSampleBufferAudioRenderer()
+    var operationQueue: OperationQueue = OperationQueue()
 
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
+        operationQueue.maxConcurrentOperationCount = 1
     }
     
     public func initModel(fastSpeechModel:String, melGanModel: String) {
@@ -48,44 +50,51 @@ public class TTS {
     }
 
     public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, result: @escaping FlutterResult) {
-        initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
-        
-        guard let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-            print("model initialzed failed")
-            return
+        let operation = BlockOperation {
+            self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
+            
+            guard let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+                print("model initialzed failed")
+                return
+            }
+            
+            do {
+                let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
+                let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
+                let arr = duration.map( { Double($0) })
+                DispatchQueue.main {
+                    result(arr)
+                }
+                
+                let data = try mbMelGan.getAudio(input: melSpectrogram[0])
+                print(data)
+
+                let blockBuffer = try CMBlockBuffer(length: data.count)
+                try data.withUnsafeBytes { try blockBuffer.replaceDataBytes(with: $0) }
+
+                let audioStreamBasicDescription = AudioStreamBasicDescription(mSampleRate: Float64(self.sampleRate), mFormatID: kAudioFormatLinearPCM, mFormatFlags: kAudioFormatFlagIsFloat, mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4, mChannelsPerFrame: 1, mBitsPerChannel: 32, mReserved: 0)
+
+                let formatDescription = try CMFormatDescription(audioStreamBasicDescription: audioStreamBasicDescription)
+
+                let delay: TimeInterval = 1
+
+                let sampleBuffer = try CMSampleBuffer(dataBuffer: blockBuffer,
+                                                      formatDescription: formatDescription,
+                                                      numSamples: data.count / 4,
+                                                      presentationTimeStamp: self.sampleBufferRenderSynchronizer.currentTime()
+                                                      + CMTime(seconds: delay, preferredTimescale: CMTimeScale(self.sampleRate)),
+                                                      packetDescriptions: [])
+
+                self.sampleBufferAudioRenderer.enqueue(sampleBuffer)
+
+                self.sampleBufferRenderSynchronizer.rate = 1
+            }
+            catch {
+                print(error)
+            }
         }
         
-        do {
-            let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
-            let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-            let arr = duration.map( { Double($0) })
-            result(arr)
-            let data = try mbMelGan.getAudio(input: melSpectrogram[0])
-            print(data)
-
-            let blockBuffer = try CMBlockBuffer(length: data.count)
-            try data.withUnsafeBytes { try blockBuffer.replaceDataBytes(with: $0) }
-
-            let audioStreamBasicDescription = AudioStreamBasicDescription(mSampleRate: Float64(sampleRate), mFormatID: kAudioFormatLinearPCM, mFormatFlags: kAudioFormatFlagIsFloat, mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4, mChannelsPerFrame: 1, mBitsPerChannel: 32, mReserved: 0)
-
-            let formatDescription = try CMFormatDescription(audioStreamBasicDescription: audioStreamBasicDescription)
-
-            let delay: TimeInterval = 1
-
-            let sampleBuffer = try CMSampleBuffer(dataBuffer: blockBuffer,
-                                                  formatDescription: formatDescription,
-                                                  numSamples: data.count / 4,
-                                                  presentationTimeStamp: sampleBufferRenderSynchronizer.currentTime()
-                                                    + CMTime(seconds: delay, preferredTimescale: CMTimeScale(sampleRate)),
-                                                  packetDescriptions: [])
-
-            sampleBufferAudioRenderer.enqueue(sampleBuffer)
-
-            sampleBufferRenderSynchronizer.rate = 1
-        }
-        catch {
-            print(error)
-        }
+        self.operationQueue.addOperation(operation)
     }
 }
 
@@ -114,4 +123,23 @@ extension Array {
     guard unsafeData.count % MemoryLayout<Element>.stride == 0 else { return nil }
     self = unsafeData.withUnsafeBytes { .init($0.bindMemory(to: Element.self)) }
   }
+}
+
+extension DispatchQueue {
+    static func background(delay: Double = 0.0, background: (()->Void)? = nil, completion: (() -> Void)? = nil) {
+        DispatchQueue.global(qos: .background).async {
+            background?()
+            if let completion = completion {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: {
+                    completion()
+                })
+            }
+        }
+    }
+    
+    static func main(_ task: @escaping () -> ()) {
+        DispatchQueue.main.async {
+           task()
+        }
+    }
 }
