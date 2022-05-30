@@ -1,7 +1,6 @@
 import Flutter
 import UIKit
 
-@available(iOS 13.0, *)
 public class SwiftTtsPlugin: NSObject, FlutterPlugin {
     private let tts = TTS()
   public static func register(with registrar: FlutterPluginRegistrar) {

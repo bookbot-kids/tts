@@ -10,7 +10,6 @@ import AVFoundation
 import TensorFlowLite
 import Flutter
 
-@available(iOS 13.0, *)
 public class TTS {
     var fastSpeech2: FastSpeech2?
     var mbMelGan: MBMelGan?
@@ -20,7 +19,10 @@ public class TTS {
     public let hopSize = 512
 
     /// Vocoder sample rate
-    let sampleRate = 44_100
+    let sampleRate = 44_100.0
+    
+//    let engine = AVAudioEngine()
+//    let player = AVAudioPlayerNode()
 
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
@@ -68,26 +70,11 @@ public class TTS {
                 
                 let data = try mbMelGan.getAudio(input: melSpectrogram[0])
                 print(data)
-
-                let blockBuffer = try CMBlockBuffer(length: data.count)
-                try data.withUnsafeBytes { try blockBuffer.replaceDataBytes(with: $0) }
-
-                let audioStreamBasicDescription = AudioStreamBasicDescription(mSampleRate: Float64(self.sampleRate), mFormatID: kAudioFormatLinearPCM, mFormatFlags: kAudioFormatFlagIsFloat, mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4, mChannelsPerFrame: 1, mBitsPerChannel: 32, mReserved: 0)
-
-                let formatDescription = try CMFormatDescription(audioStreamBasicDescription: audioStreamBasicDescription)
-
-                let delay: TimeInterval = 1
-
-                let sampleBuffer = try CMSampleBuffer(dataBuffer: blockBuffer,
-                                                      formatDescription: formatDescription,
-                                                      numSamples: data.count / 4,
-                                                      presentationTimeStamp: self.sampleBufferRenderSynchronizer.currentTime()
-                                                      + CMTime(seconds: delay, preferredTimescale: CMTimeScale(self.sampleRate)),
-                                                      packetDescriptions: [])
-
-                self.sampleBufferAudioRenderer.enqueue(sampleBuffer)
-
-                self.sampleBufferRenderSynchronizer.rate = 1
+                if MlProcessorStrategy.shared().delegate != nil {
+                    MlProcessorStrategy.shared().delegate?.playBuffer(data)
+                } else {
+                    self.playBuffer(data: data)
+                }
             }
             catch {
                 print(error)
@@ -96,18 +83,31 @@ public class TTS {
         
         self.operationQueue.addOperation(operation)
     }
-}
+    
+    private func playBuffer(data: Data) {
+        let engine = AVAudioEngine()
+        let player = AVAudioPlayerNode()
+        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: self.sampleRate, channels: 1)!
+        let mixer = engine.mainMixerNode
+        engine.attach(player)
+        engine.connect(player, to: mixer, format: audioFormat)
+        engine.prepare()
 
-@available(iOS 13.0, *)
-extension TTS: ObservableObject {
+        do {
+            try engine.start()
+        } catch {
+            print("Error info: \(error)")
+        }
 
-}
-
-public struct Mapper: Codable {
-    public let symbol_to_id: [String: Int32]
-    public let id_to_symbol: [String: String]
-    public let speakers_map: [String: Int32]
-    public let processor_name: String
+        player.play()
+        guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
+           return
+        }
+        
+        DispatchQueue.main {
+            player.scheduleBuffer(buffer, completionHandler: nil)
+        }
+    }
 }
 
 extension Array {
@@ -141,5 +141,28 @@ extension DispatchQueue {
         DispatchQueue.main.async {
            task()
         }
+    }
+}
+
+extension Data {
+    init(buffer: AVAudioPCMBuffer, time: AVAudioTime) {
+        let audioBuffer = buffer.audioBufferList.pointee.mBuffers
+        self.init(bytes: audioBuffer.mData!, count: Int(audioBuffer.mDataByteSize))
+    }
+
+    func makePCMBuffer(format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let streamDesc = format.streamDescription.pointee
+        let frameCapacity = UInt32(count) / streamDesc.mBytesPerFrame
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCapacity) else { return nil }
+
+        buffer.frameLength = buffer.frameCapacity
+        let audioBuffer = buffer.audioBufferList.pointee.mBuffers
+
+        withUnsafeBytes { (bufferPointer) in
+            guard let addr = bufferPointer.baseAddress else { return }
+            audioBuffer.mData?.copyMemory(from: addr, byteCount: Int(audioBuffer.mDataByteSize))
+        }
+
+        return buffer
     }
 }

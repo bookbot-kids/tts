@@ -1,5 +1,6 @@
 @protocol ProcessorStrategyDelegate <NSObject>
 - (NSURL*)urlFor:(NSString*)imagePath;
+- (void)playBuffer:(NSData*) audioBuffer;
 @end
 
 @interface MlProcessorStrategy : NSObject
