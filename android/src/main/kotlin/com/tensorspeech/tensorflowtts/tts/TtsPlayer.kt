@@ -14,17 +14,21 @@ import kotlin.math.min
  * Created 2020-07-20 18:22
  */
 internal class TtsPlayer {
+    var sampleRate: Int = 0
+    var hopSize = 0
+    private fun bufferSize() = AudioTrack.getMinBufferSize(sampleRate, CHANNEL, FORMAT)
+
     private val mAudioTrack: AudioTrack = AudioTrack(
         AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build(),
         AudioFormat.Builder()
-            .setSampleRate(SAMPLE_RATE)
+            .setSampleRate(sampleRate)
             .setEncoding(FORMAT)
             .setChannelMask(CHANNEL)
             .build(),
-        BUFFER_SIZE,
+        bufferSize(),
         AudioTrack.MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE
     )
     private val mAudioQueue = LinkedBlockingQueue<AudioData>()
@@ -51,10 +55,7 @@ internal class TtsPlayer {
     companion object {
         private const val TAG = "TtsPlayer"
         private const val FORMAT = AudioFormat.ENCODING_PCM_FLOAT
-        public const val SAMPLE_RATE = 44100
-        public const val HOP_SIZE = 521
         private const val CHANNEL = AudioFormat.CHANNEL_OUT_MONO
-        private val BUFFER_SIZE = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL, FORMAT)
     }
 
     init {
@@ -67,14 +68,14 @@ internal class TtsPlayer {
                     Log.d(TAG, "playing: " + currentAudioData.inputIds)
                     var index = 0
                     while (index < currentAudioData.audio.size && !currentAudioData.isInterrupt) {
-                        val buffer = min(BUFFER_SIZE, currentAudioData.audio.size - index)
+                        val buffer = min(bufferSize(), currentAudioData.audio.size - index)
                         mAudioTrack.write(
                             currentAudioData.audio,
                             index,
                             buffer,
                             AudioTrack.WRITE_BLOCKING
                         )
-                        index += BUFFER_SIZE
+                        index += bufferSize()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Exception: ", e)

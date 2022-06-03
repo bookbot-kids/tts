@@ -14,12 +14,6 @@ public class TTS {
     var fastSpeech2: FastSpeech2?
     var mbMelGan: MBMelGan?
     private var modelMap = [String:Bool]()
-
-    /// Mel spectrogram hop size
-    public let hopSize = 512
-
-    /// Vocoder sample rate
-    let sampleRate = 44_100.0
     
 //    let engine = AVAudioEngine()
 //    let player = AVAudioPlayerNode()
@@ -51,7 +45,7 @@ public class TTS {
         }
     }
 
-    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, result: @escaping FlutterResult) {
+    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         let operation = BlockOperation {
             self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
             
@@ -73,7 +67,7 @@ public class TTS {
                 if MlProcessorStrategy.shared().delegate != nil {
                     MlProcessorStrategy.shared().delegate?.playBuffer(data)
                 } else {
-                    self.playBuffer(data: data)
+                    self.playBuffer(data: data, sampleRate: sampleRate)
                 }
             }
             catch {
@@ -84,10 +78,10 @@ public class TTS {
         self.operationQueue.addOperation(operation)
     }
     
-    private func playBuffer(data: Data) {
+    private func playBuffer(data: Data, sampleRate: Int) {
         let engine = AVAudioEngine()
         let player = AVAudioPlayerNode()
-        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: self.sampleRate, channels: 1)!
+        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1)!
         let mixer = engine.mainMixerNode
         engine.attach(player)
         engine.connect(player, to: mixer, format: audioFormat)

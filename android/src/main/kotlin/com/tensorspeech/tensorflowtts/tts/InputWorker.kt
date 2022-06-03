@@ -21,9 +21,9 @@ internal class InputWorker(fastspeech: String, vocoder: String) {
     private val mMBMelGan: MBMelGan
     private val mProcessor: Processor
     private val mTtsPlayer: TtsPlayer
-    fun processInput(inputIds: List<Int>, speed: Float, speakerId: Int = 0, result: MethodChannel.Result) {
+    fun processInput(inputIds: List<Int>, speed: Float, speakerId: Int = 0, sampleRate: Int, hopSize: Int, result: MethodChannel.Result) {
         Log.d(TAG, "add to queue: $inputIds")
-        mInputQueue.offer(InputText(inputIds, speed, speakerId, result))
+        mInputQueue.offer(InputText(inputIds, speed, speakerId, sampleRate, hopSize, result))
     }
 
     fun interrupt() {
@@ -34,7 +34,7 @@ internal class InputWorker(fastspeech: String, vocoder: String) {
         mTtsPlayer.interrupt()
     }
 
-    private inner class InputText(val inputIds: List<Int>, private val SPEED: Float, private val speakerId: Int, private val result: MethodChannel.Result) {
+    private inner class InputText(val inputIds: List<Int>, private val SPEED: Float, private val speakerId: Int, private val sampleRate: Int, private val hopSize: Int, private val result: MethodChannel.Result) {
         private var isInterrupt = false
         fun proceed() {
             val time = System.currentTimeMillis()
@@ -55,6 +55,9 @@ internal class InputWorker(fastspeech: String, vocoder: String) {
                 TAG,
                 "Time cost: " + (encoderTime - time) + "+" + (vocoderTime - encoderTime) + "=" + (vocoderTime - time)
             )
+
+            mTtsPlayer.sampleRate = sampleRate
+            mTtsPlayer.hopSize = hopSize
             mTtsPlayer.play(AudioData(inputIds, audioData))
         }
 

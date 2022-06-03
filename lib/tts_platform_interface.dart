@@ -1,4 +1,5 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:tts/request_info.dart';
 
 import 'tts_method_channel.dart';
 
@@ -23,15 +24,8 @@ abstract class TtsPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<List> speakText(
-    String fastSpeechModel,
-    String melganModel,
-    List<int> inputIds, {
-    double speed = 1.0,
-    int speakerId = 0,
-  }) async {
-    return await _instance.speakText(fastSpeechModel, melganModel, inputIds,
-        speed: speed, speakerId: speakerId);
+  Future<List> speakText(RequestInfo requestInfo) async {
+    return await _instance.speakText(requestInfo);
   }
 
   Future<void> initModels(String fastSpeechModel, String melganModel) async {

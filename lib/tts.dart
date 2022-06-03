@@ -1,6 +1,7 @@
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
+import 'package:tts/request_info.dart';
 
 import 'tts_platform_interface.dart';
 
@@ -22,32 +23,24 @@ class Tts {
   static const sampleRate = 44100;
   static const silent = '_';
 
-  Future<List> speakText(
-    String fastSpeechModel,
-    String melganModel,
-    List<int> inputIds,
-    List<String> visemes, {
-    double speed = 1.0,
-    int speakerId = 0,
-    bool useDot = true,
-  }) async {
-    if (inputIds.isEmpty) {
-      inputIds.add(eos);
+  Future<List> speakText(RequestInfo requestInfo) async {
+    if (requestInfo.inputIds.isEmpty) {
+      requestInfo.inputIds.add(eos);
     } else {
-      if (useDot && inputIds[inputIds.length - 1] != dot) {
-        inputIds.add(dot);
+      if (requestInfo.useDot &&
+          requestInfo.inputIds[requestInfo.inputIds.length - 1] != dot) {
+        requestInfo.inputIds.add(dot);
       }
 
-      inputIds.add(eos);
+      requestInfo.inputIds.add(eos);
     }
 
-    final output = await TtsPlatform.instance.speakText(
-        fastSpeechModel, melganModel, inputIds,
-        speed: speed, speakerId: speakerId);
+    final output = await TtsPlatform.instance.speakText(requestInfo);
     final result = [];
     var dur = 0.0;
     for (var i = 0; i < output.length; i++) {
-      final token = i < visemes.length ? visemes[i] : silent;
+      final token =
+          i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
       result.add({
         'duration': dur * hopSize / sampleRate,
         'token': token,

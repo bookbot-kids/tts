@@ -82,11 +82,11 @@ class TtsManager {
         mWorker?.interrupt()
     }
 
-    fun speak(inputIds: List<Int>, speed: Float, interrupt: Boolean, speakerId: Int = 0, result: MethodChannel.Result) {
+    fun speak(inputIds: List<Int>, speed: Float, interrupt: Boolean, sampleRate: Int, hopSize: Int, speakerId: Int = 0, result: MethodChannel.Result) {
         if (interrupt) {
             stopTts()
         }
-        ThreadPoolManager.instance.execute { mWorker?.processInput(inputIds, speed, speakerId, result) }
+        ThreadPoolManager.instance.execute { mWorker?.processInput(inputIds, speed, speakerId, sampleRate, hopSize, result) }
     }
 
     companion object {

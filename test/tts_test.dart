@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tts/request_info.dart';
 import 'package:tts/tts.dart';
 import 'package:tts/tts_platform_interface.dart';
 import 'package:tts/tts_method_channel.dart';
@@ -11,9 +12,7 @@ class MockTtsPlatform with MockPlatformInterfaceMixin implements TtsPlatform {
   }
 
   @override
-  Future<List> speakText(
-      String fastSpeechModel, String melganModel, List<int> inputIds,
-      {double speed = 1.0, int speakerId = 0}) {
+  Future<List> speakText(RequestInfo requestInfo) {
     throw UnimplementedError();
   }
 }

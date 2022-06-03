@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:tts/request_info.dart';
 
 import 'tts_platform_interface.dart';
 
@@ -10,15 +11,15 @@ class MethodChannelTts extends TtsPlatform {
   final methodChannel = const MethodChannel('tts');
 
   @override
-  Future<List> speakText(
-      String fastSpeechModel, String melganModel, List<int> inputIds,
-      {double speed = 1.0, int speakerId = 0}) async {
+  Future<List> speakText(RequestInfo requestInfo) async {
     return await methodChannel.invokeMethod('speakText', {
-      'fastSpeechModel': fastSpeechModel,
-      'melganModel': melganModel,
-      'inputIds': inputIds,
-      'speed': speed,
-      'speakerId': speakerId,
+      'fastSpeechModel': requestInfo.fastSpeechModel,
+      'melganModel': requestInfo.melganModel,
+      'inputIds': requestInfo.inputIds,
+      'speed': requestInfo.speed,
+      'speakerId': requestInfo.speakerId,
+      'sampleRate': requestInfo.sampleRate,
+      'hopSize': requestInfo.hopeSize,
     });
   }
 

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
+import 'package:tts/request_info.dart';
 import 'package:tts/tts.dart';
 import 'package:path/path.dart' as p;
 
@@ -169,8 +170,10 @@ class _MyAppState extends State<MyApp> {
       }
 
       final output = await _ttsPlugin.speakText(
-          'fastspeech2_quant.tflite', 'mbmelgan.tflite', inputIds, visemes,
-          speed: 1);
+        RequestInfo(
+            'fastspeech2_quant.tflite', 'mbmelgan.tflite', inputIds, visemes,
+            speed: 1),
+      );
       setState(() {
         _result += '''
 IPA:

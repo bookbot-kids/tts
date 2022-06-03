@@ -46,8 +46,10 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val inputIds = args["inputIds"] as List<*>
           val speed = args["speed"] as Double
           val speakerId = args["speakerId"] as Int
+          val sampleRate = args["sampleRate"] as Int
+          val hopSize = args["hopSize"] as Int
           TtsManager.instance.init(context, fastSpeechModel, melganModel) {
-            TtsManager.instance.speak(inputIds as List<Int>, speed.toFloat(), true, speakerId, result)
+            TtsManager.instance.speak(inputIds as List<Int>, speed.toFloat(), true, sampleRate, hopSize, speakerId, result)
           }
         }
       }
