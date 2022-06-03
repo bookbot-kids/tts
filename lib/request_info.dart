@@ -1,4 +1,17 @@
 class RequestInfo {
+  // english params
+  static const enSampleRate = 44100;
+  static const enHopSize = 512;
+  static const enEos = 95; // end of sentence
+
+  // indonesian params
+  static const idSampleRate = 22050;
+  static const idHopSize = 256;
+  static const idEos = 148;
+
+  static const defaultDot = 7; // dot (.)
+  static const eosText = 'eos';
+
   final String fastSpeechModel;
   final String melganModel;
   final List<int> inputIds;
@@ -7,7 +20,9 @@ class RequestInfo {
   int speakerId;
   bool useDot;
   int sampleRate;
-  int hopeSize;
+  int hopSize;
+  int eos;
+  int dot;
 
   RequestInfo(
     this.fastSpeechModel,
@@ -17,7 +32,9 @@ class RequestInfo {
     this.speed = 1.0,
     this.speakerId = 0,
     this.useDot = true,
-    this.sampleRate = 44100,
-    this.hopeSize = 512,
+    this.sampleRate = enSampleRate,
+    this.hopSize = enHopSize,
+    this.eos = enEos,
+    this.dot = defaultDot,
   });
 }

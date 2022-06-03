@@ -19,7 +19,7 @@ class MethodChannelTts extends TtsPlatform {
       'speed': requestInfo.speed,
       'speakerId': requestInfo.speakerId,
       'sampleRate': requestInfo.sampleRate,
-      'hopSize': requestInfo.hopeSize,
+      'hopSize': requestInfo.hopSize,
     });
   }
 

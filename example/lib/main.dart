@@ -24,15 +24,19 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+enum Langage { en, id }
+
 class _MyAppState extends State<MyApp> {
   final _ttsPlugin = Tts();
   bool _isRunning = false;
   // 'hello world'    'h ə l oʊ   w ɝ r l d'     '53 20 64 70 91 45 64 37'
-  static const _defaultText = 'library aback ables';
-  final _textController = TextEditingController()..text = _defaultText;
+  static const _defaultEnText = 'library aback ables';
+  static const _defaultIdText = 'halo, apa kabar?';
+  final _textController = TextEditingController()..text = _defaultEnText;
   var _result = '';
   late Database _db;
   late StoreRef _storeRef;
+  Langage? _language = Langage.en;
 
   @override
   void initState() {
@@ -87,33 +91,54 @@ class _MyAppState extends State<MyApp> {
     try {
       final startTime = DateTime.now().millisecondsSinceEpoch;
       final text = _textController.text;
-      final words = text
-          .split(' ')
-          .map((e) => e.trim())
-          .where((element) => element.isNotEmpty)
-          .toList();
 
       List<int> inputIds = [];
       List<String> visemes = [];
 
       List wordIPAs = []; // ipa for each word
       List wirdInputIds = []; // input id for each word
-      final allAvailableIPAs = _ttsPlugin.allIPAs['en']!;
-      for (final word in words) {
-        final ipa = await _findIPA(word);
-        final characters = ipaCharacters(allAvailableIPAs, ipa);
-        wordIPAs.add(characters);
-        final map = _ttsPlugin.search(characters);
+      RequestInfo request;
+      if (_language == Langage.en) {
+        final words = text
+            .split(' ')
+            .map((e) => e.trim())
+            .where((element) => element.isNotEmpty)
+            .toList();
+        final allAvailableIPAs = _ttsPlugin.allIPAs['en']!;
+        for (final word in words) {
+          final ipa = await _findIPA(word);
+          final characters = ipaCharacters(allAvailableIPAs, ipa);
+          wordIPAs.add(characters);
+          final map = _ttsPlugin.search(characters);
+          inputIds.addAll(map['inputIds'] as List<int>);
+          visemes.addAll(map['visemes'] as List<String>);
+          wirdInputIds.add(map['inputIds']);
+        }
+
+        request = RequestInfo(
+            'fastspeech2_quant.tflite', 'mbmelgan.tflite', inputIds, visemes);
+      } else {
+        final characters = text.characters.toList();
+        final map = _ttsPlugin.search(characters, language: 'id');
         inputIds.addAll(map['inputIds'] as List<int>);
         visemes.addAll(map['visemes'] as List<String>);
+        wordIPAs.add(characters);
         wirdInputIds.add(map['inputIds']);
+
+        request = RequestInfo(
+          'id_fastspeech2_quant.tflite',
+          'id_mbmelgan.tflite',
+          inputIds,
+          visemes,
+          speed: 1,
+          sampleRate: RequestInfo.idSampleRate,
+          hopSize: RequestInfo.idHopSize,
+          eos: RequestInfo.idEos,
+          useDot: false,
+        );
       }
 
-      final output = await _ttsPlugin.speakText(
-        RequestInfo(
-            'fastspeech2_quant.tflite', 'mbmelgan.tflite', inputIds, visemes,
-            speed: 1),
-      );
+      final output = await _ttsPlugin.speakText(request);
       setState(() {
         _result += '''
 IPA:
@@ -147,7 +172,9 @@ ${wirdInputIds.join('; ')}
   }
 
   Future<void> init() async {
-    await _ttsPlugin.loadMapping('assets/tts_mapping.csv');
+    await _ttsPlugin.loadCsvMapping('assets/tts_mapping.csv');
+    await _ttsPlugin.loadJsonMapping('assets/id_processor.json',
+        language: 'id');
 
     // copy word db into storage
     Directory appDocDir = await getApplicationDocumentsDirectory();
@@ -183,6 +210,32 @@ ${wirdInputIds.join('; ')}
             ),
             TextField(
               controller: _textController,
+            ),
+            ListTile(
+              title: const Text('en'),
+              leading: Radio<Langage>(
+                value: Langage.en,
+                groupValue: _language,
+                onChanged: (Langage? value) {
+                  setState(() {
+                    _language = value;
+                    _textController.text = _defaultEnText;
+                  });
+                },
+              ),
+            ),
+            ListTile(
+              title: const Text('id'),
+              leading: Radio<Langage>(
+                value: Langage.id,
+                groupValue: _language,
+                onChanged: (Langage? value) {
+                  setState(() {
+                    _language = value;
+                    _textController.text = _defaultIdText;
+                  });
+                },
+              ),
             ),
             TextButton(
               child: const Text('Speak'),

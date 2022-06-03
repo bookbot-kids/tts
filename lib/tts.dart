@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
@@ -17,22 +19,19 @@ class MappingData {
 class Tts {
   Map<String, Map<String, MappingData>> mapping = {};
   Map<String, Set<String>> allIPAs = {};
-  static const eos = 95; // end of sentence
-  static const dot = 7; // dot (.)
-  static const hopSize = 512;
-  static const sampleRate = 44100;
   static const silent = '_';
 
   Future<List> speakText(RequestInfo requestInfo) async {
     if (requestInfo.inputIds.isEmpty) {
-      requestInfo.inputIds.add(eos);
+      requestInfo.inputIds.add(requestInfo.eos);
     } else {
       if (requestInfo.useDot &&
-          requestInfo.inputIds[requestInfo.inputIds.length - 1] != dot) {
-        requestInfo.inputIds.add(dot);
+          requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
+              requestInfo.dot) {
+        requestInfo.inputIds.add(requestInfo.dot);
       }
 
-      requestInfo.inputIds.add(eos);
+      requestInfo.inputIds.add(requestInfo.eos);
     }
 
     final output = await TtsPlatform.instance.speakText(requestInfo);
@@ -42,7 +41,7 @@ class Tts {
       final token =
           i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
       result.add({
-        'duration': dur * hopSize / sampleRate,
+        'duration': dur * requestInfo.hopSize / requestInfo.sampleRate,
         'token': token,
       });
       dur += output[i];
@@ -71,7 +70,7 @@ class Tts {
     };
   }
 
-  Future<void> loadMapping(String mappingAsset,
+  Future<void> loadCsvMapping(String mappingAsset,
       {String language = 'en'}) async {
     // read csv from asset
     final csvData = await rootBundle.loadString(mappingAsset);
@@ -108,6 +107,18 @@ class Tts {
     });
 
     final map = mapping.putIfAbsent(language, () => {});
+    allIPAs[language] = map.keys.toSet();
+  }
+
+  Future<void> loadJsonMapping(String jsonPath,
+      {String language = 'en'}) async {
+    final jsonData = json.decode(await rootBundle.loadString(jsonPath));
+    final symboyToId = jsonData['symbol_to_id'] as Map;
+    final map = mapping.putIfAbsent(language, () => {});
+    symboyToId.forEach((symbol, id) {
+      map[symbol] = MappingData(symbol, symbol, [id], [symbol]);
+    });
+
     allIPAs[language] = map.keys.toSet();
   }
 }

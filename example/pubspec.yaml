@@ -61,6 +61,7 @@ flutter:
   assets:
     - assets/tts_mapping.csv
     - assets/Word.db
+    - assets/id_processor.json
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
