@@ -31,7 +31,7 @@ class TtsBufferPlayer(sampleRate: Int) {
     private var task: Future<*>? = null
 
     fun play(inputIds: List<Int>, audio: FloatArray) {
-        Log.d(TAG, "start playing: $inputIds")
+        Log.d(TAG, "start playing: $inputIds, audio ${audio.size}")
         if(isPlaying) {
             isInterrupt = true
             task?.cancel(true)
@@ -44,6 +44,7 @@ class TtsBufferPlayer(sampleRate: Int) {
         task = threadPool.submit {
             isPlaying = true
             var index = 0
+            mAudioTrack.play()
             while (index < audio.size && !isInterrupt) {
                 val buffer = min(bufferSize, audio.size - index)
                 mAudioTrack.write(
