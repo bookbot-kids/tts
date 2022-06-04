@@ -37,11 +37,12 @@ class _MyAppState extends State<MyApp> {
   late Database _db;
   late StoreRef _storeRef;
   Langage? _language = Langage.en;
+  Future? initTask;
 
   @override
   void initState() {
     super.initState();
-    init();
+    initTask = init();
   }
 
   Future<List<String>> _findIPA(String word) async {
@@ -83,6 +84,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _speak() async {
+    await initTask;
     setState(() {
       _isRunning = true;
       _result = '';

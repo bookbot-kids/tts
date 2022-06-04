@@ -1,6 +1,7 @@
 package com.tensorspeech.tensorflowtts.tts
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.bookbot.tts.ProcessorHolder
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
@@ -15,8 +16,9 @@ import java.io.FileOutputStream
  * Created 2020-07-28 14:25
  */
 class TtsManager {
-    private var mWorker: InputWorker? = null
-    private val workerMap = mutableMapOf<String, InputWorker?>()
+    private var mWorker: InputTask? = null
+    private val workerMap = mutableMapOf<String, InputTask?>()
+    private val players = mutableMapOf<Int, TtsBufferPlayer>()
     fun init(context: Context, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(workerMap[key] == null) {
@@ -29,7 +31,7 @@ class TtsManager {
                     }
 
                     workerMap.clear()
-                    mWorker = InputWorker(fastspeech, vocoder)
+                    mWorker = InputTask(fastspeech, vocoder)
                     workerMap[key] = mWorker
                     callback?.invoke()
                 } catch (e: Exception) {
@@ -86,7 +88,21 @@ class TtsManager {
         if (interrupt) {
             stopTts()
         }
-        ThreadPoolManager.instance.execute { mWorker?.processInput(inputIds, speed, speakerId, sampleRate, hopSize, result) }
+
+        val playerKey = sampleRate + hopSize
+        val player = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            players.putIfAbsent(playerKey, TtsBufferPlayer(sampleRate))
+            players[playerKey]
+        } else {
+            if (!players.containsKey(playerKey)) {
+                players[playerKey] = TtsBufferPlayer(sampleRate)
+            }
+            players[playerKey]
+        }
+
+        ThreadPoolManager.instance.execute {
+            mWorker?.processInput(inputIds, speed, speakerId, player, result)
+        }
     }
 
     companion object {
