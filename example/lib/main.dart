@@ -127,16 +127,11 @@ class _MyAppState extends State<MyApp> {
         wordIPAs.add(characters);
         wirdInputIds.add(map['inputIds']);
 
-        request = RequestInfo(
+        request = IdRequestInfo(
           'id_fastspeech2_quant.tflite',
           'id_mbmelgan.tflite',
           inputIds,
           visemes,
-          speed: 1,
-          sampleRate: RequestInfo.idSampleRate,
-          hopSize: RequestInfo.idHopSize,
-          eos: RequestInfo.idEos,
-          useDot: false,
         );
       }
 

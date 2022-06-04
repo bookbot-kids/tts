@@ -1,4 +1,4 @@
-class RequestInfo {
+class Parameters {
   // english params
   static const enSampleRate = 44100;
   static const enHopSize = 512;
@@ -11,7 +11,9 @@ class RequestInfo {
 
   static const defaultDot = 7; // dot (.)
   static const eosText = 'eos';
+}
 
+class RequestInfo {
   final String fastSpeechModel;
   final String melganModel;
   final List<int> inputIds;
@@ -32,9 +34,25 @@ class RequestInfo {
     this.speed = 1.0,
     this.speakerId = 0,
     this.useDot = true,
-    this.sampleRate = enSampleRate,
-    this.hopSize = enHopSize,
-    this.eos = enEos,
-    this.dot = defaultDot,
+    this.sampleRate = Parameters.enSampleRate,
+    this.hopSize = Parameters.enHopSize,
+    this.eos = Parameters.enEos,
+    this.dot = Parameters.defaultDot,
+  });
+}
+
+class IdRequestInfo extends RequestInfo {
+  IdRequestInfo(
+    super.fastSpeechModel,
+    super.melganModel,
+    super.inputIds,
+    super.visemes, {
+    super.sampleRate = Parameters.idSampleRate,
+    super.hopSize = Parameters.idHopSize,
+    super.eos = Parameters.idEos,
+    super.speed = 1.0,
+    super.speakerId = 0,
+    super.useDot = false,
+    super.dot = Parameters.defaultDot,
   });
 }
