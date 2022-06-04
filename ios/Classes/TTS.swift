@@ -15,8 +15,8 @@ public class TTS {
     var mbMelGan: MBMelGan?
     private var modelMap = [String:Bool]()
     
-//    let engine = AVAudioEngine()
-//    let player = AVAudioPlayerNode()
+    private var engine: AVAudioEngine?
+    private var player: AVAudioPlayerNode?
 
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
@@ -26,6 +26,9 @@ public class TTS {
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
         operationQueue.maxConcurrentOperationCount = 1
+        if(MlProcessorStrategy.shared().delegate == nil) {
+            initAudioEngine()
+        }
     }
     
     public func initModel(fastSpeechModel:String, melGanModel: String) {
@@ -78,29 +81,39 @@ public class TTS {
         self.operationQueue.addOperation(operation)
     }
     
+    private func initAudioEngine() {
+        engine = AVAudioEngine()
+        player = AVAudioPlayerNode()
+    }
+    
     private func playBuffer(data: Data, sampleRate: Int) {
-        let engine = AVAudioEngine()
-        let player = AVAudioPlayerNode()
-        let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1)!
+        guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
+            print("engine does not initialize yet")
+            return
+        }
+        
         let mixer = engine.mainMixerNode
         engine.attach(player)
         engine.connect(player, to: mixer, format: audioFormat)
-        engine.prepare()
-
+        
         do {
+            engine.prepare()
             try engine.start()
         } catch {
             print("Error info: \(error)")
         }
-
-        player.play()
+        
         guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
            return
         }
         
-        DispatchQueue.main {
-            player.scheduleBuffer(buffer, completionHandler: nil)
+        guard player.engine?.isRunning == true else {
+            print("engine does not start yet")
+            return
         }
+        
+        player.play()
+        player.scheduleBuffer(buffer, completionHandler: nil)
     }
 }
 
