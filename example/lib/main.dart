@@ -1,6 +1,8 @@
 // ignore_for_file: avoid_print
 
 import 'dart:io';
+import 'package:csv/csv.dart';
+import 'package:csv/csv_settings_autodetection.dart';
 import 'package:duration/duration.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -12,6 +14,8 @@ import 'package:sembast/sembast_io.dart';
 import 'package:tts/request_info.dart';
 import 'package:tts/tts.dart';
 import 'package:path/path.dart' as p;
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,6 +47,69 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     initTask = init();
+  }
+
+  Future<void> _updateWordDb() async {
+    await initTask;
+    // read csv
+    final csvData = await rootBundle.loadString('assets/words.csv');
+    var detector = const FirstOccurrenceSettingsDetector(
+        fieldDelimiters: [',', ';'],
+        textDelimiters: ['"'],
+        textEndDelimiters: ['"'],
+        eols: ['\r\n', '\n']);
+    var converter = CsvToListConverter(
+      csvSettingsDetector: detector,
+      shouldParseNumbers: false,
+      allowInvalid: true,
+    );
+
+    final allRows = converter.convert(csvData);
+    final newWords = [];
+    allRows.skip(1).forEach((row) {
+      // inuse
+      if ('true' == row[9]?.toString().toLowerCase() ||
+          'true' == row[10]?.toString().toLowerCase()) {
+        final item = [];
+
+        for (var i = 0; i < row.length; i++) {
+          item.add(row[i]);
+        }
+        newWords.add(item);
+      }
+    });
+    final finder = Finder(
+        filter: Filter.or([
+      Filter.equals('inUse', true),
+      Filter.equals('pluralInUse', true),
+    ]));
+
+    final records = await _storeRef.find(_db, finder: finder);
+    await _db.transaction((db) async {
+      for (final requeryRecord in records) {
+        final data = requeryRecord.value;
+        final id = data['id'] as String;
+        final csvRow = newWords.firstWhereOrNull((element) => element[0] == id);
+        if (csvRow == null) {
+          continue;
+        }
+
+        final updateRecord = _storeRef.record(id);
+        await updateRecord.update(db, {
+          'syllable': csvRow[3],
+          'syllablePlural': csvRow[4],
+          'ukipa': csvRow[5],
+          'usipa': csvRow[6],
+          'ukipaPlural': csvRow[7],
+          'usipaPlural': csvRow[8],
+        });
+        print('update word $id');
+      }
+    });
+
+    await _db.close();
+
+    print('done');
   }
 
   Future<List<String>> _findIPA(String word) async {
