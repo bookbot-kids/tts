@@ -27,7 +27,7 @@ l̩,AH0 L,20 64,A S,
 m̩,M,65,F,
 n̩,N,66,S,
 f,F,51,F,
-ɡ,G,52,S,
+ɡ,G,52,S,"the ""g"" here is not normal unicode g"
 h,HH,53,A,
 dʒ,JH,62,S,
 k,K,63,S,
@@ -49,3 +49,5 @@ w,W,91,Q,
 j,Y,92,E,
 z,Z,93,S,
 ʒ,ZH,94,Q,
+ɒ,AO1,25,O,"""o"" in ""smoggy"""
+ɜ,ER1,45,E,"""ur"" in ""occur"" (UK)"
