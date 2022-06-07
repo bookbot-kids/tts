@@ -31,50 +31,68 @@ public class TTS {
         }
     }
     
-    public func initModel(fastSpeechModel:String, melGanModel: String) {
+    public func initModel(fastSpeechModel:String, melGanModel: String, onCompleted:@escaping((Bool) -> Void)) {
         let key  = fastSpeechModel + melGanModel
         if(modelMap[key] == nil) {
             modelMap.removeAll()
-            let fastSpeechUrl = MlProcessorStrategy.shared().delegate?.url(for: fastSpeechModel) ?? Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")
-            let melganUrl = MlProcessorStrategy.shared().delegate?.url(for: melGanModel) ?? Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")
-            guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
-                print("can't read model url \(fastSpeechModel), \(melGanModel) ")
-                return
+            if(MlProcessorStrategy.shared().delegate != nil) {
+                MlProcessorStrategy.shared().delegate.urls(for: [fastSpeechModel, melGanModel]) { urls in
+                    guard let modelUrls = urls, let fastSpeechUrl = modelUrls[0] as? URL, let melganUrl = modelUrls[1] as? URL else {
+                        onCompleted(false)
+                        return
+                    }
+                    
+                    self.fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
+                    self.mbMelGan = try? MBMelGan(url: melganUrl)
+                    self.modelMap[key] = true
+                    onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
+                }
+            } else {
+                let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")
+                let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")
+                guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
+                    print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                    onCompleted(false)
+                    return
+                }
+                
+                fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
+                mbMelGan = try? MBMelGan(url: melganUrl)
+                modelMap[key] = true
+                onCompleted(fastSpeech2 != nil && mbMelGan != nil)
             }
-            
-            fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
-            mbMelGan = try? MBMelGan(url: melganUrl)
-            modelMap[key] = true
+        } else {
+            onCompleted(true)
         }
     }
 
     public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         let operation = BlockOperation {
-            self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel)
-            
-            guard let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-                print("model initialzed failed")
-                return
-            }
-            
-            do {
-                let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
-                let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-                let arr = duration.map( { Double($0) })
-                DispatchQueue.main {
-                    result(arr)
+            self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
+                guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+                    print("model initialzed failed")
+                    return
                 }
                 
-                let data = try mbMelGan.getAudio(input: melSpectrogram[0])
-                print(data)
-                if MlProcessorStrategy.shared().delegate != nil {
-                    MlProcessorStrategy.shared().delegate?.playBuffer(data)
-                } else {
-                    self.playBuffer(data: data, sampleRate: sampleRate)
+                do {
+                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
+                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
+                    let arr = duration.map( { Double($0) })
+                    DispatchQueue.main {
+                        result(arr)
+                    }
+                    
+                    let data = try mbMelGan.getAudio(input: melSpectrogram[0])
+                    print(data)
+                    if MlProcessorStrategy.shared().delegate != nil {
+                        MlProcessorStrategy.shared().delegate?.playBuffer(data)
+                    } else {
+                        self.playBuffer(data: data, sampleRate: sampleRate)
+                    }
                 }
-            }
-            catch {
-                print(error)
+                catch {
+                    print(error)
+                }
             }
         }
         

@@ -1,5 +1,5 @@
 @protocol ProcessorStrategyDelegate <NSObject>
-- (NSURL*)urlFor:(NSString*)imagePath;
+- (void)urlsFor:(NSArray*)models withComplete:(void(^)(NSArray*))onCompleted;
 - (void)playBuffer:(NSData*) audioBuffer;
 @end
 
