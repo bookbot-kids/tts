@@ -24,16 +24,26 @@ class TtsManager {
         if(workerMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
-                    val fastspeech = ProcessorHolder.processorStrategy?.initModel(fastSpeechModel) ?: copyFile(context, fastSpeechModel)
-                    val vocoder = ProcessorHolder.processorStrategy?.initModel(melganModel) ?: copyFile(context, melganModel)
-                    for(worker in workerMap.values) {
-                        worker?.interrupt()
+                    @Suppress("SpellCheckingInspection")
+                    val listener = fun (fastspeech: String, vocoder: String) {
+                        for(worker in workerMap.values) {
+                            worker?.interrupt()
+                        }
+
+                        workerMap.clear()
+                        mWorker = InputTask(fastspeech, vocoder)
+                        workerMap[key] = mWorker
+                        callback?.invoke()
                     }
 
-                    workerMap.clear()
-                    mWorker = InputTask(fastspeech, vocoder)
-                    workerMap[key] = mWorker
-                    callback?.invoke()
+                    if(ProcessorHolder.processorStrategy != null) {
+                        ProcessorHolder.processorStrategy?.initModel(arrayListOf(fastSpeechModel, melganModel)) {
+                            listener(it[0], it[1])
+                        }
+                    } else {
+                        listener(copyFile(context, fastSpeechModel), copyFile(context, melganModel))
+                    }
+
                 } catch (e: Exception) {
                     Log.e(TAG, "mWorker init failed", e)
                 }
