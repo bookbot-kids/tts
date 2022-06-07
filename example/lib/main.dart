@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> {
       Filter.equals('pluralInUse', true),
     ]));
 
-    final records = await _storeRef.find(_db, finder: finder);
+    var records = await _storeRef.find(_db, finder: finder);
     await _db.transaction((db) async {
       for (final requeryRecord in records) {
         final data = requeryRecord.value;
@@ -107,8 +107,24 @@ class _MyAppState extends State<MyApp> {
       }
     });
 
-    await _db.close();
+    // remove unused
+    records = await _storeRef.find(_db,
+        finder: Finder(
+            filter: Filter.and([
+          Filter.notEquals('inUse', true),
+          Filter.notEquals('pluralInUse', true),
+        ])));
+    await _db.transaction((db) async {
+      for (final requeryRecord in records) {
+        final data = requeryRecord.value;
+        final id = data['id'] as String;
+        final findingRecord = _storeRef.record(id);
+        final deleteResult = await findingRecord.delete(db);
+        print('remove word $id $deleteResult');
+      }
+    });
 
+    await _db.close();
     print('done');
   }
 
