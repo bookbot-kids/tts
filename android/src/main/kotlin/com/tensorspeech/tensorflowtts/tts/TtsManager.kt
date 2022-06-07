@@ -19,6 +19,7 @@ class TtsManager {
     private var mWorker: InputTask? = null
     private val workerMap = mutableMapOf<String, InputTask?>()
     private val players = mutableMapOf<Int, TtsBufferPlayer>()
+    private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
     fun init(context: Context, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(workerMap[key] == null) {
@@ -110,7 +111,7 @@ class TtsManager {
             players[playerKey]
         }
 
-        ThreadPoolManager.instance.execute {
+        threadPool.execute {
             mWorker?.processInput(inputIds, speed, speakerId, player, result)
         }
     }
