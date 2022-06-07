@@ -252,8 +252,9 @@ ${wirdInputIds.join('; ')}
   }
 
   Future<void> init() async {
-    await _ttsPlugin.loadCsvMapping('assets/tts_mapping.csv');
-    await _ttsPlugin.loadJsonMapping('assets/id_processor.json',
+    await _ttsPlugin.loadIPAsMapping('assets/tts_mapping.csv');
+    await _ttsPlugin.loadCharactersMapping(
+        'assets/id_processor.json', 'assets/chars_to_mouth.csv',
         language: 'id');
 
     // copy word db into storage
