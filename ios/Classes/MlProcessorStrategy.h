@@ -1,6 +1,6 @@
 @protocol ProcessorStrategyDelegate <NSObject>
 - (void)urlsFor:(NSArray*)models withComplete:(void(^)(NSArray*))onCompleted;
-- (void)playBuffer:(NSData*) audioBuffer;
+- (void)playBuffer:(NSData*) audioBuffer withSampleRate: (int) sampleRate;
 @end
 
 @interface MlProcessorStrategy : NSObject

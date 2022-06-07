@@ -85,7 +85,7 @@ public class TTS {
                     let data = try mbMelGan.getAudio(input: melSpectrogram[0])
                     print(data)
                     if MlProcessorStrategy.shared().delegate != nil {
-                        MlProcessorStrategy.shared().delegate?.playBuffer(data)
+                        MlProcessorStrategy.shared().delegate?.playBuffer(data, withSampleRate: Int32(sampleRate))
                     } else {
                         self.playBuffer(data: data, sampleRate: sampleRate)
                     }
