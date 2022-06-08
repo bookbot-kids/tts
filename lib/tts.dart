@@ -21,7 +21,11 @@ class Tts {
   Map<String, Set<String>> allIPAs = {};
   static const silent = '_';
 
-  Future<List> speakText(RequestInfo requestInfo) async {
+  Future<List> speakText(
+    RequestInfo requestInfo, {
+    bool cleanUpVisemes = true,
+    double minDurationInSecond = 0.05,
+  }) async {
     if (requestInfo.inputIds.isEmpty) {
       requestInfo.inputIds.add(requestInfo.eos);
     } else {
@@ -43,10 +47,36 @@ class Tts {
       result.add({
         'duration': dur * requestInfo.hopSize / requestInfo.sampleRate,
         'token': token,
+        'enabled': true,
       });
       dur += output[i];
     }
-    return result;
+
+    return cleanUpVisemes
+        ? normalizeVisemes(result, minDurationInSecond: minDurationInSecond)
+        : result;
+  }
+
+  /// Disable visemes that are too short by `enabled` key
+  List normalizeVisemes(
+    List visemes, {
+    double minDurationInSecond = 0.05,
+  }) {
+    // ignore the last eos by length - 2
+    for (var i = visemes.length - 2; i >= 0; i--) {
+      double duration = visemes[i]['duration'];
+      // remove duration less than min
+      if (i - 1 >= 0) {
+        String previousViseme = visemes[i - 1]['token'];
+        double previousDuration = visemes[i - 1]['duration'];
+        final extra = duration - previousDuration;
+        if (extra < minDurationInSecond && previousViseme != silent) {
+          visemes[i]['enabled'] = false;
+        }
+      }
+    }
+
+    return visemes;
   }
 
   Future<void> initModels(String fastSpeechModel, String melganModel) {

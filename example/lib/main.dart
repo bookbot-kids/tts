@@ -35,7 +35,8 @@ class _MyAppState extends State<MyApp> {
   bool _isRunning = false;
   // 'hello world'    'h ə l oʊ   w ɝ r l d'     '53 20 64 70 91 45 64 37'
   static const _defaultEnText = 'library aback ables';
-  static const _defaultIdText = 'halo, apa kabar?';
+  static const _defaultIdText =
+      'Halo, Nama saya BUKBOT. Saya akan mengajakmu berkeliling ke Perpustakaan BUKBOT. Perpustakaan BUKBOT memiliki berbagai macam buku yang levelnya berbeda-beda.';
   final _textController = TextEditingController()..text = _defaultEnText;
   var _result = '';
   late Database _db;
