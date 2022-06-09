@@ -6,34 +6,32 @@ import android.util.Log
 import com.bookbot.tts.ProcessorHolder
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
+import com.tensorspeech.tensorflowtts.module.FastSpeech2
+import com.tensorspeech.tensorflowtts.module.MBMelGan
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.Future
 
 /**
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
  * Created 2020-07-28 14:25
  */
 class TtsManager {
-    private var mWorker: InputTask? = null
-    private val workerMap = mutableMapOf<String, InputTask?>()
     private val players = mutableMapOf<Int, TtsBufferPlayer>()
     private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
+    private var runningTask: Future<*>? = null
+    private val modelMap = mutableMapOf<String, Pair<FastSpeech2, MBMelGan>>()
+    private val tasks = mutableListOf<InputTask>()
     fun init(context: Context, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
-        if(workerMap[key] == null) {
+        if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
                     @Suppress("SpellCheckingInspection")
                     val listener = fun (fastspeech: String, vocoder: String) {
-                        for(worker in workerMap.values) {
-                            worker?.interrupt()
-                        }
-
-                        workerMap.clear()
-                        mWorker = InputTask(fastspeech, vocoder)
-                        workerMap[key] = mWorker
+                        modelMap[key] = Pair(FastSpeech2(fastspeech), MBMelGan(vocoder))
                         callback?.invoke()
                     }
 
@@ -92,10 +90,13 @@ class TtsManager {
     }
 
     fun stopTts() {
-        mWorker?.interrupt()
+        runningTask?.cancel(true)
+        tasks.forEach {
+            it.stop = true
+        }
     }
 
-    fun speak(inputIds: List<Int>, speed: Float, interrupt: Boolean, sampleRate: Int, hopSize: Int, speakerId: Int = 0, result: MethodChannel.Result) {
+    fun speak(fastSpeechModel: String, melganModel: String, inputIds: List<Int>, speed: Float, interrupt: Boolean, sampleRate: Int, hopSize: Int, speakerId: Int = 0, result: MethodChannel.Result) {
         if (interrupt) {
             stopTts()
         }
@@ -111,9 +112,12 @@ class TtsManager {
             players[playerKey]
         }
 
-        threadPool.execute {
-            mWorker?.processInput(inputIds, speed, speakerId, player, result)
-        }
+        val key = fastSpeechModel + melganModel
+        val processors = modelMap[key] ?: return
+        tasks.clear()
+        val task = InputTask(processors.first, processors.second, inputIds, speed, speakerId, player, result )
+        tasks.add(task)
+        runningTask = threadPool.submit(task)
     }
 
     companion object {

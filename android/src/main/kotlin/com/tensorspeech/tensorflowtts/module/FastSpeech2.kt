@@ -16,19 +16,24 @@ import java.util.*
  */
 class FastSpeech2(modulePath: String) : AbstractModule() {
     private lateinit var mModule: Interpreter
-    fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int): Pair<TensorBuffer, IntArray> {
+    fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int, isCancelled: () -> Boolean): Pair<TensorBuffer, IntArray>? {
         Log.d(TAG, "input id length: " + inputIds.size)
+        if(isCancelled()) return null
         mModule.resizeInput(0, intArrayOf(1, inputIds.size))
+
+        if(isCancelled()) return null
         mModule.allocateTensors()
+        if(isCancelled()) return null
         @SuppressLint("UseSparseArrays") val outputMap: MutableMap<Int, Any> = HashMap()
         val outputBuffer = FloatBuffer.allocate(350000)
         val outputBuffer3 = IntBuffer.allocate(inputIds.size)
+        if(isCancelled()) return null
         outputMap[0] = outputBuffer
         outputMap[2] = outputBuffer3
         val inputs = Array(1) { IntArray(inputIds.size) }
         inputs[0] = inputIds
-        val time = System.currentTimeMillis()
 
+        if(isCancelled()) return null
         mModule.runForMultipleInputsOutputs(
             arrayOf<Any>(
                 inputs,
@@ -39,13 +44,19 @@ class FastSpeech2(modulePath: String) : AbstractModule() {
             ),
             outputMap
         )
-        Log.d(TAG, "time cost: " + (System.currentTimeMillis() - time))
+
+        if(isCancelled()) return null
         val size = mModule.getOutputTensor(0).shape()[2]
+        if(isCancelled()) return null
         val shape = intArrayOf(1, outputBuffer.position() / size, size)
         val spectrogram1 = TensorBuffer.createFixedSize(shape, DataType.FLOAT32)
         val outputArray = FloatArray(outputBuffer.position())
+
+        if(isCancelled()) return null
         outputBuffer.rewind()
         outputBuffer[outputArray]
+
+        if(isCancelled()) return null
         spectrogram1.loadArray(outputArray)
         outputBuffer3.position()
         val duration = outputBuffer3.array()

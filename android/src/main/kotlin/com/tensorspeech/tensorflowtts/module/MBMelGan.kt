@@ -13,16 +13,19 @@ import java.util.*
  */
 class MBMelGan(modulePath: String) : AbstractModule() {
     private lateinit var mModule: Interpreter
-    fun getAudio(input: TensorBuffer): FloatArray {
+    fun getAudio(input: TensorBuffer, isCancelled: () -> Boolean): FloatArray? {
+        if(isCancelled()) return null
         mModule.resizeInput(0, input.shape)
         mModule.allocateTensors()
+        if(isCancelled()) return null
         val outputBuffer = FloatBuffer.allocate(350000)
-        val time = System.currentTimeMillis()
+        if(isCancelled()) return null
         mModule.run(input.buffer, outputBuffer)
-        Log.d(TAG, "time cost: " + (System.currentTimeMillis() - time))
+        if(isCancelled()) return null
         val audioArray = FloatArray(outputBuffer.position())
         outputBuffer.rewind()
         outputBuffer[audioArray]
+        if(isCancelled()) return null
         return audioArray
     }
 

@@ -4,7 +4,7 @@ import com.tensorspeech.tensorflowtts.tts.TtsBufferPlayer
 
 interface ProcessorStrategy {
     fun initModel(modelPaths: List<String>, onCompleted: (modelOutputs: List<String>) -> Unit)
-    fun playBuffer(player: TtsBufferPlayer, audio: FloatArray): Boolean?
+    fun playBuffer(player: TtsBufferPlayer, audio: FloatArray, isCancelled: () -> Boolean): Boolean?
 }
 
 /// The singleton class use to share strategy across plugin & target app

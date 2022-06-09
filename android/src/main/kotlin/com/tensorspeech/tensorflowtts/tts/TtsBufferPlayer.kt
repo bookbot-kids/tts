@@ -32,23 +32,23 @@ class TtsBufferPlayer(val sampleRate: Int) {
     @Volatile var isInterrupt = false
     var task: Future<*>? = null
 
-    fun play(inputIds: List<Int>, audio: FloatArray) {
+    fun play(inputIds: List<Int>, audio: FloatArray, isCancelled: () -> Boolean) {
         Log.d(TAG, "start playing: $inputIds, audio ${audio.size}")
-        if(isPlaying) {
+        if(isPlaying || isCancelled()) {
             isInterrupt = true
             task?.cancel(true)
         }
 
-        submitTask(audio)
+        submitTask(audio, isCancelled)
     }
 
-    private fun submitTask(audio: FloatArray) {
+    private fun submitTask(audio: FloatArray, isCancelled: () -> Boolean) {
         task = threadPool.submit {
-            if(ProcessorHolder.processorStrategy?.playBuffer(this, audio) != true) {
+            if(ProcessorHolder.processorStrategy?.playBuffer(this, audio, isCancelled) != true) {
                 isPlaying = true
                 var index = 0
                 audioTrack.play()
-                while (index < audio.size && !isInterrupt) {
+                while (index < audio.size && !isInterrupt && !isCancelled()) {
                     val buffer = min(bufferSize, audio.size - index)
                     audioTrack.write(
                         audio,
