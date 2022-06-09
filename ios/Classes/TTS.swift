@@ -136,7 +136,9 @@ public class TTS {
                     
                     guard !isCancelled, !data.isEmpty else { return }
                     if MlProcessorStrategy.shared().delegate != nil {
-                        MlProcessorStrategy.shared().delegate?.playBuffer(data, withSampleRate: Int32(sampleRate))
+                        MlProcessorStrategy.shared().delegate?.playBuffer(data, withSampleRate: Int32(sampleRate), withCancelled: {
+                            return self.isCancelled
+                        })
                     } else {
                         self.playBuffer(data: data, sampleRate: sampleRate)
                     }
