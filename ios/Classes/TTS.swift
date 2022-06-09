@@ -67,23 +67,74 @@ public class TTS {
     }
 
     public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
-        let operation = BlockOperation {
-            self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
-                guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-                    print("model initialzed failed")
-                    return
-                }
-                
+        
+        self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
+            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+                print("model initialzed failed")
+                return
+            }
+            
+            self.operationQueue.cancelAllOperations()
+            let requestTask = RequesTask(fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
+            self.operationQueue.addOperation(requestTask)
+        }
+    }
+    
+    private func initAudioEngine() {
+        engine = AVAudioEngine()
+        player = AVAudioPlayerNode()
+    }
+    
+    class RequesTask: Operation {
+        let fastSpeech2: FastSpeech2
+        let mbMelGan: MBMelGan
+        let inputIds: [Int32]
+        let speakerId: Int32
+        let speed: Float
+        let sampleRate: Int
+        let hopSize: Int
+        let result: FlutterResult
+        let engine: AVAudioEngine?
+        let player: AVAudioPlayerNode?
+        
+        init(fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
+            self.fastSpeech2 = fastSpeech2
+            self.mbMelGan = mbMelGan
+            self.inputIds = inputIds
+            self.speakerId = speakerId
+            self.speed = speed
+            self.sampleRate = sampleRate
+            self.hopSize = hopSize
+            self.result = result
+            self.engine = engine
+            self.player = player
+        }
+        
+        override func main() {
+               guard !isCancelled else { return }
+               print("Running..")
+            
                 do {
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId)
+                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId, isCancelled: {
+                        return isCancelled
+                    })
+                    
+                    guard melSpectrogram.count == 2 else { return }
+                    
+                    guard !isCancelled else { return }
                     let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
                     let arr = duration.map( { Double($0) })
+                    guard !isCancelled else { return }
                     DispatchQueue.main {
-                        result(arr)
+                        self.result(arr)
                     }
                     
-                    let data = try mbMelGan.getAudio(input: melSpectrogram[0])
-                    print(data)
+                    guard !isCancelled else { return }
+                    let data = try mbMelGan.getAudio(input: melSpectrogram[0], isCancelled: {
+                        return isCancelled
+                    })
+                    
+                    guard !isCancelled, !data.isEmpty else { return }
                     if MlProcessorStrategy.shared().delegate != nil {
                         MlProcessorStrategy.shared().delegate?.playBuffer(data, withSampleRate: Int32(sampleRate))
                     } else {
@@ -93,45 +144,48 @@ public class TTS {
                 catch {
                     print(error)
                 }
+           }
+        
+        private func playBuffer(data: Data, sampleRate: Int) {
+            guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
+                print("engine does not initialize yet")
+                return
+            }
+            
+            guard !isCancelled else { return }
+            let mixer = engine.mainMixerNode
+            engine.attach(player)
+            engine.connect(player, to: mixer, format: audioFormat)
+            
+            do {
+                engine.prepare()
+                try engine.start()
+            } catch {
+                print("Error info: \(error)")
+            }
+            
+            guard !isCancelled else { return }
+            guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
+               return
+            }
+            
+            guard !isCancelled else { return }
+            guard player.engine?.isRunning == true else {
+                print("engine does not start yet")
+                return
+            }
+            
+            guard !isCancelled else { return }
+            player.play()
+            guard !isCancelled else { return }
+            player.scheduleBuffer(buffer) {
+                if self.isCancelled {
+                    DispatchQueue.main {
+                        player.stop()
+                    }
+                }
             }
         }
-        
-        self.operationQueue.addOperation(operation)
-    }
-    
-    private func initAudioEngine() {
-        engine = AVAudioEngine()
-        player = AVAudioPlayerNode()
-    }
-    
-    private func playBuffer(data: Data, sampleRate: Int) {
-        guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
-            print("engine does not initialize yet")
-            return
-        }
-        
-        let mixer = engine.mainMixerNode
-        engine.attach(player)
-        engine.connect(player, to: mixer, format: audioFormat)
-        
-        do {
-            engine.prepare()
-            try engine.start()
-        } catch {
-            print("Error info: \(error)")
-        }
-        
-        guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
-           return
-        }
-        
-        guard player.engine?.isRunning == true else {
-            print("engine does not start yet")
-            return
-        }
-        
-        player.play()
-        player.scheduleBuffer(buffer, completionHandler: nil)
     }
 }
 

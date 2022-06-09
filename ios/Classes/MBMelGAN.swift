@@ -13,20 +13,38 @@ class MBMelGan {
     
     init(url: URL) throws {
         var options = Interpreter.Options()
-        options.threadCount = 5
+        options.threadCount = 1
         interpreter = try Interpreter(modelPath: url.path, options: options)
     }
     
-    func getAudio(input: Tensor) throws -> Data {
+    func getAudio(input: Tensor, isCancelled: (() -> Bool)) throws -> Data {
+        if isCancelled() {
+            return Data()
+        }
+        
         try interpreter.resizeInput(at: 0, to: input.shape)
+        
+        if isCancelled() {
+            return Data()
+        }
+        
         try interpreter.allocateTensors()
+        
+        if isCancelled() {
+            return Data()
+        }
         
         try interpreter.copy(input.data, toInputAt: 0)
 
-        let t0 = Date()
+        if isCancelled() {
+            return Data()
+        }
+        
         try interpreter.invoke()
-        print("mbmelgan: \(Date().timeIntervalSince(t0))s")
 
+        if isCancelled() {
+            return Data()
+        }
         return try interpreter.output(at: 0).data
     }
 }
