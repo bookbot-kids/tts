@@ -10,6 +10,11 @@ import AVFoundation
 import TensorFlowLite
 import Flutter
 
+public class BufferHolder {
+    static let shared: BufferHolder = BufferHolder()
+    var audioBuffers = Dictionary<String, Data>()
+}
+
 public class TTS {
     var fastSpeech2: FastSpeech2?
     var mbMelGan: MBMelGan?
@@ -17,8 +22,6 @@ public class TTS {
     
     private var engine: AVAudioEngine?
     private var player: AVAudioPlayerNode?
-    private var audioBuffers = Dictionary<String, Data>()
-
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
     private let sampleBufferAudioRenderer = AVSampleBufferAudioRenderer()
@@ -97,7 +100,7 @@ public class TTS {
             }
             
             self.operationQueue.cancelAllOperations()
-            let requestTask = GenerateTask(requestId: requestId, audioBuffers: self.audioBuffers, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
+            let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
@@ -105,7 +108,7 @@ public class TTS {
     public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         
         self.audioOperationQueue.cancelAllOperations()
-        let requestTask = PlayVoiceTask(requestId: requestId, audioBuffers: self.audioBuffers, sampleRate: sampleRate, player: self.player, engine: self.engine, result: result)
+        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, result: result)
         self.audioOperationQueue.addOperation(requestTask)
     }
     
@@ -121,9 +124,8 @@ public class TTS {
         let engine: AVAudioEngine?
         let player: AVAudioPlayerNode?
         let requestId: String
-        var audioBuffers: Dictionary<String, Data>
         
-        init(requestId: String, audioBuffers: Dictionary<String, Data> , fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
+        init(requestId: String, fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.fastSpeech2 = fastSpeech2
             self.mbMelGan = mbMelGan
@@ -135,7 +137,6 @@ public class TTS {
             self.result = result
             self.engine = engine
             self.player = player
-            self.audioBuffers = audioBuffers
         }
         
         func onCancelled() {
@@ -147,7 +148,7 @@ public class TTS {
                    onCancelled()
                    return
                }
-               print("Running..")
+               print("Generate request \(requestId)")
             
                 do {
                     let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId, isCancelled: {
@@ -173,7 +174,7 @@ public class TTS {
                         return
                     }
                     
-                    audioBuffers[requestId] = data
+                    BufferHolder.shared.audioBuffers[requestId] = data
                     let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
                     let arr = duration.map( { Double($0) })
                     DispatchQueue.main {
@@ -191,14 +192,12 @@ public class TTS {
         let player: AVAudioPlayerNode?
         let requestId: String
         let result: FlutterResult
-        var audioBuffers: Dictionary<String, Data>
         let sampleRate: Int
-        init(requestId: String, audioBuffers: Dictionary<String, Data>, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, result: @escaping FlutterResult) {
+        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.result = result
             self.engine = engine
             self.player = player
-            self.audioBuffers = audioBuffers
             self.sampleRate = sampleRate
         }
         
@@ -211,8 +210,11 @@ public class TTS {
                    onCancelled()
                    return
                }
-               print("playing..")
-            guard let buffer = audioBuffers[requestId] else {
+               
+            print("playing voice request \(requestId)")
+            
+            guard let buffer = BufferHolder.shared.audioBuffers[requestId] else {
+                print("buffer is null")
                 result(nil)
                 return
             }
@@ -225,7 +227,7 @@ public class TTS {
                     
                     return self.isCancelled
                 }, withCompleted: {
-                    self.audioBuffers.removeValue(forKey: self.requestId)
+                    BufferHolder.shared.audioBuffers.removeValue(forKey: self.requestId)
                     self.result(nil)
                 })
             } else {
