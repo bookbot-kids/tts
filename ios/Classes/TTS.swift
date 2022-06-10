@@ -120,19 +120,17 @@ public class TTS {
                     })
                     
                     guard melSpectrogram.count == 2 else { return }
-                    
-                    guard !isCancelled else { return }
-                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-                    let arr = duration.map( { Double($0) })
-                    guard !isCancelled else { return }
-                    DispatchQueue.main {
-                        self.result(arr)
-                    }
-                    
                     guard !isCancelled else { return }
                     let data = try mbMelGan.getAudio(input: melSpectrogram[0], isCancelled: {
                         return isCancelled
                     })
+                    
+                    guard !isCancelled, !data.isEmpty else { return }
+                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
+                    let arr = duration.map( { Double($0) })
+                    DispatchQueue.main {
+                        self.result(arr)
+                    }
                     
                     guard !isCancelled, !data.isEmpty else { return }
                     if MlProcessorStrategy.shared().delegate != nil {

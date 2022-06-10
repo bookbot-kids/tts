@@ -20,21 +20,16 @@ class InputTask(private val fastspeech: FastSpeech2, private val mbMelGan: MBMel
         val isStopping: () -> Boolean = {
             stop || Thread.interrupted()
         }
-
+        if (isStopping())  return
         val output =
             fastspeech.getMelSpectrogram(inputIds.toIntArray(), speed, speakerId, isStopping)
                 ?: return
 
-        result.success(output.second.map { it.toDouble() })
-        if (isStopping()) {
-            return
-        }
-
+        if (isStopping())  return
         val audioData = mbMelGan.getAudio(output.first, isStopping) ?: return
-        if (isStopping()) {
-            return
-        }
-
+        if (isStopping())  return
+        result.success(output.second.map { it.toDouble() })
+        if (isStopping())  return
         player?.play(inputIds, audioData, isStopping)
     }
 }
