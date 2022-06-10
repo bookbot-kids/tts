@@ -66,6 +66,28 @@ class TtsBufferPlayer(val sampleRate: Int) {
         }
     }
 
+    fun playBuffer(audio: FloatArray, isCancelled: () -> Boolean) {
+        if(ProcessorHolder.processorStrategy?.playBuffer(this, audio, isCancelled) != true) {
+            isPlaying = true
+            var index = 0
+            audioTrack.play()
+            while (index < audio.size && !isInterrupt && !isCancelled()) {
+                val buffer = min(bufferSize, audio.size - index)
+                audioTrack.write(
+                    audio,
+                    index,
+                    buffer,
+                    AudioTrack.WRITE_BLOCKING
+                )
+                index += bufferSize
+                Log.d(TAG, "play $index")
+            }
+            isPlaying = false
+            isInterrupt = false
+            Log.d(TAG, "play completed")
+        }
+    }
+
     companion object {
         private const val TAG = "TtsPlayer"
         private const val FORMAT = AudioFormat.ENCODING_PCM_FLOAT

@@ -27,6 +27,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
 
   @Suppress("UNCHECKED_CAST")
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    val wrapper = TtsMethodResultWrapper(result)
     when(call.method){
       "initModels" -> {
         pluginBinding?.applicationContext?.let { context ->
@@ -34,26 +35,38 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val fastSpeechModel = args["fastSpeechModel"] as String
           val melganModel = args["melganModel"] as String
           TtsManager.instance.init(context, fastSpeechModel, melganModel) {
-            result.success(null)
+            wrapper.success(null)
           }
         }
       }
       "speakText" -> {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
-          val fastSpeechModel = args["fastSpeechModel"] as String
-          val melganModel = args["melganModel"] as String
-          val inputIds = args["inputIds"] as List<*>
-          val speed = args["speed"] as Double
-          val speakerId = args["speakerId"] as Int
-          val sampleRate = args["sampleRate"] as Int
-          val hopSize = args["hopSize"] as Int
-          TtsManager.instance.init(context, fastSpeechModel, melganModel) {
-            TtsManager.instance.speak(fastSpeechModel, melganModel,  inputIds as List<Int>, speed.toFloat(), true, sampleRate, hopSize, speakerId, result)
+          val request = RequestInfo(args, wrapper)
+          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+            TtsManager.instance.speak(request)
           }
         }
       }
-      else -> result.notImplemented()
+      "playVoice" -> {
+        pluginBinding?.applicationContext?.let { context ->
+          val args = call.arguments as Map<*, *>
+          val request = RequestInfo(args, wrapper)
+          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+            TtsManager.instance.playVoice(request)
+          }
+        }
+      }
+      "generateVoice"-> {
+        pluginBinding?.applicationContext?.let { context ->
+          val args = call.arguments as Map<*, *>
+          val request = RequestInfo(args, wrapper)
+          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+            TtsManager.instance.generateVoice(request)
+          }
+        }
+      }
+      else -> wrapper.notImplemented()
     }
   }
 

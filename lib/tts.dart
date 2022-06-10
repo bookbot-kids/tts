@@ -57,6 +57,46 @@ class Tts {
         : result;
   }
 
+  Future<void> playVoice(RequestInfo requestInfo) async {
+    await TtsPlatform.instance.playVoice(requestInfo);
+  }
+
+  Future<List> generateVoice(
+    RequestInfo requestInfo, {
+    bool cleanUpVisemes = true,
+    double minDurationInSecond = 0.05,
+  }) async {
+    if (requestInfo.inputIds.isEmpty) {
+      requestInfo.inputIds.add(requestInfo.eos);
+    } else {
+      if (requestInfo.useDot &&
+          requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
+              requestInfo.dot) {
+        requestInfo.inputIds.add(requestInfo.dot);
+      }
+
+      requestInfo.inputIds.add(requestInfo.eos);
+    }
+
+    final output = await TtsPlatform.instance.generateVoice(requestInfo);
+    final result = [];
+    var dur = 0.0;
+    for (var i = 0; i < output.length; i++) {
+      final token =
+          i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
+      result.add({
+        'duration': dur * requestInfo.hopSize / requestInfo.sampleRate,
+        'token': token,
+        'enabled': true,
+      });
+      dur += output[i];
+    }
+
+    return cleanUpVisemes
+        ? normalizeVisemes(result, minDurationInSecond: minDurationInSecond)
+        : result;
+  }
+
   /// Disable visemes that are too short by `enabled` key
   List normalizeVisemes(
     List visemes, {

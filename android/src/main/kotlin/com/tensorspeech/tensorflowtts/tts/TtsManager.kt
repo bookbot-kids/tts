@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.bookbot.tts.ProcessorHolder
+import com.bookbot.tts.RequestInfo
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
 import com.tensorspeech.tensorflowtts.module.FastSpeech2
 import com.tensorspeech.tensorflowtts.module.MBMelGan
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
-import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.Future
@@ -21,9 +21,13 @@ import java.util.concurrent.Future
 class TtsManager {
     private val players = mutableMapOf<Int, TtsBufferPlayer>()
     private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
+    private val audioPlayerPool = ThreadPoolManager.instance.getSingleExecutor("tts")
     private var runningTask: Future<*>? = null
     private val modelMap = mutableMapOf<String, Pair<FastSpeech2, MBMelGan>>()
     private val tasks = mutableListOf<InputTask>()
+    private val generateTasks = mutableListOf<GenerateTask>()
+    private val playerTasks = mutableListOf<PlayVoiceTask>()
+    private val audioBuffers =  mutableMapOf<String, FloatArray>()
     fun init(context: Context, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(modelMap[key] == null) {
@@ -96,11 +100,7 @@ class TtsManager {
         }
     }
 
-    fun speak(fastSpeechModel: String, melganModel: String, inputIds: List<Int>, speed: Float, interrupt: Boolean, sampleRate: Int, hopSize: Int, speakerId: Int = 0, result: MethodChannel.Result) {
-        if (interrupt) {
-            stopTts()
-        }
-
+    private fun getPlayer(sampleRate: Int, hopSize: Int): TtsBufferPlayer? {
         val playerKey = sampleRate + hopSize
         val player = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             players.putIfAbsent(playerKey, TtsBufferPlayer(sampleRate))
@@ -112,11 +112,63 @@ class TtsManager {
             players[playerKey]
         }
 
-        val key = fastSpeechModel + melganModel
+        return player
+    }
+
+    fun speak(request: RequestInfo) {
+        stopTts()
+        val player = getPlayer(request.sampleRate , request.hopSize)
+        val key = request.fastSpeechModel + request.melganModel
         val processors = modelMap[key] ?: return
         tasks.clear()
-        val task = InputTask(processors.first, processors.second, inputIds, speed, speakerId, player, result )
+        val task = InputTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, player, request.result )
         tasks.add(task)
+        runningTask = threadPool.submit(task)
+    }
+
+    fun playVoice(request: RequestInfo) {
+        val buffer = audioBuffers[request.requestId]
+        if (buffer != null) {
+            val player = getPlayer(request.sampleRate , request.hopSize) ?: return
+            val onCancelled: () -> Unit = {
+                request.result.success(null)
+            }
+
+            val onComplete: () -> Unit = {
+                audioBuffers.remove(request.requestId)
+                request.result.success(null)
+            }
+
+            playerTasks.forEach {
+                it.stop = true
+            }
+
+            val audioTask = PlayVoiceTask(player, buffer, onCancelled, onComplete)
+            playerTasks.add(audioTask)
+            audioPlayerPool.submit(audioTask)
+        } else {
+            request.result.success(null)
+        }
+    }
+
+    fun generateVoice(request: RequestInfo) {
+        val key = request.fastSpeechModel + request.melganModel
+        val processors = modelMap[key] ?: return
+        val onComplete: (buffer: FloatArray, durations: List<Double>) -> Unit = { buff, dur ->
+            audioBuffers[request.requestId] = buff
+            request.result.success(dur)
+        }
+
+        val onCancelled: () -> Unit = {
+            request.result.success(listOf<Double>())
+        }
+
+        generateTasks.forEach {
+            it.stop = true
+        }
+
+        val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)
+        generateTasks.add(task)
         runningTask = threadPool.submit(task)
     }
 

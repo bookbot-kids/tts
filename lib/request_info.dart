@@ -25,6 +25,7 @@ class RequestInfo {
   int hopSize;
   int eos;
   int dot;
+  String requestId;
 
   RequestInfo(
     this.fastSpeechModel,
@@ -38,6 +39,7 @@ class RequestInfo {
     this.hopSize = Parameters.enHopSize,
     this.eos = Parameters.enEos,
     this.dot = Parameters.defaultDot,
+    this.requestId = '',
   });
 }
 
@@ -54,5 +56,6 @@ class IdRequestInfo extends RequestInfo {
     super.speakerId = 0,
     super.useDot = false,
     super.dot = Parameters.defaultDot,
+    super.requestId = '',
   });
 }

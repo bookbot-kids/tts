@@ -30,6 +30,30 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let hopSize = argurments["hopSize"] as! Int
             tts.speak(fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
             break
+          case "generateVoice":
+            let argurments = call.arguments as! Dictionary<String, Any>
+            let fastSpeechModel = argurments["fastSpeechModel"] as! String
+            let melganModel = argurments["melganModel"] as! String
+            let inputIds = argurments["inputIds"] as! Array<Int32>
+            let speed = argurments["speed"] as! NSNumber
+            let speakerId = argurments["speakerId"] as! Int
+            let sampleRate = argurments["sampleRate"] as! Int
+            let hopSize = argurments["hopSize"] as! Int
+            let requestId = argurments["requestId"] as! String
+          tts.generateVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
+            break
+          case "playVoice":
+            let argurments = call.arguments as! Dictionary<String, Any>
+            let fastSpeechModel = argurments["fastSpeechModel"] as! String
+            let melganModel = argurments["melganModel"] as! String
+            let inputIds = argurments["inputIds"] as! Array<Int32>
+            let speed = argurments["speed"] as! NSNumber
+            let speakerId = argurments["speakerId"] as! Int
+            let sampleRate = argurments["sampleRate"] as! Int
+            let hopSize = argurments["hopSize"] as! Int
+            let requestId = argurments["requestId"] as! String
+          tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
+            break
           default :
               result(FlutterMethodNotImplemented)
       }

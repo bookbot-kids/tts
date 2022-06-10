@@ -20,6 +20,7 @@ class MethodChannelTts extends TtsPlatform {
       'speakerId': requestInfo.speakerId,
       'sampleRate': requestInfo.sampleRate,
       'hopSize': requestInfo.hopSize,
+      'requestId': requestInfo.requestId,
     });
   }
 
@@ -28,6 +29,34 @@ class MethodChannelTts extends TtsPlatform {
     await methodChannel.invokeMethod('initModels', {
       'fastSpeechModel': fastSpeechModel,
       'melganModel': melganModel,
+    });
+  }
+
+  @override
+  Future<List> playVoice(RequestInfo requestInfo) async {
+    return await methodChannel.invokeMethod('playVoice', {
+      'fastSpeechModel': requestInfo.fastSpeechModel,
+      'melganModel': requestInfo.melganModel,
+      'inputIds': requestInfo.inputIds,
+      'speed': requestInfo.speed,
+      'speakerId': requestInfo.speakerId,
+      'sampleRate': requestInfo.sampleRate,
+      'hopSize': requestInfo.hopSize,
+      'requestId': requestInfo.requestId,
+    });
+  }
+
+  @override
+  Future<List> generateVoice(RequestInfo requestInfo) async {
+    return await methodChannel.invokeMethod('generateVoice', {
+      'fastSpeechModel': requestInfo.fastSpeechModel,
+      'melganModel': requestInfo.melganModel,
+      'inputIds': requestInfo.inputIds,
+      'speed': requestInfo.speed,
+      'speakerId': requestInfo.speakerId,
+      'sampleRate': requestInfo.sampleRate,
+      'hopSize': requestInfo.hopSize,
+      'requestId': requestInfo.requestId,
     });
   }
 }

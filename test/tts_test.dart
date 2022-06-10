@@ -15,6 +15,16 @@ class MockTtsPlatform with MockPlatformInterfaceMixin implements TtsPlatform {
   Future<List> speakText(RequestInfo requestInfo) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<List> generateVoice(RequestInfo requestInfo) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List> playVoice(RequestInfo requestInfo) {
+    throw UnimplementedError();
+  }
 }
 
 void main() {

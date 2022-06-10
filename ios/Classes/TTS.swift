@@ -17,18 +17,26 @@ public class TTS {
     
     private var engine: AVAudioEngine?
     private var player: AVAudioPlayerNode?
+    private var audioBuffers = Dictionary<String, Data>()
 
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
     private let sampleBufferAudioRenderer = AVSampleBufferAudioRenderer()
     var operationQueue: OperationQueue = OperationQueue()
+    var audioOperationQueue: OperationQueue = OperationQueue()
 
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
         operationQueue.maxConcurrentOperationCount = 1
+        audioOperationQueue.maxConcurrentOperationCount = 1
         if(MlProcessorStrategy.shared().delegate == nil) {
             initAudioEngine()
         }
+    }
+    
+    private func initAudioEngine() {
+        engine = AVAudioEngine()
+        player = AVAudioPlayerNode()
     }
     
     public func initModel(fastSpeechModel:String, melGanModel: String, onCompleted:@escaping((Bool) -> Void)) {
@@ -80,10 +88,195 @@ public class TTS {
         }
     }
     
-    private func initAudioEngine() {
-        engine = AVAudioEngine()
-        player = AVAudioPlayerNode()
+    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+        
+        self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
+            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+                print("model initialzed failed")
+                return
+            }
+            
+            self.operationQueue.cancelAllOperations()
+            let requestTask = GenerateTask(requestId: requestId, audioBuffers: self.audioBuffers, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
+            self.operationQueue.addOperation(requestTask)
+        }
     }
+    
+    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+        
+        self.audioOperationQueue.cancelAllOperations()
+        let requestTask = PlayVoiceTask(requestId: requestId, audioBuffers: self.audioBuffers, sampleRate: sampleRate, player: self.player, engine: self.engine, result: result)
+        self.audioOperationQueue.addOperation(requestTask)
+    }
+    
+    class GenerateTask: Operation {
+        let fastSpeech2: FastSpeech2
+        let mbMelGan: MBMelGan
+        let inputIds: [Int32]
+        let speakerId: Int32
+        let speed: Float
+        let sampleRate: Int
+        let hopSize: Int
+        let result: FlutterResult
+        let engine: AVAudioEngine?
+        let player: AVAudioPlayerNode?
+        let requestId: String
+        var audioBuffers: Dictionary<String, Data>
+        
+        init(requestId: String, audioBuffers: Dictionary<String, Data> , fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
+            self.requestId = requestId
+            self.fastSpeech2 = fastSpeech2
+            self.mbMelGan = mbMelGan
+            self.inputIds = inputIds
+            self.speakerId = speakerId
+            self.speed = speed
+            self.sampleRate = sampleRate
+            self.hopSize = hopSize
+            self.result = result
+            self.engine = engine
+            self.player = player
+            self.audioBuffers = audioBuffers
+        }
+        
+        func onCancelled() {
+            result([])
+        }
+        
+        override func main() {
+               guard !isCancelled else {
+                   onCancelled()
+                   return
+               }
+               print("Running..")
+            
+                do {
+                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId, isCancelled: {
+                        return isCancelled
+                    })
+                    
+                    guard melSpectrogram.count == 2 else {
+                        onCancelled()
+                        return
+                        
+                    }
+                    
+                    guard !isCancelled else {
+                        onCancelled()
+                        return
+                    }
+                    let data = try mbMelGan.getAudio(input: melSpectrogram[0], isCancelled: {
+                        return isCancelled
+                    })
+                    
+                    guard !isCancelled, !data.isEmpty else {
+                        onCancelled()
+                        return
+                    }
+                    
+                    audioBuffers[requestId] = data
+                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
+                    let arr = duration.map( { Double($0) })
+                    DispatchQueue.main {
+                        self.result(arr)
+                    }
+                }
+                catch {
+                    print(error)
+                }
+           }
+    }
+    
+    class PlayVoiceTask: Operation {
+        let engine: AVAudioEngine?
+        let player: AVAudioPlayerNode?
+        let requestId: String
+        let result: FlutterResult
+        var audioBuffers: Dictionary<String, Data>
+        let sampleRate: Int
+        init(requestId: String, audioBuffers: Dictionary<String, Data>, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, result: @escaping FlutterResult) {
+            self.requestId = requestId
+            self.result = result
+            self.engine = engine
+            self.player = player
+            self.audioBuffers = audioBuffers
+            self.sampleRate = sampleRate
+        }
+        
+        func onCancelled() {
+            result(nil)
+        }
+        
+        override func main() {
+               guard !isCancelled else {
+                   onCancelled()
+                   return
+               }
+               print("playing..")
+            guard let buffer = audioBuffers[requestId] else {
+                result(nil)
+                return
+            }
+            
+            if MlProcessorStrategy.shared().delegate != nil {
+                MlProcessorStrategy.shared().delegate?.playBuffer(buffer, withSampleRate: Int32(sampleRate), withCancelled: {
+                    if self.isCancelled {
+                        self.result(nil)
+                    }
+                    
+                    return self.isCancelled
+                }, withCompleted: {
+                    self.audioBuffers.removeValue(forKey: self.requestId)
+                    self.result(nil)
+                })
+            } else {
+                self.playBuffer(data: buffer, sampleRate: sampleRate)
+            }
+        }
+        
+        private func playBuffer(data: Data, sampleRate: Int) {
+            guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
+                print("engine does not initialize yet")
+                result(nil)
+                return
+            }
+            
+            guard !isCancelled else { return result(nil)}
+            let mixer = engine.mainMixerNode
+            engine.attach(player)
+            engine.connect(player, to: mixer, format: audioFormat)
+            
+            do {
+                engine.prepare()
+                try engine.start()
+            } catch {
+                print("Error info: \(error)")
+            }
+            
+            guard !isCancelled else { return result(nil)}
+            guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
+                result(nil)
+               return
+            }
+            
+            guard !isCancelled else {
+                result(nil)
+                return
+            }
+            guard player.engine?.isRunning == true else {
+                print("engine does not start yet")
+                result(nil)
+                return
+            }
+            
+            guard !isCancelled else { return }
+            player.play()
+            guard !isCancelled else { return }
+            player.scheduleBuffer(buffer) {
+                self.result(nil)
+            }
+        }
+    }
+    
     
     class RequesTask: Operation {
         let fastSpeech2: FastSpeech2
@@ -136,6 +329,8 @@ public class TTS {
                     if MlProcessorStrategy.shared().delegate != nil {
                         MlProcessorStrategy.shared().delegate?.playBuffer(data, withSampleRate: Int32(sampleRate), withCancelled: {
                             return self.isCancelled
+                        }, withCompleted: {
+                          
                         })
                     } else {
                         self.playBuffer(data: data, sampleRate: sampleRate)
