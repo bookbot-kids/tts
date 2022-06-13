@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:tts/request_info.dart';
 
 import 'tts_platform_interface.dart';
@@ -25,6 +26,7 @@ class Tts {
     RequestInfo requestInfo, {
     bool cleanUpVisemes = true,
     double minDurationInSecond = 0.05,
+    bool debug = false,
   }) async {
     if (requestInfo.inputIds.isEmpty) {
       requestInfo.inputIds.add(requestInfo.eos);
@@ -36,6 +38,11 @@ class Tts {
       }
 
       requestInfo.inputIds.add(requestInfo.eos);
+    }
+
+    if (debug) {
+      // ignore: avoid_print
+      print('inputIds: ${requestInfo.inputIds}');
     }
 
     final output = await TtsPlatform.instance.speakText(requestInfo);
@@ -120,6 +127,30 @@ class Tts {
     return visemes;
   }
 
+  List<String> breakIPA(String ipas, {String language = 'en'}) {
+    final allIPAs = this.allIPAs[language] ?? {};
+    final result = <String>[];
+    for (final ipa in ipas.split('.')) {
+      final characters = ipa.characters.toList();
+      final length = characters.length;
+      for (var i = 0; i < length; i++) {
+        if (i < length - 1) {
+          final combine = '${characters[i]}${characters[i + 1]}';
+          if (allIPAs.contains(combine)) {
+            result.add(combine);
+            i++;
+          } else {
+            result.add(characters[i]);
+          }
+        } else {
+          result.add(characters[i]);
+        }
+      }
+    }
+
+    return result;
+  }
+
   Future<void> initModels(String fastSpeechModel, String melganModel) {
     return TtsPlatform.instance.initModels(fastSpeechModel, melganModel);
   }
@@ -130,14 +161,17 @@ class Tts {
     final map = mapping.putIfAbsent(language, () => {});
     final inputIds = <int>[];
     final visemes = <String>[];
+    final arpabets = <String>[];
     for (final ipa in ipas) {
       inputIds.addAll(map[ipa]?.inputIds ?? []);
       visemes.addAll(map[ipa]?.visemes ?? []);
+      arpabets.add(map[ipa]?.arpabet ?? '');
     }
 
     return {
       'inputIds': inputIds,
       'visemes': visemes,
+      'arpabet': arpabets,
     };
   }
 
