@@ -44,8 +44,10 @@ class Tts {
     for (var i = 0; i < output.length; i++) {
       final token =
           i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
+
       result.add({
-        'duration': dur * requestInfo.hopSize / requestInfo.sampleRate,
+        'start': dur * requestInfo.hopSize / requestInfo.sampleRate,
+        'duration': output[i] * requestInfo.hopSize / requestInfo.sampleRate,
         'token': token,
         'enabled': true,
       });
@@ -85,7 +87,8 @@ class Tts {
       final token =
           i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
       result.add({
-        'duration': dur * requestInfo.hopSize / requestInfo.sampleRate,
+        'start': dur * requestInfo.hopSize / requestInfo.sampleRate,
+        'duration': output[i] * requestInfo.hopSize / requestInfo.sampleRate,
         'token': token,
         'enabled': true,
       });
@@ -108,9 +111,7 @@ class Tts {
       // remove duration less than min
       if (i - 1 >= 0) {
         String previousViseme = visemes[i - 1]['token'];
-        double previousDuration = visemes[i - 1]['duration'];
-        final extra = duration - previousDuration;
-        if (extra < minDurationInSecond && previousViseme != silent) {
+        if (duration < minDurationInSecond && previousViseme != silent) {
           visemes[i]['enabled'] = false;
         }
       }
