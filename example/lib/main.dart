@@ -51,6 +51,58 @@ class _MyAppState extends State<MyApp> {
     initTask = init();
   }
 
+  Future<void> _mapping() async {
+    await initTask;
+    final finder = Finder();
+    var records = await _storeRef.find(_db, finder: finder);
+    List<List<dynamic>> rows = [];
+    List row = [
+      'id',
+      'word',
+      'plural',
+      'ukIPA',
+      'pluralIPA',
+      'ukARPA',
+      'ukPluralARPA',
+      'inUse',
+      'pluralInUse'
+    ];
+    rows.add(row);
+    for (final record in records) {
+      List row = [];
+      final data = record.value;
+      final id = data['id'] ?? '';
+      final word = data['word'] ?? '';
+      final pluaral = data['plural'] ?? '';
+      final ukipa = data['ukipa'] ?? '';
+      final ukipaPlural = data['ukipaPlural'] ?? '';
+      final inUse = data['inUse'] ?? false;
+      final pluralInuse = data['pluralInUse'] ?? false;
+      final ukChars = _ttsPlugin.breakIPA(ukipa, language: 'en');
+      final ukPluralChars = _ttsPlugin.breakIPA(ukipaPlural, language: 'en');
+      final ukInfo = _ttsPlugin.search(ukChars, language: 'en');
+      final ukPluralInfo = _ttsPlugin.search(ukPluralChars, language: 'en');
+
+      row.add(id);
+      row.add(word);
+      row.add(pluaral);
+      row.add(ukipa);
+      row.add(ukipaPlural);
+      row.add(ukInfo['arpabet']);
+      row.add(ukPluralInfo['arpabet']);
+      row.add(inUse);
+      row.add(pluralInuse);
+      rows.add(row);
+      print('process word $word');
+    }
+
+    final csv = const ListToCsvConverter().convert(rows);
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final file = File(p.join(appDocDir.path, 'mapping.csv'));
+    await file.writeAsString(csv);
+    print('done');
+  }
+
   Future<void> _updateWordDb() async {
     await initTask;
     // read csv
@@ -110,21 +162,21 @@ class _MyAppState extends State<MyApp> {
     });
 
     // remove unused
-    records = await _storeRef.find(_db,
-        finder: Finder(
-            filter: Filter.and([
-          Filter.notEquals('inUse', true),
-          Filter.notEquals('pluralInUse', true),
-        ])));
-    await _db.transaction((db) async {
-      for (final requeryRecord in records) {
-        final data = requeryRecord.value;
-        final id = data['id'] as String;
-        final findingRecord = _storeRef.record(id);
-        final deleteResult = await findingRecord.delete(db);
-        print('remove word $id $deleteResult');
-      }
-    });
+    // records = await _storeRef.find(_db,
+    //     finder: Finder(
+    //         filter: Filter.and([
+    //       Filter.notEquals('inUse', true),
+    //       Filter.notEquals('pluralInUse', true),
+    //     ])));
+    // await _db.transaction((db) async {
+    //   for (final requeryRecord in records) {
+    //     final data = requeryRecord.value;
+    //     final id = data['id'] as String;
+    //     final findingRecord = _storeRef.record(id);
+    //     final deleteResult = await findingRecord.delete(db);
+    //     print('remove word $id $deleteResult');
+    //   }
+    // });
 
     await _db.close();
     print('done');
