@@ -175,7 +175,7 @@ class Tts {
     };
   }
 
-  Future<List<List<E>>> _readCSV<E extends dynamic>(String assetPath) async {
+  Future<List<List<E>>> readCSV<E extends dynamic>(String assetPath) async {
     final csvData = await rootBundle.loadString(assetPath);
     var detector = const FirstOccurrenceSettingsDetector(
         fieldDelimiters: [',', ';'],
@@ -194,7 +194,7 @@ class Tts {
 
   Future<void> loadIPAsMapping(String mappingAsset,
       {String language = 'en'}) async {
-    final allRows = await _readCSV(mappingAsset);
+    final allRows = await readCSV(mappingAsset);
     allRows.skip(1).forEach((row) {
       final map = mapping.putIfAbsent(language, () => {});
       String ipa = row[0];
@@ -222,7 +222,7 @@ class Tts {
   Future<void> loadCharactersMapping(String jsonPath, String visemePaths,
       {String language = 'id'}) async {
     final jsonData = json.decode(await rootBundle.loadString(jsonPath));
-    final visemeRows = (await _readCSV(visemePaths)).skip(1).toList();
+    final visemeRows = (await readCSV(visemePaths)).skip(1).toList();
     final symboyToId = jsonData['symbol_to_id'] as Map;
     final map = mapping.putIfAbsent(language, () => {});
     symboyToId.forEach((symbol, id) {

@@ -26,6 +26,7 @@ class RequestInfo {
   int eos;
   int dot;
   String requestId;
+  bool singleThread;
 
   RequestInfo(
     this.fastSpeechModel,
@@ -40,6 +41,7 @@ class RequestInfo {
     this.eos = Parameters.enEos,
     this.dot = Parameters.defaultDot,
     this.requestId = '',
+    this.singleThread = true,
   });
 }
 
@@ -57,5 +59,6 @@ class IdRequestInfo extends RequestInfo {
     super.useDot = false,
     super.dot = Parameters.defaultDot,
     super.requestId = '',
+    super.singleThread = true,
   });
 }

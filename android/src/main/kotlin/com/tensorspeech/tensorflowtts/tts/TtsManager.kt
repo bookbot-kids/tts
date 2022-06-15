@@ -139,8 +139,10 @@ class TtsManager {
                 request.result.success(null)
             }
 
-            playerTasks.forEach {
-                it.stop = true
+            if(request.singleThread) {
+                playerTasks.forEach {
+                    it.stop = true
+                }
             }
 
             val audioTask = PlayVoiceTask(player, buffer, onCancelled, onComplete)
@@ -163,8 +165,10 @@ class TtsManager {
             request.result.success(listOf<Double>())
         }
 
-        generateTasks.forEach {
-            it.stop = true
+        if(request.singleThread) {
+            generateTasks.forEach {
+                it.stop = true
+            }
         }
 
         val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)

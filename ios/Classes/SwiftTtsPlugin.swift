@@ -40,7 +40,8 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let sampleRate = argurments["sampleRate"] as! Int
             let hopSize = argurments["hopSize"] as! Int
             let requestId = argurments["requestId"] as! String
-          tts.generateVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
+            let singleThread = argurments["singleThread"] as! Bool
+            tts.generateVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, result: result)
             break
           case "playVoice":
             let argurments = call.arguments as! Dictionary<String, Any>
@@ -52,7 +53,8 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let sampleRate = argurments["sampleRate"] as! Int
             let hopSize = argurments["hopSize"] as! Int
             let requestId = argurments["requestId"] as! String
-          tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
+            let singleThread = argurments["singleThread"] as! Bool
+            tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, result: result)
             break
           default :
               result(FlutterMethodNotImplemented)

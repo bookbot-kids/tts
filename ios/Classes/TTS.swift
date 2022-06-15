@@ -91,7 +91,7 @@ public class TTS {
         }
     }
     
-    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
             guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
@@ -99,15 +99,21 @@ public class TTS {
                 return
             }
             
-            self.operationQueue.cancelAllOperations()
+            if singleThread {
+                self.operationQueue.cancelAllOperations()
+            }
+            
             let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
     
-    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
         
-        self.audioOperationQueue.cancelAllOperations()
+        if singleThread {
+            self.audioOperationQueue.cancelAllOperations()
+        }
+        
         let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, result: result)
         self.audioOperationQueue.addOperation(requestTask)
     }
@@ -151,7 +157,7 @@ public class TTS {
                print("Generate request \(requestId)")
             
                 do {
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId, isCancelled: {
+                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
                         return isCancelled
                     })
                     
@@ -310,7 +316,7 @@ public class TTS {
                print("Running..")
             
                 do {
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: 2 - speed, speakerId: speakerId, isCancelled: {
+                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
                         return isCancelled
                     })
                     

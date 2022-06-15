@@ -21,6 +21,7 @@ class MethodChannelTts extends TtsPlatform {
       'sampleRate': requestInfo.sampleRate,
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
+      'singleThread': requestInfo.singleThread,
     });
   }
 
@@ -43,6 +44,7 @@ class MethodChannelTts extends TtsPlatform {
       'sampleRate': requestInfo.sampleRate,
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
+      'singleThread': requestInfo.singleThread,
     });
   }
 
@@ -57,6 +59,7 @@ class MethodChannelTts extends TtsPlatform {
       'sampleRate': requestInfo.sampleRate,
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
+      'singleThread': requestInfo.singleThread,
     });
   }
 }
