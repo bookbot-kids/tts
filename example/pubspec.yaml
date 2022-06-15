@@ -64,6 +64,7 @@ flutter:
     - assets/id_processor.json
     - assets/words.csv
     - assets/chars_to_mouth.csv
+    - assets/words_arpa.csv
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

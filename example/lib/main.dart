@@ -51,6 +51,41 @@ class _MyAppState extends State<MyApp> {
     initTask = init();
   }
 
+  Future<void> _importCsv() async {
+    await initTask;
+    var csvRows = await _ttsPlugin.readCSV('assets/words_arpa.csv');
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    final dbFile = File(p.join(appDocDir.path, 'WordInfo.db'));
+    final db = await databaseFactoryIo.openDatabase(dbFile.path);
+    final storeRef = StoreRef.main();
+    csvRows = csvRows.skip(1).toList();
+    await db.transaction((transaction) async {
+      for (final row in csvRows) {
+        final id = row[0];
+        final word = row[1];
+        final plural = row[2];
+        final cmuarpaInputIds = _parseList<int>(row[3]);
+        final cmuarpaPluralInputIds = _parseList<int>(row[4]);
+        final cmuarpaVisemes = _parseList<String>(row[5]);
+        final cmuarpaPluralVisemes = _parseList<String>(row[6]);
+        await storeRef.record(id).put(transaction, {
+          'id': id,
+          'word': word,
+          'plural': plural,
+          'cmuarpaInputIds': cmuarpaInputIds,
+          'cmuarpaPluralInputIds': cmuarpaPluralInputIds,
+          'cmuarpaVisemes': cmuarpaVisemes,
+          'cmuarpaPluralVisemes': cmuarpaPluralVisemes,
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+          '_status': 'synced',
+        });
+      }
+    });
+
+    print('done');
+  }
+
   Future<void> _exportCsv() async {
     await initTask;
     final allWords = await _storeRef.find(_db);
@@ -383,6 +418,25 @@ ${wirdInputIds.join('; ')}
 
     _db = await databaseFactoryIo.openDatabase(dbFile.path);
     _storeRef = StoreRef.main();
+  }
+
+  List<T> _parseList<T>(String? data) {
+    if (data == null) return [];
+    data = data.replaceAll('[', '').replaceAll(']', '');
+    return List<T>.from(data
+        .split(',')
+        .map((e) => e.replaceAll("'", '').trim())
+        .where((e) => e.isNotEmpty)
+        .map((e) {
+      switch (T) {
+        case int:
+          return int.parse(e);
+        case double:
+          return double.parse(e);
+        default:
+          return e;
+      }
+    }).toList());
   }
 
   @override
