@@ -145,7 +145,7 @@ class TtsManager {
                 }
             }
 
-            val audioTask = PlayVoiceTask(player, buffer, onCancelled, onComplete)
+            val audioTask = PlayVoiceTask(player, buffer, request.playerCompletedDelayed, onCancelled, onComplete)
             playerTasks.add(audioTask)
             audioPlayerPool.submit(audioTask)
         } else {

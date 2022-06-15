@@ -22,6 +22,7 @@ class MethodChannelTts extends TtsPlatform {
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
       'singleThread': requestInfo.singleThread,
+      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
     });
   }
 
@@ -45,6 +46,7 @@ class MethodChannelTts extends TtsPlatform {
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
       'singleThread': requestInfo.singleThread,
+      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
     });
   }
 
@@ -60,6 +62,7 @@ class MethodChannelTts extends TtsPlatform {
       'hopSize': requestInfo.hopSize,
       'requestId': requestInfo.requestId,
       'singleThread': requestInfo.singleThread,
+      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
     });
   }
 }

@@ -54,7 +54,8 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let hopSize = argurments["hopSize"] as! Int
             let requestId = argurments["requestId"] as! String
             let singleThread = argurments["singleThread"] as! Bool
-            tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, result: result)
+            let playerCompletedDelayed = argurments["playerCompletedDelayed"] as! Int
+            tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, playerCompletedDelayed: playerCompletedDelayed, result: result)
             break
           default :
               result(FlutterMethodNotImplemented)

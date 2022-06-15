@@ -28,6 +28,9 @@ class RequestInfo {
   String requestId;
   bool singleThread;
 
+  /// delay time in milliseconds before notify complete
+  int playerCompletedDelayed;
+
   RequestInfo(
     this.fastSpeechModel,
     this.melganModel,
@@ -42,6 +45,7 @@ class RequestInfo {
     this.dot = Parameters.defaultDot,
     this.requestId = '',
     this.singleThread = true,
+    this.playerCompletedDelayed = 0,
   });
 }
 
@@ -60,5 +64,6 @@ class IdRequestInfo extends RequestInfo {
     super.dot = Parameters.defaultDot,
     super.requestId = '',
     super.singleThread = true,
+    super.playerCompletedDelayed = 0,
   });
 }

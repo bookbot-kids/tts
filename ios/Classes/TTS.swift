@@ -108,13 +108,13 @@ public class TTS {
         }
     }
     
-    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
+    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
         
         if singleThread {
             self.audioOperationQueue.cancelAllOperations()
         }
         
-        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, result: result)
+        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: playerCompletedDelayed,  result: result)
         self.audioOperationQueue.addOperation(requestTask)
     }
     
@@ -199,12 +199,14 @@ public class TTS {
         let requestId: String
         let result: FlutterResult
         let sampleRate: Int
-        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, result: @escaping FlutterResult) {
+        let playerCompletedDelayed: Int
+        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.result = result
             self.engine = engine
             self.player = player
             self.sampleRate = sampleRate
+            self.playerCompletedDelayed = playerCompletedDelayed
         }
         
         func onCancelled() {
@@ -234,7 +236,14 @@ public class TTS {
                     return self.isCancelled
                 }, withCompleted: {
                     BufferHolder.shared.audioBuffers.removeValue(forKey: self.requestId)
-                    self.result(nil)
+                    if self.playerCompletedDelayed == 0 {
+                        self.result(nil)
+                    } else {
+                        DispatchQueue.main(delay: Double(self.playerCompletedDelayed) / 1000) {
+                            self.result(nil)
+                        }
+                    }
+                    
                 })
             } else {
                 self.playBuffer(data: buffer, sampleRate: sampleRate)
@@ -280,7 +289,13 @@ public class TTS {
             player.play()
             guard !isCancelled else { return }
             player.scheduleBuffer(buffer) {
-                self.result(nil)
+                if self.playerCompletedDelayed == 0 {
+                    self.result(nil)
+                } else {
+                    DispatchQueue.main(delay: Double(self.playerCompletedDelayed) / 1000) {
+                        self.result(nil)
+                    }
+                }
             }
         }
     }
@@ -423,6 +438,12 @@ extension DispatchQueue {
         DispatchQueue.main.async {
            task()
         }
+    }
+    
+    static func main(delay: Double = 0.0, _ task: @escaping () -> ()) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: {
+            task()
+        })
     }
 }
 
