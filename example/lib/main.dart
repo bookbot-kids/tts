@@ -51,6 +51,81 @@ class _MyAppState extends State<MyApp> {
     initTask = init();
   }
 
+  List getBISyllables(String word) {
+    if (word.isNotEmpty != true) return [];
+    const consonant = 'kh|n[yg]|sy|[bcdfghjklmnpqrstvwxyz]';
+    const vowel =
+        'a(?:[iu](?!(?:$consonant)+\\b))?|o(?:i(?!(?:$consonant)+\\b))?|[aeiou]';
+    final regex = RegExp(
+        '(?:$consonant)*(?:$vowel)(?:(?:$consonant)*(?=[^a-zA-Z]|\$)|(?=($consonant))\\1(?=(?:$consonant)))?',
+        caseSensitive: false);
+
+    Iterable matches = regex.allMatches(word);
+
+    var out = [];
+    for (Match m in matches) {
+      out.add(m[0]);
+    }
+    return out;
+  }
+
+  Future<void> _exportBIWords() async {
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+
+    final assetContent = await rootBundle.load('assets/WordIndonesia.db');
+    final dbFile = File(p.join(appDocDir.path, 'WordIndonesia.db'));
+    if (!await dbFile.exists()) {
+      final bytes = assetContent.buffer
+          .asUint8List(assetContent.offsetInBytes, assetContent.lengthInBytes);
+      await dbFile.writeAsBytes(bytes);
+    }
+
+    final db = await databaseFactoryIo.openDatabase(dbFile.path);
+    final store = StoreRef.main();
+    final allWords = await store.find(db);
+    List<List<dynamic>> rows = [];
+    List<dynamic> row = [];
+    row.add("id");
+    row.add("word");
+    row.add("plural");
+    row.add("syllable");
+    row.add("syllablePlural");
+
+    rows.add(row);
+    for (var i = 0; i < allWords.length; i++) {
+      final item = allWords[i].value;
+      if (item == null) continue;
+      List<dynamic> row = [];
+      final id = item['id'];
+      String word = item['word'] ?? '';
+      String plural = item['plural'] ?? '';
+      String syllable = item['syllable'] ?? '';
+      if (syllable.isEmpty) {
+        syllable = getBISyllables(word).join('.');
+      }
+
+      String syllablePlural = item['syllablePlural'] ?? '';
+      if (syllablePlural.isEmpty) {
+        syllablePlural = getBISyllables(plural).join('.');
+      }
+
+      row.add(id);
+      row.add(word);
+      row.add(plural);
+      row.add(syllable);
+      row.add(syllablePlural);
+      rows.add(row);
+
+      print('Listing word $word ($i)');
+    }
+
+    Directory dir = await getTemporaryDirectory();
+    final file = File(p.join(dir.path, 'bi_words.csv'));
+    String csv = const ListToCsvConverter().convert(rows);
+    await file.writeAsString(csv);
+    print('done');
+  }
+
   Future<void> _importCsv() async {
     await initTask;
     var csvRows = await _ttsPlugin.readCSV('assets/words_arpa.csv');
