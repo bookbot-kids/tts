@@ -16,6 +16,7 @@ import 'package:tts/tts.dart';
 import 'package:path/path.dart' as p;
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
   runApp(const MyApp());
@@ -123,6 +124,75 @@ class _MyAppState extends State<MyApp> {
     final file = File(p.join(dir.path, 'bi_words.csv'));
     String csv = const ListToCsvConverter().convert(rows);
     await file.writeAsString(csv);
+    print('done');
+  }
+
+  Future<void> _importCsvToWordUniversal() async {
+    await initTask;
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    // copy word.db
+    final assetContent = await rootBundle.load('assets/Word.db');
+    final dbFile = File(p.join(appDocDir.path, 'Word.db'));
+    if (!await dbFile.exists()) {
+      final bytes = assetContent.buffer
+          .asUint8List(assetContent.offsetInBytes, assetContent.lengthInBytes);
+      await dbFile.writeAsBytes(bytes);
+    }
+
+    final wordDb = await databaseFactoryIo.openDatabase(dbFile.path);
+
+    var csvRows = await _ttsPlugin.readCSV('assets/gruut_syllables.csv');
+
+    final expirtDbFile = File(p.join(appDocDir.path, 'WordUniversal.db'));
+    final exportDb = await databaseFactoryIo.openDatabase(expirtDbFile.path);
+    final storeRef = StoreRef.main();
+    csvRows = csvRows.skip(1).toList();
+    const uuid = Uuid();
+    await exportDb.transaction((transaction) async {
+      for (final row in csvRows) {
+        final word = row[0];
+        final syllable = row[1];
+        final ipa = row[4];
+        final search = await storeRef.find(wordDb,
+            finder: Finder(
+              filter: Filter.equals('word', word),
+            ));
+        if (search.isEmpty) {
+          var id = uuid.v4();
+          await storeRef.record(id).put(transaction, {
+            'id': id,
+            'word': word,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
+            'updatedAt': DateTime.now().millisecondsSinceEpoch,
+            '_status': 'synced',
+            'inUse': true,
+            'validated': false,
+            'language': 'en',
+            'ipa': ipa,
+            'syllable': syllable
+          });
+        } else {
+          final existingWord = search.first.value;
+          var id = existingWord['id'];
+          var syllable = existingWord['syllable'] ?? '';
+          var inUse = existingWord['inUse'] ?? false;
+          var validated = existingWord['validated'] ?? false;
+          await storeRef.record(id).put(transaction, {
+            'id': id,
+            'word': word,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
+            'updatedAt': DateTime.now().millisecondsSinceEpoch,
+            '_status': 'synced',
+            'inUse': true,
+            'validated': validated,
+            'language': 'en',
+            'ipa': ipa,
+            'syllable': syllable
+          });
+        }
+      }
+    });
+
     print('done');
   }
 

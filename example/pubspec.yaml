@@ -34,6 +34,7 @@ dependencies:
   path_provider: ^2.0.10
   path: ^1.8.1
   csv: ^5.0.1
+  uuid: ^3.0.6
 
 dev_dependencies:
   flutter_test:
@@ -59,13 +60,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/tts_mapping.csv
-    - assets/Word.db
-    - assets/id_processor.json
-    - assets/words.csv
-    - assets/chars_to_mouth.csv
-    - assets/words_arpa.csv
-    - assets/WordIndonesia.db
+    - assets/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
