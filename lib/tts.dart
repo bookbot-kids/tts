@@ -29,7 +29,9 @@ class Tts {
     bool debug = false,
   }) async {
     if (requestInfo.inputIds.isEmpty) {
-      requestInfo.inputIds.add(requestInfo.eos);
+      if (requestInfo.useEos) {
+        requestInfo.inputIds.add(requestInfo.eos);
+      }
     } else {
       if (requestInfo.useDot &&
           requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
@@ -37,7 +39,9 @@ class Tts {
         requestInfo.inputIds.add(requestInfo.dot);
       }
 
-      requestInfo.inputIds.add(requestInfo.eos);
+      if (requestInfo.useEos) {
+        requestInfo.inputIds.add(requestInfo.eos);
+      }
     }
 
     if (debug) {
@@ -62,7 +66,11 @@ class Tts {
     }
 
     return cleanUpVisemes
-        ? normalizeVisemes(result, minDurationInSecond: minDurationInSecond)
+        ? normalizeVisemes(
+            result,
+            minDurationInSecond: minDurationInSecond,
+            useEos: requestInfo.useEos,
+          )
         : result;
   }
 
@@ -76,7 +84,9 @@ class Tts {
     double minDurationInSecond = 0.05,
   }) async {
     if (requestInfo.inputIds.isEmpty) {
-      requestInfo.inputIds.add(requestInfo.eos);
+      if (requestInfo.useEos) {
+        requestInfo.inputIds.add(requestInfo.eos);
+      }
     } else {
       if (requestInfo.useDot &&
           requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
@@ -84,7 +94,9 @@ class Tts {
         requestInfo.inputIds.add(requestInfo.dot);
       }
 
-      requestInfo.inputIds.add(requestInfo.eos);
+      if (requestInfo.useEos) {
+        requestInfo.inputIds.add(requestInfo.eos);
+      }
     }
 
     final output = await TtsPlatform.instance.generateVoice(requestInfo);
@@ -103,7 +115,11 @@ class Tts {
     }
 
     return cleanUpVisemes
-        ? normalizeVisemes(result, minDurationInSecond: minDurationInSecond)
+        ? normalizeVisemes(
+            result,
+            minDurationInSecond: minDurationInSecond,
+            useEos: requestInfo.useEos,
+          )
         : result;
   }
 
@@ -111,9 +127,11 @@ class Tts {
   List normalizeVisemes(
     List visemes, {
     double minDurationInSecond = 0.05,
+    bool useEos = true,
   }) {
     // ignore the last eos by length - 2
-    for (var i = visemes.length - 2; i >= 0; i--) {
+    final length = visemes.length - (useEos ? 2 : 1);
+    for (var i = length; i >= 0; i--) {
       double duration = visemes[i]['duration'];
       // remove duration less than min
       if (i - 1 >= 0) {

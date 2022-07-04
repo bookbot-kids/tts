@@ -27,6 +27,7 @@ class RequestInfo {
   int dot;
   String requestId;
   bool singleThread;
+  bool useEos;
 
   /// delay time in milliseconds before notify complete
   int playerCompletedDelayed;
@@ -46,6 +47,7 @@ class RequestInfo {
     this.requestId = '',
     this.singleThread = true,
     this.playerCompletedDelayed = 0,
+    this.useEos = true,
   });
 }
 
@@ -65,5 +67,6 @@ class IdRequestInfo extends RequestInfo {
     super.requestId = '',
     super.singleThread = true,
     super.playerCompletedDelayed = 0,
+    super.useEos = true,
   });
 }
