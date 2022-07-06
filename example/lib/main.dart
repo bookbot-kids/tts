@@ -152,7 +152,7 @@ class _MyAppState extends State<MyApp> {
       for (final row in csvRows) {
         final word = row[0];
         final syllable = row[1];
-        final ipa = row[4];
+        final ipa = row[3];
         final search = await storeRef.find(wordDb,
             finder: Finder(
               filter: Filter.equals('word', word),
@@ -169,7 +169,8 @@ class _MyAppState extends State<MyApp> {
             'validated': false,
             'language': 'en',
             'ipa': ipa,
-            'syllable': syllable
+            'syllable': syllable,
+            'level': 0
           });
         } else {
           final existingWord = search.first.value;
@@ -177,17 +178,19 @@ class _MyAppState extends State<MyApp> {
           var syllable = existingWord['syllable'] ?? '';
           var inUse = existingWord['inUse'] ?? false;
           var validated = existingWord['validated'] ?? false;
+          var level = existingWord['level'] ?? 0;
           await storeRef.record(id).put(transaction, {
             'id': id,
             'word': word,
             'createdAt': DateTime.now().millisecondsSinceEpoch,
             'updatedAt': DateTime.now().millisecondsSinceEpoch,
             '_status': 'synced',
-            'inUse': true,
+            'inUse': inUse,
             'validated': validated,
             'language': 'en',
             'ipa': ipa,
-            'syllable': syllable
+            'syllable': syllable,
+            'level': level
           });
         }
       }
