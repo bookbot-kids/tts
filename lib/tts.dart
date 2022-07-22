@@ -152,6 +152,18 @@ class Tts {
       final characters = ipa.characters.toList();
       final length = characters.length;
       for (var i = 0; i < length; i++) {
+        // 3 letters ipa
+        if (i < length - 2) {
+          final combine =
+              '${characters[i]}${characters[i + 1]}${characters[i + 2]}';
+          if (allIPAs.contains(combine)) {
+            result.add(combine);
+            i += 2;
+            continue;
+          }
+        }
+
+        // 2 letters ipa
         if (i < length - 1) {
           final combine = '${characters[i]}${characters[i + 1]}';
           if (allIPAs.contains(combine)) {
