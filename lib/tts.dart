@@ -257,4 +257,55 @@ class Tts {
 
     allIPAs[language] = map.keys.toSet();
   }
+
+  String normalizeIPA(String input, {String language = 'en'}) {
+    final parts = input.replaceAll(' ', '');
+    final result = <String>[];
+    final validIPAs = allIPAs[language] ?? {};
+    for (final part in parts.split('.')) {
+      final characters = part.characters.toList();
+      final length = characters.length;
+      final list = <String>[];
+      for (var i = 0; i < length; i++) {
+        // 3 letters ipa
+        if (i < length - 2) {
+          final combine =
+              '${characters[i]}${characters[i + 1]}${characters[i + 2]}';
+          if (validIPAs.contains(combine)) {
+            list.add(combine);
+            i += 2;
+            continue;
+          }
+        }
+
+        // 2 letters ipa
+        if (i < length - 1) {
+          final combine = '${characters[i]}${characters[i + 1]}';
+          if (validIPAs.contains(combine)) {
+            list.add(combine);
+            i++;
+          } else {
+            list.add(characters[i]);
+          }
+        } else {
+          list.add(characters[i]);
+        }
+      }
+
+      if (list.isNotEmpty) {
+        var str = '';
+        for (final item in list) {
+          if (item == 'ˈ' || item == "'") {
+            str += item;
+          } else {
+            str += '$item ';
+          }
+        }
+
+        result.add(str.trim());
+      }
+    }
+
+    return result.join(' . ');
+  }
 }
