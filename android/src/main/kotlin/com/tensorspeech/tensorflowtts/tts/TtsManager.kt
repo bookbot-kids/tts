@@ -28,8 +28,8 @@ class TtsManager {
     private val generateTasks = mutableListOf<GenerateTask>()
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
-    fun init(context: Context, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
-        val key = fastSpeechModel + melganModel
+    fun init(context: Context, version: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
+        val key = fastSpeechModel + melganModel + version.toString()
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
@@ -40,11 +40,11 @@ class TtsManager {
                     }
 
                     if(ProcessorHolder.processorStrategy != null) {
-                        ProcessorHolder.processorStrategy?.initModel(arrayListOf(fastSpeechModel, melganModel)) {
+                        ProcessorHolder.processorStrategy?.initModel(version, arrayListOf(fastSpeechModel, melganModel)) {
                             listener(it[0], it[1])
                         }
                     } else {
-                        listener(copyFile(context, fastSpeechModel), copyFile(context, melganModel))
+                        listener(copyFile(context, fastSpeechModel, version), copyFile(context, melganModel, version))
                     }
 
                 } catch (e: Exception) {
@@ -63,11 +63,14 @@ class TtsManager {
         }
     }
 
-    private fun copyFile(context: Context, strOutFileName: String): String {
+    private fun copyFile(context: Context, strOutFileName: String, version: Int): String {
         Log.d(TAG, "start copy file $strOutFileName")
-        val file = context.filesDir
-        val tmpFile = file.absolutePath + "/" + strOutFileName
-        val f = File(tmpFile)
+        val dir = File(context.filesDir, "$version")
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+
+        val f = File(dir.absolutePath, strOutFileName)
         if (f.exists()) {
             Log.d(TAG, "file exists $strOutFileName")
             return f.absolutePath

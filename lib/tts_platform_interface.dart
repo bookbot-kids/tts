@@ -28,8 +28,9 @@ abstract class TtsPlatform extends PlatformInterface {
     return await _instance.speakText(requestInfo);
   }
 
-  Future<void> initModels(String fastSpeechModel, String melganModel) async {
-    await _instance.initModels(fastSpeechModel, melganModel);
+  Future<void> initModels(String fastSpeechModel, String melganModel,
+      {int version = 1}) async {
+    await _instance.initModels(fastSpeechModel, melganModel, version: version);
   }
 
   Future<List> generateVoice(RequestInfo requestInfo) async {

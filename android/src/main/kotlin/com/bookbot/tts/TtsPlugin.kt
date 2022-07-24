@@ -34,7 +34,8 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           val fastSpeechModel = args["fastSpeechModel"] as String
           val melganModel = args["melganModel"] as String
-          TtsManager.instance.init(context, fastSpeechModel, melganModel) {
+          val modelVersion = args["modelVersion"] as Int
+          TtsManager.instance.init(context, modelVersion, fastSpeechModel, melganModel) {
             wrapper.success(null)
           }
         }
@@ -43,7 +44,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.speak(request)
           }
         }
@@ -52,7 +53,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.playVoice(request)
           }
         }
@@ -61,7 +62,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.generateVoice(request)
           }
         }

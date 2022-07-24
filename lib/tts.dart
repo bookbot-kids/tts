@@ -21,6 +21,9 @@ class Tts {
   Map<String, Map<String, MappingData>> mapping = {};
   Map<String, Set<String>> allIPAs = {};
   static const silent = '_';
+  final int version;
+
+  Tts({this.version = 1});
 
   Future<List> speakText(
     RequestInfo requestInfo, {
@@ -49,6 +52,7 @@ class Tts {
       print('inputIds: ${requestInfo.inputIds}');
     }
 
+    requestInfo.modelVersion = version;
     final output = await TtsPlatform.instance.speakText(requestInfo);
     final result = [];
     var dur = 0.0;
@@ -75,6 +79,7 @@ class Tts {
   }
 
   Future<void> playVoice(RequestInfo requestInfo) async {
+    requestInfo.modelVersion = version;
     await TtsPlatform.instance.playVoice(requestInfo);
   }
 
@@ -99,6 +104,7 @@ class Tts {
       }
     }
 
+    requestInfo.modelVersion = version;
     final output = await TtsPlatform.instance.generateVoice(requestInfo);
     final result = [];
     var dur = 0.0;
@@ -181,8 +187,12 @@ class Tts {
     return result;
   }
 
-  Future<void> initModels(String fastSpeechModel, String melganModel) {
-    return TtsPlatform.instance.initModels(fastSpeechModel, melganModel);
+  Future<void> initModels(
+    String fastSpeechModel,
+    String melganModel,
+  ) {
+    return TtsPlatform.instance
+        .initModels(fastSpeechModel, melganModel, version: version);
   }
 
   /// Search inputIds & visemes in mapping

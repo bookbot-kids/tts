@@ -7,7 +7,8 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockTtsPlatform with MockPlatformInterfaceMixin implements TtsPlatform {
   @override
-  Future<void> initModels(String fastSpeechModel, String melganModel) {
+  Future<void> initModels(String fastSpeechModel, String melganModel,
+      {int version = 1}) {
     throw UnimplementedError();
   }
 
