@@ -29,7 +29,7 @@ class TtsManager {
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
     fun init(context: Context, version: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
-        val key = fastSpeechModel + melganModel + version.toString()
+        val key = fastSpeechModel + melganModel
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
