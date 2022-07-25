@@ -139,16 +139,27 @@ class _MyAppState extends State<MyApp> {
       await dbFile.writeAsBytes(bytes);
     }
 
+    // copy WordIndonesia.db
+    final assetContent2 = await rootBundle.load('assets/WordIndonesia.db');
+    final dbFile2 = File(p.join(appDocDir.path, 'WordIndonesia.db'));
+    if (!await dbFile2.exists()) {
+      final bytes = assetContent2.buffer.asUint8List(
+          assetContent2.offsetInBytes, assetContent2.lengthInBytes);
+      await dbFile2.writeAsBytes(bytes);
+    }
+
     final wordDb = await databaseFactoryIo.openDatabase(dbFile.path);
+    final wordIndonesiaDb = await databaseFactoryIo.openDatabase(dbFile2.path);
 
     var csvRows = await _ttsPlugin.readCSV('assets/gruut_syllables.csv');
 
-    final expirtDbFile = File(p.join(appDocDir.path, 'WordUniversal.db'));
-    final exportDb = await databaseFactoryIo.openDatabase(expirtDbFile.path);
+    final exportDbFile = File(p.join(appDocDir.path, 'WordUniversal.db'));
+    final exportDb = await databaseFactoryIo.openDatabase(exportDbFile.path);
     final storeRef = StoreRef.main();
     csvRows = csvRows.skip(1).toList();
     const uuid = Uuid();
     await exportDb.transaction((transaction) async {
+      // copy english words
       for (final row in csvRows) {
         final word = row[0];
         final syllable = row[1];
@@ -177,7 +188,6 @@ class _MyAppState extends State<MyApp> {
           var id = existingWord['id'];
           var syllable = existingWord['syllable'] ?? '';
           var inUse = existingWord['inUse'] ?? false;
-          var validated = existingWord['validated'] ?? false;
           var level = existingWord['level'] ?? 0;
           await storeRef.record(id).put(transaction, {
             'id': id,
@@ -186,13 +196,45 @@ class _MyAppState extends State<MyApp> {
             'updatedAt': DateTime.now().millisecondsSinceEpoch,
             '_status': 'synced',
             'inUse': inUse,
-            'validated': validated,
+            'validated': false,
             'language': 'en',
             'ipa': ipa,
             'syllable': syllable,
             'level': level
           });
         }
+
+        print('Listing english word $word');
+      }
+
+      // copy indonesian words
+      final allIdWords = await storeRef.find(wordIndonesiaDb, finder: Finder());
+      for (final record in allIdWords) {
+        var existingWord = record.value;
+        var word = existingWord['word'] ?? '';
+        var inUse = existingWord['inUse'] ?? false;
+        if (!inUse || word.isEmpty) continue;
+        var id = existingWord['id'];
+        var syllable = existingWord['syllable'] ?? '';
+
+        var level = existingWord['level'] ?? 0;
+        var ipa = existingWord['ipa'] ?? '';
+
+        await storeRef.record(id).put(transaction, {
+          'id': id,
+          'word': word,
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+          '_status': 'synced',
+          'inUse': inUse,
+          'validated': false,
+          'language': 'id',
+          'ipa': ipa,
+          'syllable': syllable,
+          'level': level
+        });
+
+        print('Listing id word $word');
       }
     });
 
