@@ -6,6 +6,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.File
 import java.nio.FloatBuffer
 import java.util.*
+import kotlin.math.*
 
 /**
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
@@ -13,12 +14,25 @@ import java.util.*
  */
 class MBMelGan(modulePath: String) : AbstractModule() {
     private lateinit var mModule: Interpreter
+    private val hopSize = 512
+    private val minBufferSize = 350000
+
+    private fun roundUp(num: Int): Int {
+        return (ceil(num.toDouble() / 100000.0) * 100000.0).toInt()
+    }
+
     fun getAudio(input: TensorBuffer, isCancelled: () -> Boolean): FloatArray? {
         if(isCancelled()) return null
         mModule.resizeInput(0, input.shape)
         mModule.allocateTensors()
         if(isCancelled()) return null
-        val outputBuffer = FloatBuffer.allocate(350000)
+        var bufferSize = minBufferSize
+        val melSpectrogramLength = input.shape[1] * hopSize
+        if(melSpectrogramLength > bufferSize) {
+            bufferSize = max(minBufferSize, max(melSpectrogramLength, roundUp(melSpectrogramLength)))
+        }
+
+        val outputBuffer = FloatBuffer.allocate(bufferSize)
         if(isCancelled()) return null
         mModule.run(input.buffer, outputBuffer)
         if(isCancelled()) return null
