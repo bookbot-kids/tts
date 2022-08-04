@@ -139,10 +139,12 @@ class Tts {
     final length = visemes.length - (useEos ? 2 : 1);
     for (var i = length; i >= 0; i--) {
       double duration = visemes[i]['duration'];
-      // remove duration less than min
+      // disable duration less than min
       if (i - 1 >= 0) {
         String previousViseme = visemes[i - 1]['token'];
-        if (duration < minDurationInSecond && previousViseme != silent) {
+        if (duration < minDurationInSecond &&
+            previousViseme != silent &&
+            i != visemes.length - 1) {
           visemes[i]['enabled'] = false;
         }
       }
