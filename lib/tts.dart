@@ -78,9 +78,9 @@ class Tts {
         : result;
   }
 
-  Future<List> playVoice(RequestInfo requestInfo) {
+  Future<void> playVoice(RequestInfo requestInfo) async {
     requestInfo.modelVersion = version;
-    return TtsPlatform.instance.playVoice(requestInfo);
+    await TtsPlatform.instance.playVoice(requestInfo);
   }
 
   Future<List> generateVoice(

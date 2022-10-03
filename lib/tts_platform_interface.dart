@@ -37,7 +37,7 @@ abstract class TtsPlatform extends PlatformInterface {
     return await _instance.generateVoice(requestInfo);
   }
 
-  Future<List> playVoice(RequestInfo requestInfo) async {
-    return await _instance.playVoice(requestInfo);
+  Future<void> playVoice(RequestInfo requestInfo) async {
+    await _instance.playVoice(requestInfo);
   }
 }

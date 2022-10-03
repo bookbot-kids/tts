@@ -38,8 +38,8 @@ class MethodChannelTts extends TtsPlatform {
   }
 
   @override
-  Future<List> playVoice(RequestInfo requestInfo) async {
-    return await methodChannel.invokeMethod('playVoice', {
+  Future<void> playVoice(RequestInfo requestInfo) async {
+    await methodChannel.invokeMethod('playVoice', {
       'fastSpeechModel': requestInfo.fastSpeechModel,
       'melganModel': requestInfo.melganModel,
       'inputIds': requestInfo.inputIds,
