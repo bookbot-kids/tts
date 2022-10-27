@@ -75,6 +75,164 @@ class _MyAppState extends State<MyApp> {
     return out;
   }
 
+  Future<void> _exportWords() async {
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    final assetContent = await rootBundle.load('assets/WordUniversal.db');
+    final dbFile = File(p.join(appDocDir.path, 'WordUniversal.db'));
+    if (!await dbFile.exists()) {
+      final bytes = assetContent.buffer
+          .asUint8List(assetContent.offsetInBytes, assetContent.lengthInBytes);
+      await dbFile.writeAsBytes(bytes);
+    }
+
+    final exportDb = await databaseFactoryIo.openDatabase(dbFile.path);
+    final storeRef = StoreRef.main();
+    final allWords = await storeRef.find(exportDb, finder: Finder());
+    List<List<dynamic>> enRows = [];
+    enRows.add([
+      'id',
+      'word',
+      'inUse',
+      'validated',
+      'language',
+      'ipa',
+      'syllable',
+      'level'
+    ]);
+
+    List<List<dynamic>> biRows = [];
+    biRows.add([
+      'id',
+      'word',
+      'inUse',
+      'validated',
+      'language',
+      'ipa',
+      'syllable',
+      'level'
+    ]);
+
+    List<List<dynamic>> enEmptyRows = [];
+    enEmptyRows.add([
+      'id',
+      'word',
+      'inUse',
+      'validated',
+      'language',
+      'ipa',
+      'syllable',
+      'level'
+    ]);
+
+    List<List<dynamic>> biEmptyRows = [];
+    biEmptyRows.add([
+      'id',
+      'word',
+      'inUse',
+      'validated',
+      'language',
+      'ipa',
+      'syllable',
+      'level'
+    ]);
+
+    for (final record in allWords) {
+      if (record['deletedAt'] != null) {
+        continue;
+      }
+
+      String id = record['id'] as String;
+      String word = record['word'] as String;
+      bool inUse = record['inUse'] as bool;
+      bool validated = record['validated'] as bool;
+      String language = record['language'] as String;
+      String ipa = record['ipa'] as String;
+      String syllable = record['syllable'] as String;
+      int level = record['level'] as int;
+
+      print('word $id');
+      if (ipa.isEmpty) {
+        print('word $word has empty ipa');
+        if (language == 'id') {
+          final rows = [
+            id,
+            word,
+            inUse,
+            validated,
+            language,
+            ipa,
+            syllable,
+            level
+          ];
+          biEmptyRows.add(rows);
+        } else if (language == 'en') {
+          final rows = [
+            id,
+            word,
+            inUse,
+            validated,
+            language,
+            ipa,
+            syllable,
+            level
+          ];
+          enEmptyRows.add(rows);
+        }
+        continue;
+      }
+
+      final normalize = ipa.replaceAll('ˈ', '').replaceAll(' ', '');
+      if (normalize.length > 2) {
+        print('word $word invalid');
+        continue;
+      }
+
+      if (language == 'id') {
+        final rows = [
+          id,
+          word,
+          inUse,
+          validated,
+          language,
+          ipa,
+          syllable,
+          level
+        ];
+        biRows.add(rows);
+      } else if (language == 'en') {
+        final rows = [
+          id,
+          word,
+          inUse,
+          validated,
+          language,
+          ipa,
+          syllable,
+          level
+        ];
+        enRows.add(rows);
+      } else {
+        throw Exception('wrong language');
+      }
+    }
+
+    Directory dir = await getTemporaryDirectory();
+    final biFile = File(p.join(dir.path, 'bi_words.csv'));
+    await biFile.writeAsString(const ListToCsvConverter().convert(biRows));
+
+    final enFile = File(p.join(dir.path, 'en_words.csv'));
+    await enFile.writeAsString(const ListToCsvConverter().convert(enRows));
+
+    final biEnmptyFile = File(p.join(dir.path, 'bi_empty_words.csv'));
+    await biEnmptyFile
+        .writeAsString(const ListToCsvConverter().convert(biEmptyRows));
+
+    final enEmptyFile = File(p.join(dir.path, 'en_empty_words.csv'));
+    await enEmptyFile
+        .writeAsString(const ListToCsvConverter().convert(enEmptyRows));
+    print('done');
+  }
+
   Future<void> _exportBIWords() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
 
