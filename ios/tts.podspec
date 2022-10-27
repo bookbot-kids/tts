@@ -18,7 +18,7 @@ Text to speech flutter project.
   s.platform = :ios, '11.0'
   s.static_framework = true
 
-  s.dependency 'TensorFlowLiteSwift', '~> 2.10', :subspecs => ['CoreML', 'Metal']
+  s.dependency 'TensorFlowLiteSwift', '~> 2.10'
   s.dependency 'TensorFlowLiteSelectTfOps', '~> 2.10'
 
   # Flutter.framework does not contain a i386 slice.
