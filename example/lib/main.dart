@@ -726,7 +726,7 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'fastspeech2_quan.tflite',
+          'lightspeech_quant.tflite',
           'mb_melgan.tflite',
           inputIds,
           visemes,
