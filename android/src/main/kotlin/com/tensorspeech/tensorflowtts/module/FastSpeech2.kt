@@ -29,7 +29,7 @@ class FastSpeech2(modulePath: String) : AbstractModule() {
         val outputBuffer3 = IntBuffer.allocate(inputIds.size)
         if(isCancelled()) return null
         outputMap[0] = outputBuffer
-        outputMap[2] = outputBuffer3
+        outputMap[1] = outputBuffer3
         val inputs = Array(1) { IntArray(inputIds.size) }
         inputs[0] = inputIds
 
