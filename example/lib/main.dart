@@ -38,7 +38,7 @@ class _MyAppState extends State<MyApp> {
   static const _defaultEnText =
       'library aback ables hello world may then them single they she go do it love me so much join us';
   static const _defaultIdText =
-      'Saat kamu mengetuk kamu akan secara otomatis mengubah halaman ketika kamu selesai kecuali kamu perlu membaca ulang kata-kata yang kamu anggap sulit';
+      'Saat kamu mengetuk kamu akan secara otomatis mengubah halaman ketika kamu selesai kecuali kamu';
   final _textController = TextEditingController()..text = _defaultEnText;
   var _result = '';
   late Database _db;
@@ -767,7 +767,7 @@ class _MyAppState extends State<MyApp> {
           speakerId: 0,
           singleThread: true,
           playerCompletedDelayed: 0,
-          speed: 1.0,
+          speed: 1.2,
           useEos: true,
           dot: 31,
           eos: 36,
