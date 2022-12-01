@@ -2,18 +2,18 @@ PODS:
   - Flutter (1.0.0)
   - path_provider_ios (0.0.1):
     - Flutter
-  - TensorFlowLiteC (2.6.0):
-    - TensorFlowLiteC/Core (= 2.6.0)
-  - TensorFlowLiteC/Core (2.6.0)
-  - TensorFlowLiteSelectTfOps (2.6.0)
-  - TensorFlowLiteSwift (2.6.0):
-    - TensorFlowLiteSwift/Core (= 2.6.0)
-  - TensorFlowLiteSwift/Core (2.6.0):
-    - TensorFlowLiteC (= 2.6.0)
+  - TensorFlowLiteC (0.0.1-nightly.20220831):
+    - TensorFlowLiteC/Core (= 0.0.1-nightly.20220831)
+  - TensorFlowLiteC/Core (0.0.1-nightly.20220831)
+  - TensorFlowLiteSelectTfOps (0.0.1-nightly.20220831)
+  - TensorFlowLiteSwift (0.0.1-nightly.20220831):
+    - TensorFlowLiteSwift/Core (= 0.0.1-nightly.20220831)
+  - TensorFlowLiteSwift/Core (0.0.1-nightly.20220831):
+    - TensorFlowLiteC (= 0.0.1-nightly.20220831)
   - tts (0.0.1):
     - Flutter
-    - TensorFlowLiteSelectTfOps (~> 2.6.0)
-    - TensorFlowLiteSwift (~> 2.6.0)
+    - TensorFlowLiteSelectTfOps (= 0.0.1-nightly.20220831)
+    - TensorFlowLiteSwift (= 0.0.1-nightly.20220831)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -37,11 +37,11 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
-  TensorFlowLiteC: 869f93708210ed939fc40f40c772a120b7f964d1
-  TensorFlowLiteSelectTfOps: a15cd8395c35c8bb64967e120edbb7ee54066ffb
-  TensorFlowLiteSwift: 78bc548132d2cae55643f3238359a24a6eb92b88
-  tts: bec8c631a125d1fd62f7d5aa9a11c160fe962aa3
+  TensorFlowLiteC: e16055b16d25b31007467e7d15e6560ffab2b880
+  TensorFlowLiteSelectTfOps: 555e336ff5b6fac6d90345f1fab9fec4c529d884
+  TensorFlowLiteSwift: 200ddfbef5db5d58932ff984543109fe145d28d8
+  tts: 8a62009a8db07a2bc20b2805d12ea42035ed823a
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: 7368163408c647b7eb699d0d788ba6718e18fb8d
 
 COCOAPODS: 1.11.3
