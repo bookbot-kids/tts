@@ -332,4 +332,8 @@ class Tts {
 
     return result.join(' . ');
   }
+
+  Future<void> dispose() async {
+    await TtsPlatform.instance.dispose();
+  }
 }
