@@ -145,10 +145,17 @@ class TtsManager {
             val player = getPlayer(request.sampleRate , request.hopSize) ?: return
             val onCancelled: () -> Unit = {
                 audioBuffers.remove(request.requestId)
+                if(logEnabled) {
+                    Log.d(TAG, "[Voice request] [playVoice cancel] ${request.requestId}, ${audioBuffers.size}")
+                }
                 request.result.success(null)
             }
 
             val onComplete: () -> Unit = {
+                if(logEnabled) {
+                    Log.d(TAG, "[Voice request] [playVoice end] ${request.requestId}, ${audioBuffers.size}")
+                }
+
                 audioBuffers.remove(request.requestId)
                 request.result.success(null)
             }
@@ -162,6 +169,9 @@ class TtsManager {
             val audioTask = PlayVoiceTask(player, buffer, request.playerCompletedDelayed, onCancelled, onComplete)
             playerTasks.add(audioTask)
             audioPlayerPool.submit(audioTask)
+            if(logEnabled) {
+                Log.d(TAG, "[Voice request] [playVoice start] ${request.requestId}, ${audioBuffers.size}")
+            }
         } else {
             request.result.success(null)
         }
@@ -171,12 +181,19 @@ class TtsManager {
         val key = request.fastSpeechModel + request.melganModel
         val processors = modelMap[key] ?: return
         val onComplete: (buffer: FloatArray, durations: List<Double>) -> Unit = { buff, dur ->
+            if(logEnabled) {
+                Log.d(TAG, "[Voice request] [generate end] ${request.requestId}, ${audioBuffers.size}")
+            }
+
             audioBuffers[request.requestId] = buff
             request.result.success(dur)
         }
 
         val onCancelled: () -> Unit = {
             audioBuffers.remove(request.requestId)
+            if(logEnabled) {
+                Log.d(TAG, "[Voice request] [generateVoice cancel] ${request.requestId}, ${audioBuffers.size}")
+            }
             request.result.success(listOf<Double>())
         }
 
@@ -189,6 +206,9 @@ class TtsManager {
         val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)
         generateTasks.add(task)
         runningTask = threadPool.submit(task)
+        if(logEnabled) {
+            Log.d(TAG, "[Voice request] [generate start] ${request.requestId}, ${audioBuffers.size}")
+        }
     }
 
     fun dispose() {

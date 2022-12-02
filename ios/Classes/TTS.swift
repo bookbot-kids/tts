@@ -164,7 +164,7 @@ public class TTS {
         func onCancelled() {
             BufferHolder.shared.audioBuffers.removeValue(forKey: requestId)
             if logEnabled {
-                print("[Voice request] [cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+                print("[Voice request] [generate cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
             }
             result([])
         }
@@ -176,6 +176,14 @@ public class TTS {
                }
                 
                 do {
+                    if BufferHolder.shared.audioBuffers.count > 3 {
+                        if logEnabled {
+                            print("[Voice request] [generate something wrong] \(requestId), there are \(BufferHolder.shared.audioBuffers.count) cached items")
+                        }
+                        
+                        BufferHolder.shared.audioBuffers.removeAll()
+                    }
+                    
                     if logEnabled {
                         print("[Voice request] [generate start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
                     }
@@ -238,6 +246,11 @@ public class TTS {
         }
         
         func onCancelled() {
+            BufferHolder.shared.audioBuffers.removeValue(forKey: requestId)
+            if logEnabled {
+                print("[Voice request] [play cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+            }
+            
             result(nil)
         }
         
@@ -257,14 +270,14 @@ public class TTS {
                     print("buffer is null")
                 }
                 
-                result(nil)
+                onCancelled()
                 return
             }
             
             if MlProcessorStrategy.shared().delegate != nil {
                 MlProcessorStrategy.shared().delegate?.playBuffer(buffer, withSampleRate: Int32(sampleRate), withCancelled: {
                     if self.isCancelled {
-                        self.result(nil)
+                        self.onCancelled()
                     }
                     
                     return self.isCancelled
