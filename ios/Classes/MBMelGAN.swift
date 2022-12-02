@@ -9,12 +9,13 @@ import Foundation
 import TensorFlowLite
 
 class MBMelGan {
-    let interpreter: Interpreter
+    var options: Interpreter.Options
+    var url: URL
     
-    init(url: URL) throws {
-        var options = Interpreter.Options()
-        options.threadCount = 1
-        interpreter = try Interpreter(modelPath: url.path, options: options)
+    init(url: URL) {
+        self.url = url
+        options = Interpreter.Options()
+        options.threadCount = 1        
     }
     
     func getAudio(input: Tensor, isCancelled: (() -> Bool)) throws -> Data {
@@ -22,6 +23,7 @@ class MBMelGan {
             return Data()
         }
         
+        let interpreter = try Interpreter(modelPath: self.url.path, options: self.options)
         try interpreter.resizeInput(at: 0, to: input.shape)
         
         if isCancelled() {

@@ -15,6 +15,7 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let argurments = call.arguments as! Dictionary<String, Any>
             let fastSpeechModel = argurments["fastSpeechModel"] as! String
             let melganModel = argurments["melganModel"] as! String
+            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
             tts.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melganModel) { completedResult in
               result(completedResult)
             }
@@ -28,6 +29,7 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let speakerId = argurments["speakerId"] as! Int
             let sampleRate = argurments["sampleRate"] as! Int
             let hopSize = argurments["hopSize"] as! Int
+            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
             tts.speak(fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
             break
           case "generateVoice":
@@ -41,6 +43,7 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let hopSize = argurments["hopSize"] as! Int
             let requestId = argurments["requestId"] as! String
             let singleThread = argurments["singleThread"] as! Bool
+            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
             tts.generateVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, result: result)
             break
           case "playVoice":
@@ -55,7 +58,11 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             let requestId = argurments["requestId"] as! String
             let singleThread = argurments["singleThread"] as! Bool
             let playerCompletedDelayed = argurments["playerCompletedDelayed"] as! Int
+            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
             tts.playVoice(requestId: requestId, fastSpeechModel: fastSpeechModel, melGanModel: melganModel, inputIds: inputIds, speakerId: Int32(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, playerCompletedDelayed: playerCompletedDelayed, result: result)
+            break
+            case "dispose":
+            tts.dispose()
             break
           default :
               result(FlutterMethodNotImplemented)

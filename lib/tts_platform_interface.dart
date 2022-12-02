@@ -40,4 +40,8 @@ abstract class TtsPlatform extends PlatformInterface {
   Future<void> playVoice(RequestInfo requestInfo) async {
     await _instance.playVoice(requestInfo);
   }
+
+  Future<void> dispose() async {
+    await _instance.dispose();
+  }
 }

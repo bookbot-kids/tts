@@ -9,20 +9,28 @@ import Foundation
 import TensorFlowLite
 
 class FastSpeech2 {
-    let interpreter: Interpreter
     
     var f0Ratio: Float = 1
     
     var energyRatio: Float = 1
     
-    init(url: URL) throws {
-        var options = Interpreter.Options()
-        options.threadCount = 1
-        interpreter = try Interpreter(modelPath: url.path, options: options)
+    var url: URL
+    
+    var options: Interpreter.Options
+    
+    init(url: URL) {
+        self.url = url
+        self.options = Interpreter.Options()
+        self.options.threadCount = 1
     }
     
     func getMelSpectrogram(inputIds: [Int32], speedRatio: Float, speakerId: Int32 = 0,
-                           isCancelled: (() -> Bool) ) throws -> [Tensor] {
+                           isCancelled: (() -> Bool)) throws -> [Tensor] {
+        if isCancelled() {
+            return []
+        }
+        
+        let interpreter = try Interpreter(modelPath: url.path, options: self.options)
         if isCancelled() {
             return []
         }

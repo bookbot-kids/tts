@@ -24,6 +24,7 @@ class MethodChannelTts extends TtsPlatform {
       'singleThread': requestInfo.singleThread,
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
+      'logEnabled': requestInfo.logEnabled,
     });
   }
 
@@ -33,7 +34,8 @@ class MethodChannelTts extends TtsPlatform {
     await methodChannel.invokeMethod('initModels', {
       'fastSpeechModel': fastSpeechModel,
       'melganModel': melganModel,
-      'version': version
+      'version': version,
+      'logEnabled': true,
     });
   }
 
@@ -51,6 +53,7 @@ class MethodChannelTts extends TtsPlatform {
       'singleThread': requestInfo.singleThread,
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
+      'logEnabled': requestInfo.logEnabled,
     });
   }
 
@@ -68,6 +71,12 @@ class MethodChannelTts extends TtsPlatform {
       'singleThread': requestInfo.singleThread,
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
+      'logEnabled': requestInfo.logEnabled,
     });
+  }
+
+  @override
+  Future<void> dispose() async {
+    await methodChannel.invokeMethod('dispose');
   }
 }

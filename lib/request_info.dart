@@ -29,6 +29,7 @@ class RequestInfo {
   bool singleThread;
   bool useEos;
   int modelVersion;
+  bool logEnabled;
 
   /// delay time in milliseconds before notify complete
   int playerCompletedDelayed;
@@ -50,6 +51,7 @@ class RequestInfo {
     this.playerCompletedDelayed = 0,
     this.useEos = true,
     this.modelVersion = 1,
+    this.logEnabled = true,
   });
 }
 
@@ -71,5 +73,6 @@ class IdRequestInfo extends RequestInfo {
     super.playerCompletedDelayed = 0,
     super.useEos = true,
     super.modelVersion = 1,
+    super.logEnabled = true,
   });
 }

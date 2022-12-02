@@ -28,6 +28,7 @@ class TtsManager {
     private val generateTasks = mutableListOf<GenerateTask>()
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
+    var logEnabled = true
     fun init(context: Context, version: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(modelMap[key] == null) {
@@ -64,7 +65,10 @@ class TtsManager {
     }
 
     private fun copyFile(context: Context, strOutFileName: String, version: Int): String {
-        Log.d(TAG, "start copy file $strOutFileName")
+        if (logEnabled) {
+            Log.d(TAG, "start copy file $strOutFileName")
+        }
+
         val dir = File(context.filesDir, "$version")
         if (!dir.exists()) {
             dir.mkdirs()
@@ -72,7 +76,9 @@ class TtsManager {
 
         val f = File(dir.absolutePath, strOutFileName)
         if (f.exists()) {
-            Log.d(TAG, "file exists $strOutFileName")
+            if (logEnabled) {
+                Log.d(TAG, "file exists $strOutFileName")
+            }
             return f.absolutePath
         }
         try {
@@ -85,18 +91,22 @@ class TtsManager {
                         length = myInput.read(buffer)
                     }
                     myOutput.flush()
-                    Log.d(TAG, "Copy task successful")
+                    if (logEnabled) {
+                        Log.d(TAG, "Copy task successful")
+                    }
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "copyFile: Failed to copy", e)
         } finally {
-            Log.d(TAG, "end copy file $strOutFileName")
+            if (logEnabled) {
+                Log.d(TAG, "end copy file $strOutFileName")
+            }
         }
         return f.absolutePath
     }
 
-    fun stopTts() {
+    private fun stopTts() {
         runningTask?.cancel(true)
         tasks.forEach {
             it.stop = true
@@ -134,6 +144,7 @@ class TtsManager {
         if (buffer != null) {
             val player = getPlayer(request.sampleRate , request.hopSize) ?: return
             val onCancelled: () -> Unit = {
+                audioBuffers.remove(request.requestId)
                 request.result.success(null)
             }
 
@@ -165,6 +176,7 @@ class TtsManager {
         }
 
         val onCancelled: () -> Unit = {
+            audioBuffers.remove(request.requestId)
             request.result.success(listOf<Double>())
         }
 
@@ -177,6 +189,10 @@ class TtsManager {
         val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)
         generateTasks.add(task)
         runningTask = threadPool.submit(task)
+    }
+
+    fun dispose() {
+        audioBuffers.clear()
     }
 
     companion object {

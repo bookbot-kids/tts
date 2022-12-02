@@ -35,6 +35,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val fastSpeechModel = args["fastSpeechModel"] as String
           val melganModel = args["melganModel"] as String
           val modelVersion = args["modelVersion"] as Int
+          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           TtsManager.instance.init(context, modelVersion, fastSpeechModel, melganModel) {
             wrapper.success(null)
           }
@@ -43,6 +44,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
       "speakText" -> {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
+          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
           TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.speak(request)
@@ -52,6 +54,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
       "playVoice" -> {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
+          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
           TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.playVoice(request)
@@ -61,11 +64,15 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
       "generateVoice"-> {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
+          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
           TtsManager.instance.init(context, request.modelVersion, request.fastSpeechModel, request.melganModel) {
             TtsManager.instance.generateVoice(request)
           }
         }
+      }
+      "dispose" -> {
+        TtsManager.instance.dispose()
       }
       else -> wrapper.notImplemented()
     }

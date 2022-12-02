@@ -27,6 +27,7 @@ public class TTS {
     private let sampleBufferAudioRenderer = AVSampleBufferAudioRenderer()
     var operationQueue: OperationQueue = OperationQueue()
     var audioOperationQueue: OperationQueue = OperationQueue()
+    var logEnabled = true
 
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
@@ -53,8 +54,8 @@ public class TTS {
                         return
                     }
                     
-                    self.fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
-                    self.mbMelGan = try? MBMelGan(url: melganUrl)
+                    self.fastSpeech2 = FastSpeech2(url: fastSpeechUrl)
+                    self.mbMelGan = MBMelGan(url: melganUrl)
                     self.modelMap[key] = true
                     onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
                 }
@@ -62,13 +63,16 @@ public class TTS {
                 let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")
                 let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")
                 guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
-                    print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                    if self.logEnabled {
+                        print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                    }
+                    
                     onCompleted(false)
                     return
                 }
                 
-                fastSpeech2 = try? FastSpeech2(url: fastSpeechUrl)
-                mbMelGan = try? MBMelGan(url: melganUrl)
+                fastSpeech2 = FastSpeech2(url: fastSpeechUrl)
+                mbMelGan = MBMelGan(url: melganUrl)
                 modelMap[key] = true
                 onCompleted(fastSpeech2 != nil && mbMelGan != nil)
             }
@@ -81,12 +85,15 @@ public class TTS {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
             guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-                print("model initialzed failed")
+                if self.logEnabled {
+                    print("model initialzed failed")
+                }
+                
                 return
             }
             
             self.operationQueue.cancelAllOperations()
-            let requestTask = RequesTask(fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
+            let requestTask = RequesTask(fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
@@ -95,7 +102,10 @@ public class TTS {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
             guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-                print("model initialzed failed")
+                if self.logEnabled {
+                    print("model initialzed failed")
+                }
+                 
                 return
             }
             
@@ -103,7 +113,7 @@ public class TTS {
                 self.operationQueue.cancelAllOperations()
             }
             
-            let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, result: result)
+            let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
@@ -114,8 +124,12 @@ public class TTS {
             self.audioOperationQueue.cancelAllOperations()
         }
         
-        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: playerCompletedDelayed,  result: result)
+        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: playerCompletedDelayed, logEnabled: self.logEnabled,  result: result)
         self.audioOperationQueue.addOperation(requestTask)
+    }
+    
+    public func dispose() {
+        BufferHolder.shared.audioBuffers.removeAll()
     }
     
     class GenerateTask: Operation {
@@ -130,8 +144,9 @@ public class TTS {
         let engine: AVAudioEngine?
         let player: AVAudioPlayerNode?
         let requestId: String
+        let logEnabled: Bool
         
-        init(requestId: String, fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
+        init(requestId: String, fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.fastSpeech2 = fastSpeech2
             self.mbMelGan = mbMelGan
@@ -143,9 +158,14 @@ public class TTS {
             self.result = result
             self.engine = engine
             self.player = player
+            self.logEnabled = logEnabled
         }
         
         func onCancelled() {
+            BufferHolder.shared.audioBuffers.removeValue(forKey: requestId)
+            if logEnabled {
+                print("[Voice request] [cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+            }
             result([])
         }
         
@@ -154,17 +174,19 @@ public class TTS {
                    onCancelled()
                    return
                }
-               print("Generate request \(requestId)")
-            
+                
                 do {
+                    if logEnabled {
+                        print("[Voice request] [generate start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+                    }
+                    
                     let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
                         return isCancelled
                     })
                     
                     guard melSpectrogram.count == 2 else {
                         onCancelled()
-                        return
-                        
+                        return                        
                     }
                     
                     guard !isCancelled else {
@@ -183,6 +205,10 @@ public class TTS {
                     BufferHolder.shared.audioBuffers[requestId] = data
                     let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
                     let arr = duration.map( { Double($0) })
+                    if logEnabled {
+                        print("[Voice request] [generate end] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+                    }
+                    
                     DispatchQueue.main {
                         self.result(arr)
                     }
@@ -200,13 +226,15 @@ public class TTS {
         let result: FlutterResult
         let sampleRate: Int
         let playerCompletedDelayed: Int
-        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, result: @escaping FlutterResult) {
+        let logEnabled: Bool
+        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, logEnabled: Bool, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.result = result
             self.engine = engine
             self.player = player
             self.sampleRate = sampleRate
             self.playerCompletedDelayed = playerCompletedDelayed
+            self.logEnabled = logEnabled
         }
         
         func onCancelled() {
@@ -219,10 +247,16 @@ public class TTS {
                    return
                }
                
-            print("playing voice request \(requestId)")
+            if logEnabled {
+                print("[Voice request] [play start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
+            }
+            
             
             guard let buffer = BufferHolder.shared.audioBuffers[requestId] else {
-                print("buffer is null")
+                if logEnabled {
+                    print("buffer is null")
+                }
+                
                 result(nil)
                 return
             }
@@ -235,6 +269,9 @@ public class TTS {
                     
                     return self.isCancelled
                 }, withCompleted: {
+                    if self.logEnabled {
+                        print("[Voice request] [play end] \(self.requestId), \(BufferHolder.shared.audioBuffers.count)")
+                    }
                     BufferHolder.shared.audioBuffers.removeValue(forKey: self.requestId)
                     if self.playerCompletedDelayed == 0 {
                         self.result(nil)
@@ -312,8 +349,9 @@ public class TTS {
         let result: FlutterResult
         let engine: AVAudioEngine?
         let player: AVAudioPlayerNode?
+        let logEnabled: Bool
         
-        init(fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, result: @escaping FlutterResult) {
+        init(fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
             self.fastSpeech2 = fastSpeech2
             self.mbMelGan = mbMelGan
             self.inputIds = inputIds
@@ -324,11 +362,15 @@ public class TTS {
             self.result = result
             self.engine = engine
             self.player = player
+            self.logEnabled = logEnabled
         }
         
         override func main() {
                guard !isCancelled else { return }
-               print("Running..")
+                if logEnabled {
+                    print("Running..")
+                }
+               
             
                 do {
                     let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
@@ -366,7 +408,10 @@ public class TTS {
         
         private func playBuffer(data: Data, sampleRate: Int) {
             guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
-                print("engine does not initialize yet")
+                if self.logEnabled {
+                    print("engine does not initialize yet")
+                }
+                
                 return
             }
             
@@ -379,7 +424,9 @@ public class TTS {
                 engine.prepare()
                 try engine.start()
             } catch {
-                print("Error info: \(error)")
+                if self.logEnabled {
+                    print("Error info: \(error)")
+                }
             }
             
             guard !isCancelled else { return }
@@ -389,7 +436,9 @@ public class TTS {
             
             guard !isCancelled else { return }
             guard player.engine?.isRunning == true else {
-                print("engine does not start yet")
+                if self.logEnabled {
+                    print("engine does not start yet")
+                }
                 return
             }
             
