@@ -1,16 +1,34 @@
 class Parameters {
-  // english params
   static const enSampleRate = 44100;
   static const enHopSize = 512;
-  static const enEos = 95; // end of sentence
+  static const enEos = 77;
+  static const idEos = 38;
+  static const enDot = 72;
+  static const idDot = 33;
 
-  // indonesian params
-  static const idSampleRate = 22050;
-  static const idHopSize = 256;
-  static const idEos = 148;
+  static const eosInputIds = <String, int>{
+    'en': enEos,
+    'id': idEos,
+  };
 
-  static const defaultDot = 7; // dot (.)
-  static const eosText = 'eos';
+  static const specialInputIds = <String, Map<String, int>>{
+    'en': {
+      '!': 70,
+      ',': 71,
+      '.': enDot,
+      ':': 75,
+      ';': 74,
+      '?': 73,
+    },
+    'id': {
+      '!': 31,
+      ',': 32,
+      '.': idDot,
+      ':': 36,
+      ';': 35,
+      '?': 34,
+    },
+  };
 }
 
 class RequestInfo {
@@ -45,34 +63,12 @@ class RequestInfo {
     this.sampleRate = Parameters.enSampleRate,
     this.hopSize = Parameters.enHopSize,
     this.eos = Parameters.enEos,
-    this.dot = Parameters.defaultDot,
+    this.dot = Parameters.enDot,
     this.requestId = '',
     this.singleThread = true,
     this.playerCompletedDelayed = 0,
     this.useEos = true,
     this.modelVersion = 1,
     this.logEnabled = true,
-  });
-}
-
-class IdRequestInfo extends RequestInfo {
-  IdRequestInfo(
-    super.fastSpeechModel,
-    super.melganModel,
-    super.inputIds,
-    super.visemes, {
-    super.sampleRate = Parameters.idSampleRate,
-    super.hopSize = Parameters.idHopSize,
-    super.eos = Parameters.idEos,
-    super.speed = 1.0,
-    super.speakerId = 0,
-    super.useDot = false,
-    super.dot = Parameters.defaultDot,
-    super.requestId = '',
-    super.singleThread = true,
-    super.playerCompletedDelayed = 0,
-    super.useEos = true,
-    super.modelVersion = 1,
-    super.logEnabled = true,
   });
 }

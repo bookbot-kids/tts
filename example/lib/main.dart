@@ -736,8 +736,8 @@ class _MyAppState extends State<MyApp> {
           playerCompletedDelayed: 0,
           speed: 1.0,
           useEos: true,
-          dot: 72,
-          eos: 95,
+          dot: Parameters.enDot,
+          eos: Parameters.enEos,
         );
       } else {
         final wordTexts = breakWords(text);
@@ -769,8 +769,8 @@ class _MyAppState extends State<MyApp> {
           playerCompletedDelayed: 0,
           speed: 1.2,
           useEos: true,
-          dot: 31,
-          eos: 36,
+          dot: Parameters.idDot,
+          eos: Parameters.idEos,
         );
       }
 
