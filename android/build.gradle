@@ -18,6 +18,14 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        maven {  // Only for snapshot artifacts
+            name 'ossrh-snapshot'
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
+        }
+
+        flatDir {
+            dirs project(':tts').file('libs')
+        }
     }
 }
 
@@ -47,7 +55,9 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'org.tensorflow:tensorflow-lite:2.10.0'
-    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.10.0'
+    implementation(name:'tensorflow-lite', ext:'aar')
+    implementation(name:'tensorflow-lite-select-tf-ops', ext:'aar')
+//     implementation 'org.tensorflow:tensorflow-lite:2.11.0'
+//     implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.3'
 }
