@@ -18,10 +18,10 @@ class FastSpeech2 {
     
     var options: Interpreter.Options
     
-    init(url: URL) {
+    init(url: URL, threadCount: Int) {
         self.url = url
         self.options = Interpreter.Options()
-        self.options.threadCount = 1
+        self.options.threadCount = threadCount
     }
     
     func getMelSpectrogram(inputIds: [Int32], speedRatio: Float, speakerId: Int32 = 0,

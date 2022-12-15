@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel
 data class RequestInfo (val requestId: String, val fastSpeechModel: String, val melganModel: String,
                         val inputIds: List<Int>, val speed: Double, val speakerId: Int = 0, val sampleRate: Int,
                         val hopSize: Int, val singleThread: Boolean, val playerCompletedDelayed: Int,
-                        var modelVersion: Int, val result: MethodChannel.Result
+                        var modelVersion: Int, val threadCount: Int, val result: MethodChannel.Result
 ) {
     constructor(map: Map<*, *>, result: MethodChannel.Result) : this(
         map["requestId"] as String,
@@ -20,6 +20,7 @@ data class RequestInfo (val requestId: String, val fastSpeechModel: String, val 
         map["singleThread"] as Boolean,
         map["playerCompletedDelayed"] as Int,
         map["modelVersion"] as Int,
+        map["threadCount"] as Int,
         result
     )
 }

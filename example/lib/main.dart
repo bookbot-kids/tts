@@ -32,7 +32,7 @@ class MyApp extends StatefulWidget {
 enum Langage { en, id }
 
 class _MyAppState extends State<MyApp> {
-  final _ttsPlugin = Tts();
+  final _ttsPlugin = Tts(threadCount: 1);
   bool _isRunning = false;
   // 'hello world'    'h ə l oʊ   w ɝ r l d'     '53 20 64 70 91 45 64 37'
   static const _defaultEnText =

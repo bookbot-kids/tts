@@ -28,6 +28,7 @@ public class TTS {
     var operationQueue: OperationQueue = OperationQueue()
     var audioOperationQueue: OperationQueue = OperationQueue()
     var logEnabled = true
+    var threadCount = 1
 
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
@@ -54,8 +55,8 @@ public class TTS {
                         return
                     }
                     
-                    self.fastSpeech2 = FastSpeech2(url: fastSpeechUrl)
-                    self.mbMelGan = MBMelGan(url: melganUrl)
+                    self.fastSpeech2 = FastSpeech2(url: fastSpeechUrl, threadCount: self.threadCount)
+                    self.mbMelGan = MBMelGan(url: melganUrl, threadCount: self.threadCount)
                     self.modelMap[key] = true
                     onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
                 }
@@ -71,8 +72,8 @@ public class TTS {
                     return
                 }
                 
-                fastSpeech2 = FastSpeech2(url: fastSpeechUrl)
-                mbMelGan = MBMelGan(url: melganUrl)
+                fastSpeech2 = FastSpeech2(url: fastSpeechUrl, threadCount: self.threadCount)
+                mbMelGan = MBMelGan(url: melganUrl, threadCount: self.threadCount)
                 modelMap[key] = true
                 onCompleted(fastSpeech2 != nil && mbMelGan != nil)
             }

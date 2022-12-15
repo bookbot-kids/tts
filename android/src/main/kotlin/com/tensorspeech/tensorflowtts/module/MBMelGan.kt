@@ -11,7 +11,7 @@ import kotlin.math.max
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
  * Created 2020-07-20 17:26
  */
-class MBMelGan(private val modulePath: String) : AbstractModule() {
+class MBMelGan(private val modulePath: String, threadCount: Int) : AbstractModule(threadCount) {
     private val hopSize = 512
     private val minBufferSize = 350000
 

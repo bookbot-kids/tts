@@ -29,14 +29,14 @@ class TtsManager {
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
     var logEnabled = true
-    fun init(context: Context, version: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
+    fun init(context: Context, version: Int, threadCount: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
                     @Suppress("SpellCheckingInspection")
                     val listener = fun (fastspeech: String, vocoder: String) {
-                        modelMap[key] = Pair(FastSpeech2(fastspeech), MBMelGan(vocoder))
+                        modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount), MBMelGan(vocoder, threadCount))
                         callback?.invoke()
                     }
 

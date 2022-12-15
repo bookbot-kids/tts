@@ -13,7 +13,7 @@ import java.util.*
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
  * Created 2020-07-20 17:26
  */
-class FastSpeech2(private val modulePath: String) : AbstractModule() {
+class FastSpeech2(private val modulePath: String, threadCount: Int) : AbstractModule(threadCount) {
     fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int, isCancelled: () -> Boolean): Pair<TensorBuffer, IntArray>? {
         if(isCancelled()) return null
         val interpreter = Interpreter(File(modulePath), option)

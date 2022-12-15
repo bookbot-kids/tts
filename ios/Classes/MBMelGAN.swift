@@ -12,10 +12,10 @@ class MBMelGan {
     var options: Interpreter.Options
     var url: URL
     
-    init(url: URL) {
+    init(url: URL, threadCount: Int) {
         self.url = url
         options = Interpreter.Options()
-        options.threadCount = 1        
+        options.threadCount = threadCount
     }
     
     func getAudio(input: Tensor, isCancelled: (() -> Bool)) throws -> Data {

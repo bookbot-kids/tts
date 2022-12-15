@@ -25,17 +25,19 @@ class MethodChannelTts extends TtsPlatform {
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
       'logEnabled': requestInfo.logEnabled,
+      'threadCount': requestInfo.threadCount,
     });
   }
 
   @override
   Future<void> initModels(String fastSpeechModel, String melganModel,
-      {int version = 1}) async {
+      {int version = 1, int threadCount = 1}) async {
     await methodChannel.invokeMethod('initModels', {
       'fastSpeechModel': fastSpeechModel,
       'melganModel': melganModel,
       'version': version,
       'logEnabled': true,
+      'threadCount': threadCount
     });
   }
 
@@ -54,6 +56,7 @@ class MethodChannelTts extends TtsPlatform {
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
       'logEnabled': requestInfo.logEnabled,
+      'threadCount': requestInfo.threadCount,
     });
   }
 
@@ -72,6 +75,7 @@ class MethodChannelTts extends TtsPlatform {
       'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
       'modelVersion': requestInfo.modelVersion,
       'logEnabled': requestInfo.logEnabled,
+      'threadCount': requestInfo.threadCount,
     });
   }
 
