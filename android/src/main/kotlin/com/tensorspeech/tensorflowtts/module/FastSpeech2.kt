@@ -35,8 +35,8 @@ class FastSpeech2(private val modulePath: String, threadCount: Int) : AbstractMo
             interpreter.close()
             return null
         }
-        outputMap[0] = outputBuffer
-        outputMap[1] = outputBuffer3
+        outputMap[1] = outputBuffer
+        outputMap[2] = outputBuffer3
         val inputs = Array(1) { IntArray(inputIds.size) }
         inputs[0] = inputIds
 
