@@ -95,6 +95,6 @@ class FastSpeech2 {
             return []
         }
         
-        return [try interpreter.output(at: 1), try interpreter.output(at: 2)]
+        return [try interpreter.output(at: 0), try interpreter.output(at: 1)]
     }
 }
