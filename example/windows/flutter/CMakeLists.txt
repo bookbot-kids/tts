@@ -63,6 +63,8 @@ set_target_properties(flutter_wrapper_plugin PROPERTIES
 target_link_libraries(flutter_wrapper_plugin PUBLIC flutter)
 target_include_directories(flutter_wrapper_plugin PUBLIC
   "${WRAPPER_ROOT}/include"
+  "${WRAPPER_ROOT}/tensorflow"
+  "${WRAPPER_ROOT}/cppflow"
 )
 add_dependencies(flutter_wrapper_plugin flutter_assemble)
 
@@ -75,6 +77,8 @@ apply_standard_settings(flutter_wrapper_app)
 target_link_libraries(flutter_wrapper_app PUBLIC flutter)
 target_include_directories(flutter_wrapper_app PUBLIC
   "${WRAPPER_ROOT}/include"
+  "${WRAPPER_ROOT}/tensorflow"
+  "${WRAPPER_ROOT}/cppflow"
 )
 add_dependencies(flutter_wrapper_app flutter_assemble)
 

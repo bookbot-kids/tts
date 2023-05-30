@@ -5,6 +5,7 @@
 #include <flutter/plugin_registrar_windows.h>
 
 #include <memory>
+#include "tts_manager.h"
 
 namespace tts {
 
@@ -15,6 +16,7 @@ class TtsPlugin : public flutter::Plugin {
   TtsPlugin();
 
   virtual ~TtsPlugin();
+  TtsManager* ttsManager;
 
   // Disallow copy and assign.
   TtsPlugin(const TtsPlugin&) = delete;

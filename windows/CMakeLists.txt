@@ -16,7 +16,12 @@ set(PLUGIN_NAME "tts_plugin")
 list(APPEND PLUGIN_SOURCES
   "tts_plugin.cpp"
   "tts_plugin.h"
+  "tts_manager.cpp"
+  "tts_manager.h"
 )
+
+# Add the NOMINMAX definition to suppress min/max macro definitions in Windows headers
+add_definitions(-DNOMINMAX)
 
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
@@ -41,8 +46,18 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 # Source include directories and library dependencies. Add any plugin-specific
 # dependencies here.
 target_include_directories(${PLUGIN_NAME} INTERFACE
-  "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/tensorflow"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cppflow"
+)
+
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
+
+
+# Add TensorFlow library
+target_link_libraries(${PLUGIN_NAME} PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/libs/tensorflow.lib"
+)
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
@@ -67,6 +82,7 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/release-1.11.0.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 # Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -94,3 +110,18 @@ add_custom_command(TARGET ${TEST_RUNNER} POST_BUILD
 include(GoogleTest)
 gtest_discover_tests(${TEST_RUNNER})
 endif()
+
+# copy dll
+# Set the source and destination paths for the DLL file
+set(TF_DLL_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/tensorflow.dll")
+set(TF_DLL_DESTINATION_PATH "${CMAKE_BINARY_DIR}/../../build/windows/runner/$<CONFIG>/tensorflow.dll")
+
+# Add a custom command to copy the DLL file
+add_custom_command(
+  TARGET ${PLUGIN_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  "${TF_DLL_SOURCE_PATH}"
+  "${TF_DLL_DESTINATION_PATH}"
+  COMMENT "Copying DLL file to output directory"
+)
+
