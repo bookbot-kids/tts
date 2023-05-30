@@ -42,17 +42,22 @@ void TtsPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("initModels") == 0) {   
-    //  const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
-    ttsManager->initModel(std::move(result));
+      const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      auto fastSpeechModel_it = (args->find(flutter::EncodableValue("fastSpeechModel")))->second;
+      auto melganModel_it = (args->find(flutter::EncodableValue("melganModel")))->second;
+      std::string fastSpeechModel = std::get<std::string>(fastSpeechModel_it);
+      std::string melganModel = std::get<std::string>(melganModel_it);
+      ttsManager->initModel(fastSpeechModel, melganModel);
+      result->Success(flutter::EncodableValue(TRUE));
   } else if (method_call.method_name().compare("speakText") == 0) {  
-      // const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
-      ttsManager->speakText(std::move(result));
+      const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      ttsManager->speakText(args, std::move(result));
   } if (method_call.method_name().compare("playVoice") == 0) {   
-      // const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
-      ttsManager->playVoice(std::move(result));
+      const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      ttsManager->playVoice(args, std::move(result));
   }  if (method_call.method_name().compare("generateVoice") == 0) {  
-      // const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
-      ttsManager->generateVoice(std::move(result));
+      const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      ttsManager->generateVoice(args, std::move(result));
   } if (method_call.method_name().compare("dispose") == 0) {   
       ttsManager->dispose(std::move(result));
   } else {
