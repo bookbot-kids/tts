@@ -241,11 +241,10 @@ namespace tts {
         audioCache[requestId] = std::get<1>(fastSpeechResult);
     }
 
-    void TtsManager::dispose(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+    void TtsManager::dispose() {
         initialized = false;
         lightspeech.reset();
         mbmelgan.reset();
-        audioCache.clear();
-        result->Success(flutter::EncodableValue(TRUE));
+        audioCache.clear();        
     }
 }

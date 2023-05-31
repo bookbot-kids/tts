@@ -35,6 +35,7 @@ TtsPlugin::TtsPlugin() {
 }
 
 TtsPlugin::~TtsPlugin() {
+    ttsManager->dispose();
     ttsManager = nullptr;
 }
 
@@ -59,7 +60,8 @@ void TtsPlugin::HandleMethodCall(
       const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments());
       ttsManager->generateVoice(args, std::move(result));
   } if (method_call.method_name().compare("dispose") == 0) {   
-      ttsManager->dispose(std::move(result));
+      ttsManager->dispose();
+      result->Success(flutter::EncodableValue(TRUE));
   } else {
     result->NotImplemented();
   }

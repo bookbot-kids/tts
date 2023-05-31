@@ -22,7 +22,7 @@ namespace tts {
         void speakText(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
         void playVoice(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
         void generateVoice(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-        void dispose(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+        void dispose();
         std::tuple<std::vector<double>, std::vector<float>> TtsManager::runFastSpeech(std::vector<int64_t> inputIds, double speed, std::int32_t speaker, std::int32_t sampleRate);
  private:
      bool initialized;
