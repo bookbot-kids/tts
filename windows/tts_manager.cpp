@@ -43,7 +43,7 @@ namespace tts {
     TtsManager::~TtsManager() {
     }
 
-    IXAudio2* InitializeXAudio2() {
+    IXAudio2* initializeXAudio2() {
         IXAudio2* xAudio2 = nullptr;
         HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
         if (FAILED(hr)) {
@@ -53,8 +53,8 @@ namespace tts {
         return xAudio2;
     }
 
-    void PlayAudioData(const std::vector<float>& audioData, int sampleRate, int numChannels) {
-        IXAudio2* xAudio2 = InitializeXAudio2();
+    void playAudioData(const std::vector<float>& audioData, int sampleRate, int numChannels) {
+        IXAudio2* xAudio2 = initializeXAudio2();
         if (!xAudio2) {
             return;
         }
@@ -130,25 +130,7 @@ namespace tts {
         }       
     }
 
-    void TtsManager::speakText(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result){
-        auto fastSpeechModel_it = (args->find(flutter::EncodableValue("fastSpeechModel")))->second;
-        auto melganModel_it = (args->find(flutter::EncodableValue("melganModel")))->second;
-        std::string fastSpeechModel = std::get<std::string>(fastSpeechModel_it);
-        std::string melganModel = std::get<std::string>(melganModel_it);
-        initModel(fastSpeechModel, melganModel);
-
-        auto inputIds_it = (args->find(flutter::EncodableValue("inputIds")))->second;
-        auto speed_it = (args->find(flutter::EncodableValue("speed")))->second;
-        auto speakerId_it = (args->find(flutter::EncodableValue("speakerId")))->second;
-        auto sampleRate_it = (args->find(flutter::EncodableValue("sampleRate")))->second;
-        auto hopSize_it = (args->find(flutter::EncodableValue("hopSize")))->second;
-        auto requestId_it = (args->find(flutter::EncodableValue("requestId")))->second;
-
-        std::vector<int64_t> inputIds = std::get<std::vector<int64_t>>(inputIds_it);
-        double speed = std::get<double>(speed_it);
-        std::int32_t speaker = std::get<std::int32_t>(speakerId_it);
-        std::int32_t sampleRate = std::get<std::int32_t>(sampleRate_it);
-
+    std::tuple<std::vector<double>, std::vector<float>> TtsManager::runFastSpeech(std::vector<int64_t> inputIds, double speed, std::int32_t speaker, std::int32_t sampleRate) {
         // This is the shape of the input IDs, our equivalent to tf.expand_dims.
         std::vector<int64_t> InputIDShape = { 1, (int64_t)inputIds.size() };
 
@@ -156,7 +138,7 @@ namespace tts {
         cppflow::tensor input_ids{inputIds, InputIDShape};
         cppflow::tensor energy_ratios{1.f};
         cppflow::tensor f0_ratios{1.f};
-        
+
         // change speaker index here
         cppflow::tensor speaker_ids{speaker};
         cppflow::tensor speed_ratios{speed};
@@ -179,12 +161,38 @@ namespace tts {
         cppflow::tensor input_mels{mel_spec.Data, mel_spec.Shape};
         // infer
         auto out_audio = (*mbmelgan)({ {"serving_default_mels:0", input_mels} }, { "StatefulPartitionedCall:0" })[0];
-        TFTensor<float> audio_tensor = CopyTensor<float>(out_audio);
+        TFTensor<float> audio_tensor = CopyTensor<float>(out_audio); 
+
+        // copy duration into double array and send back to flutter
+        std::vector<double> outputDurations(durations.Data.begin(), durations.Data.end());
+        return { outputDurations, audio_tensor.Data };
+    }
+
+    void TtsManager::speakText(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result){
+        auto fastSpeechModel_it = (args->find(flutter::EncodableValue("fastSpeechModel")))->second;
+        auto melganModel_it = (args->find(flutter::EncodableValue("melganModel")))->second;
+        std::string fastSpeechModel = std::get<std::string>(fastSpeechModel_it);
+        std::string melganModel = std::get<std::string>(melganModel_it);
+        initModel(fastSpeechModel, melganModel);
+
+        auto inputIds_it = (args->find(flutter::EncodableValue("inputIds")))->second;
+        auto speed_it = (args->find(flutter::EncodableValue("speed")))->second;
+        auto speakerId_it = (args->find(flutter::EncodableValue("speakerId")))->second;
+        auto sampleRate_it = (args->find(flutter::EncodableValue("sampleRate")))->second;
+        auto hopSize_it = (args->find(flutter::EncodableValue("hopSize")))->second;
+        auto requestId_it = (args->find(flutter::EncodableValue("requestId")))->second;
+
+        std::vector<int64_t> inputIds = std::get<std::vector<int64_t>>(inputIds_it);
+        double speed = std::get<double>(speed_it);
+        std::int32_t speaker = std::get<std::int32_t>(speakerId_it);
+        std::int32_t sampleRate = std::get<std::int32_t>(sampleRate_it);
+
+        std::tuple<std::vector<double>, std::vector<float>> fastSpeechResult = runFastSpeech(inputIds, speed, speaker, sampleRate);
+        result->Success(flutter::EncodableValue(std::get<0>(fastSpeechResult)));
 
         // play audio
-        const std::vector<float> audioData = audio_tensor.Data;
-        PlayAudioData(audioData, sampleRate, 1);
-        result->Success(flutter::EncodableValue(TRUE));
+        const std::vector<float> audioData = std::get<1>(fastSpeechResult);
+        playAudioData(audioData, sampleRate, 1);
     }
 
     void TtsManager::playVoice(const flutter::EncodableMap* args, std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result){
@@ -193,6 +201,18 @@ namespace tts {
         std::string fastSpeechModel = std::get<std::string>(fastSpeechModel_it);
         std::string melganModel = std::get<std::string>(melganModel_it);
         initModel(fastSpeechModel, melganModel);
+        auto requestId_it = (args->find(flutter::EncodableValue("requestId")))->second;
+        std::string requestId = std::get<std::string>(requestId_it);
+        auto sampleRate_it = (args->find(flutter::EncodableValue("sampleRate")))->second;
+        std::int32_t sampleRate = std::get<std::int32_t>(sampleRate_it);
+        auto it = audioCache.find(requestId);
+        if (it != audioCache.end()) {
+            std::vector<float> audioData = audioCache[requestId];
+            playAudioData(audioData, sampleRate, 1);        }
+        else {
+            std::cout << requestId << " cache not found." << std::endl;
+        }
+
         result->Success(flutter::EncodableValue(TRUE));
     }
 
@@ -202,13 +222,30 @@ namespace tts {
         std::string fastSpeechModel = std::get<std::string>(fastSpeechModel_it);
         std::string melganModel = std::get<std::string>(melganModel_it);
         initModel(fastSpeechModel, melganModel);
-        result->Success(flutter::EncodableValue(TRUE));
+
+        auto inputIds_it = (args->find(flutter::EncodableValue("inputIds")))->second;
+        auto speed_it = (args->find(flutter::EncodableValue("speed")))->second;
+        auto speakerId_it = (args->find(flutter::EncodableValue("speakerId")))->second;
+        auto sampleRate_it = (args->find(flutter::EncodableValue("sampleRate")))->second;
+        auto hopSize_it = (args->find(flutter::EncodableValue("hopSize")))->second;
+        auto requestId_it = (args->find(flutter::EncodableValue("requestId")))->second;
+
+        std::vector<int64_t> inputIds = std::get<std::vector<int64_t>>(inputIds_it);
+        double speed = std::get<double>(speed_it);
+        std::int32_t speaker = std::get<std::int32_t>(speakerId_it);
+        std::int32_t sampleRate = std::get<std::int32_t>(sampleRate_it);
+        std::string requestId = std::get<std::string>(requestId_it);
+        std::tuple<std::vector<double>, std::vector<float>> fastSpeechResult = runFastSpeech(inputIds, speed, speaker, sampleRate);
+        result->Success(flutter::EncodableValue(std::get<0>(fastSpeechResult)));
+        // cache audio
+        audioCache[requestId] = std::get<1>(fastSpeechResult);
     }
 
     void TtsManager::dispose(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
         initialized = false;
         lightspeech.reset();
         mbmelgan.reset();
+        audioCache.clear();
         result->Success(flutter::EncodableValue(TRUE));
     }
 }
