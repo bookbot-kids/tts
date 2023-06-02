@@ -41,8 +41,6 @@ flutter:
         pluginClass: TtsPlugin
       ios:
         pluginClass: TtsPlugin
-      windows:
-        pluginClass: TtsPluginCApi  
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
