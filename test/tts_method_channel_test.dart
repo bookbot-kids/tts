@@ -9,12 +9,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       return '42';
     });
+    platform.initModels('fastSpeechModel', 'melganModel');
   });
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 }

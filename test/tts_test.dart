@@ -29,7 +29,6 @@ class MockTtsPlatform with MockPlatformInterfaceMixin implements TtsPlatform {
 
   @override
   Future<void> dispose() {
-    // TODO: implement dispose
     throw UnimplementedError();
   }
 }
@@ -42,7 +41,8 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    Tts ttsPlugin = Tts();
+    final ttsPlugin = Tts();
+    ttsPlugin.version;
     MockTtsPlatform fakePlatform = MockTtsPlatform();
     TtsPlatform.instance = fakePlatform;
   });
