@@ -8,22 +8,18 @@
 import Foundation
 import onnxruntime_objc
 
-class MBMelGan {
-    var url: URL
-    var ortSession: ORTSession?
+class MBMelGan : BaseProcessor {
     
-    init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
-        self.url = url
-        if let env = ortEnv {
-            ortSession = try? ORTSession(env: env, modelPath: url.path, sessionOptions: nil)
-        }
+    override init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
+        super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
     
-    func getAudio(mels: [[[Float]]], isCancelled: (() -> Bool)) throws -> Data {
-        if isCancelled() {
+    func getAudio(mels: [[[Float]]], isCancelled: (() -> Bool)) throws -> Data {        
+        guard !isCancelled() else {
             return Data()
         }
         
+        initSession()        
         guard let session = ortSession else {
             return Data()
         }

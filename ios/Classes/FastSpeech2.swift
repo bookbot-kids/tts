@@ -17,31 +17,24 @@ struct LightSpeechOutputs {
     }
 }
 
-class FastSpeech2 {
-    
+class FastSpeech2: BaseProcessor {    
     var f0Ratio: Float = 1
-    
     var energyRatio: Float = 1
     
-    var url: URL
     
-    var ortSession: ORTSession?
-    
-    init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
-        self.url = url
-        if let env = ortEnv {
-            ortSession = try? ORTSession(env: env, modelPath: url.path, sessionOptions: nil)
-        }        
+    override init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
+        super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
     
     func getMelSpectrogram(inputIds: [Int32], speedRatio: Float, speakerId: Int32 = 0,
                            isCancelled: (() -> Bool)) throws -> LightSpeechOutputs {
         var result = LightSpeechOutputs(mels: [], durations: [])
         
-        if isCancelled() {
+        guard !isCancelled() else {
             return result
         }
         
+        initSession()        
         guard let session = ortSession else {
             return result
         }

@@ -7,7 +7,7 @@ PODS:
     - onnxruntime-c (= 1.15.1)
   - path_provider_ios (0.0.1):
     - Flutter
-  - tts (0.0.1):
+  - tts (1.0.0):
     - Flutter
     - onnxruntime-objc
 
@@ -34,7 +34,7 @@ SPEC CHECKSUMS:
   onnxruntime-c: ebdcfd8650bcbd10121c125262f99dea681b92a3
   onnxruntime-objc: ae7acec7a3d03eaf072d340afed7a35635c1c2a6
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
-  tts: 432e67df8a1cc3401d747549fcb26f0fd4fc9ea1
+  tts: c526e7438529f637c621d44ec6d24a55a1d572e3
 
 PODFILE CHECKSUM: 7368163408c647b7eb699d0d788ba6718e18fb8d
 
