@@ -5,7 +5,7 @@ import com.tensorspeech.tensorflowtts.module.FastSpeech2
 import com.tensorspeech.tensorflowtts.module.MBMelGan
 import io.flutter.plugin.common.MethodChannel
 
-class InputTask(private val fastspeech: FastSpeech2, private val mbMelGan: MBMelGan,
+class InputTask(private val fastSpeech: FastSpeech2, private val mbMelGan: MBMelGan,
                 private val inputIds: List<Int>, private val speed: Float,
                 private val speakerId: Int = 0, private val player: TtsBufferPlayer?,
                 private val result: MethodChannel.Result
@@ -22,14 +22,16 @@ class InputTask(private val fastspeech: FastSpeech2, private val mbMelGan: MBMel
         }
         if (isStopping())  return
         val output =
-            fastspeech.getMelSpectrogram(inputIds.toIntArray(), speed, speakerId, isStopping)
+            fastSpeech.getMelSpectrogram(inputIds.toIntArray(), speed, speakerId, isStopping)
                 ?: return
 
         if (isStopping())  return
         val audioData = mbMelGan.getAudio(output.first, isStopping) ?: return
+        val audio = audioData.flatMap { it.asIterable() }.flatMap { it.asIterable() }.toFloatArray()
+        val duration = output.second.flatMap { it.asIterable() }.map { it.toDouble() }
         if (isStopping())  return
-        result.success(output.second.map { it.toDouble() })
+        result.success(duration)
         if (isStopping())  return
-        player?.play(inputIds, audioData, isStopping)
+        player?.play(inputIds, audio, isStopping)
     }
 }

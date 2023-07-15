@@ -1,17 +1,16 @@
 package com.tensorspeech.tensorflowtts.module
 
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.File
+import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
 import java.nio.FloatBuffer
+import java.util.Collections
 import kotlin.math.ceil
-import kotlin.math.max
 
 /**
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
  * Created 2020-07-20 17:26
  */
-class MBMelGan(private val modulePath: String, threadCount: Int) : AbstractModule(threadCount) {
+class MBMelGan(private val modulePath: String, threadCount: Int, ortEnv: OrtEnvironment) : AbstractModule(threadCount, modulePath, ortEnv) {
     private val hopSize = 512
     private val minBufferSize = 350000
 
@@ -19,36 +18,31 @@ class MBMelGan(private val modulePath: String, threadCount: Int) : AbstractModul
         return (ceil(num.toDouble() / 100000.0) * 100000.0).toInt()
     }
 
-    fun getAudio(input: TensorBuffer, isCancelled: () -> Boolean): FloatArray? {
+    fun getAudio(mels: Array<Array<FloatArray>>, isCancelled: () -> Boolean): Array<Array<FloatArray>>? {
         if(isCancelled()) return null
-        val interpreter = Interpreter(File(modulePath), option)
-        interpreter.resizeInput(0, input.shape)
-        interpreter.allocateTensors()
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        var bufferSize = minBufferSize
-        val melSpectrogramLength = input.shape[1] * hopSize
-        if(melSpectrogramLength > bufferSize) {
-            bufferSize = max(minBufferSize, max(melSpectrogramLength, roundUp(melSpectrogramLength)))
+
+        // unpack 3d FloatArray and get size along each dimension := (1, L, 80)
+        val melsShape = longArrayOf(mels.size.toLong(), mels[0].size.toLong(), mels[0][0].size.toLong())
+
+        val totalElements = mels.size * mels[0].size * mels[0][0].size
+        val flattenedMels = FloatArray(totalElements) { index ->
+            val i = index / (mels[0].size * mels[0][0].size)
+            val j = (index % (mels[0].size * mels[0][0].size)) / mels[0][0].size
+            val k = (index % (mels[0].size * mels[0][0].size)) % mels[0][0].size
+            mels[i][j][k]
         }
 
-        val outputBuffer = FloatBuffer.allocate(bufferSize)
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        interpreter.run(input.buffer, outputBuffer)
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        val audioArray = FloatArray(outputBuffer.position())
-        outputBuffer.rewind()
-        outputBuffer[audioArray]
         if(isCancelled()) return null
-        interpreter.close()
-        return audioArray
+        // create input tensors from raw vectors
+        val melTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(flattenedMels), melsShape)
+        if(isCancelled()) return null
+        // create input name -> input tensor map
+        val inputTensors: Map<String, OnnxTensor> = Collections.singletonMap("mels", melTensor)
+
+        val output = session.run(inputTensors)
+        output.use {
+            @Suppress("UNCHECKED_CAST")
+            return output?.get(0)?.value as Array<Array<FloatArray>>
+        }
     }
 }

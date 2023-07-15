@@ -1,10 +1,7 @@
 package com.tensorspeech.tensorflowtts.module
 
-import android.annotation.SuppressLint
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.File
+import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.util.*
@@ -13,77 +10,43 @@ import java.util.*
  * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
  * Created 2020-07-20 17:26
  */
-class FastSpeech2(private val modulePath: String, threadCount: Int) : AbstractModule(threadCount) {
-    fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int, isCancelled: () -> Boolean): Pair<TensorBuffer, IntArray>? {
+class FastSpeech2(modulePath: String, threadCount: Int,
+                   ortEnv: OrtEnvironment
+) : AbstractModule(threadCount, modulePath, ortEnv) {
+    fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int, isCancelled: () -> Boolean): Pair<Array<Array<FloatArray>>, Array<IntArray>>? {
         if(isCancelled()) return null
-        val interpreter = Interpreter(File(modulePath), option)
-        interpreter.resizeInput(0, intArrayOf(1, inputIds.size))
+        val speakerIDs = intArrayOf(speakerId)
+        val speedRatios = floatArrayOf(speed)
+        val f0Ratios = floatArrayOf(1.0F)
+        val energyRatios = floatArrayOf(1.0F)
 
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        interpreter.allocateTensors()
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        @SuppressLint("UseSparseArrays") val outputMap: MutableMap<Int, Any> = HashMap()
-        val outputBuffer = FloatBuffer.allocate(350000)
-        val outputBuffer3 = IntBuffer.allocate(inputIds.size)
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        outputMap[0] = outputBuffer
-        outputMap[1] = outputBuffer3
-        val inputs = Array(1) { IntArray(inputIds.size) }
-        inputs[0] = inputIds
+        // this is the shape of the inputs, our equivalent to tf.expand_dims.
+        val inputIDsShape = longArrayOf(1, inputIds.size.toLong())
+        val speakerIDsShape = longArrayOf(1)
+        val speedRatiosShape = longArrayOf(1)
+        val f0RatiosShape = longArrayOf(1)
+        val energyRatiosShape = longArrayOf(1)
 
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
+        val inputNames = arrayOf("input_ids", "speaker_ids", "speed_ratios", "f0_ratios", "energy_ratios")
 
-        interpreter.runForMultipleInputsOutputs(
-            arrayOf<Any>(
-                inputs,
-                intArrayOf(speakerId),
-                floatArrayOf(speed),
-                floatArrayOf(1f),
-                floatArrayOf(1f)
-            ),
-            outputMap
-        )
+        // create input tensors from raw vectors
+        val inputIDsTensor = OnnxTensor.createTensor(ortEnv, IntBuffer.wrap(inputIds), inputIDsShape)
+        val speakerIDsTensor = OnnxTensor.createTensor(ortEnv, IntBuffer.wrap(speakerIDs), speakerIDsShape)
+        val speedRatiosTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(speedRatios), speedRatiosShape)
+        val f0RatiosTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(f0Ratios), f0RatiosShape)
+        val energyRatiosTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(energyRatios), energyRatiosShape)
+        val inputTensorsVector = arrayOf(inputIDsTensor, speakerIDsTensor, speedRatiosTensor, f0RatiosTensor, energyRatiosTensor)
 
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        val size = interpreter.getOutputTensor(0).shape()[2]
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        val shape = intArrayOf(1, outputBuffer.position() / size, size)
-        val spectrogram1 = TensorBuffer.createFixedSize(shape, DataType.FLOAT32)
-        val outputArray = FloatArray(outputBuffer.position())
+        if(isCancelled()) return null
+        // create input name -> input tensor map
+        val inputTensors: Map<String, OnnxTensor> = inputNames.zip(inputTensorsVector).toMap()
+        if(isCancelled()) return null
 
-        if(isCancelled()) {
-            interpreter.close()
-            return null
+        val output = session.run(inputTensors)
+        output.use {
+            @Suppress("UNCHECKED_CAST") val mels = output?.get(0)?.value as Array<Array<FloatArray>>
+            @Suppress("UNCHECKED_CAST") val durations = output.get(1)?.value as Array<IntArray>
+            return mels to durations
         }
-        outputBuffer.rewind()
-        outputBuffer[outputArray]
-
-        if(isCancelled()) {
-            interpreter.close()
-            return null
-        }
-        spectrogram1.loadArray(outputArray)
-        outputBuffer3.position()
-        val duration = outputBuffer3.array()
-        interpreter.close()
-        return spectrogram1 to duration
     }
 }

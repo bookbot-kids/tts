@@ -7,7 +7,7 @@ import com.tensorspeech.tensorflowtts.module.MBMelGan
 class GenerateTask(private val fastspeech: FastSpeech2, private val mbMelGan: MBMelGan,
                     private val inputIds: List<Int>, private val speed: Float,
                     private val speakerId: Int = 0,
-                   private val onCompleted: (buffer: FloatArray, durations: List<Double>) -> Unit,
+                   private val onCompleted: (buffer: FloatArray, durations: Array<IntArray>) -> Unit,
                    private val onCancelled: () -> Unit
 ): Runnable {
     var stop: Boolean = false
@@ -32,6 +32,10 @@ class GenerateTask(private val fastspeech: FastSpeech2, private val mbMelGan: MB
 
         if (isStopping())  return
         val audioData = mbMelGan.getAudio(output.first, isStopping) ?: return
-        onCompleted(audioData, output.second.map { it.toDouble() })
+        val durations = output.second
+
+        val audio = audioData.flatMap { it.asIterable() }.flatMap { it.asIterable() }.toFloatArray()
+        onCompleted(audio, durations)
     }
+
 }

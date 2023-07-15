@@ -1,5 +1,6 @@
 package com.tensorspeech.tensorflowtts.tts
 
+import ai.onnxruntime.OrtEnvironment
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -34,9 +35,10 @@ class TtsManager {
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 try {
+                    val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
                     @Suppress("SpellCheckingInspection")
                     val listener = fun (fastspeech: String, vocoder: String) {
-                        modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount), MBMelGan(vocoder, threadCount))
+                        modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount, ortEnv), MBMelGan(vocoder, threadCount, ortEnv))
                         callback?.invoke()
                     }
 
@@ -180,7 +182,7 @@ class TtsManager {
     fun generateVoice(request: RequestInfo) {
         val key = request.fastSpeechModel + request.melganModel
         val processors = modelMap[key] ?: return
-        val onComplete: (buffer: FloatArray, durations: List<Double>) -> Unit = { buff, dur ->
+        val onComplete: (buffer: FloatArray, durations: Array<IntArray>) -> Unit = { buff, dur ->
             if(logEnabled) {
                 Log.d(TAG, "[Voice request] [generate end] ${request.requestId}, ${audioBuffers.size}")
             }
