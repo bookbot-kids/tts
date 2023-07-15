@@ -6,47 +6,68 @@
 //
 
 import Foundation
-import TensorFlowLite
+import onnxruntime_objc
 
 class MBMelGan {
-    var options: Interpreter.Options
     var url: URL
+    var ortSession: ORTSession?
     
-    init(url: URL, threadCount: Int) {
+    init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
         self.url = url
-        options = Interpreter.Options()
-        options.threadCount = threadCount
+        if let env = ortEnv {
+            ortSession = try? ORTSession(env: env, modelPath: url.path, sessionOptions: nil)
+        }
     }
     
-    func getAudio(input: Tensor, isCancelled: (() -> Bool)) throws -> Data {
+    func getAudio(mels: [[[Float]]], isCancelled: (() -> Bool)) throws -> Data {
         if isCancelled() {
             return Data()
         }
         
-        let interpreter = try Interpreter(modelPath: self.url.path, options: self.options)
-        try interpreter.resizeInput(at: 0, to: input.shape)
-        
-        if isCancelled() {
+        guard let session = ortSession else {
             return Data()
         }
         
-        try interpreter.allocateTensors()
+        // unpack 3d FloatArray and get size along each dimension := (1, L, 80)
+        let melsShape: [NSNumber] = [NSNumber(value: mels.count), NSNumber(value: mels[0].count), NSNumber(value: mels[0][0].count)]
         
-        if isCancelled() {
-            return Data()
+        let totalElements = mels.count * mels[0].count * mels[0][0].count
+        var flattenedMels = [Float](repeating: 0, count: totalElements)
+        for i in 0..<mels.count {
+            for j in 0..<mels[0].count {
+                for k in 0..<mels[0][0].count {
+                    let index = i * mels[0].count * mels[0][0].count + j * mels[0][0].count + k
+                    flattenedMels[index] = mels[i][j][k]
+                }
+            }
         }
         
-        try interpreter.copy(input.data, toInputAt: 0)
+        // create input tensors from raw vectors
+        let melTensor = try! ORTValue(tensorData: NSMutableData(bytes: flattenedMels, length: flattenedMels.count * MemoryLayout<Float>.size), elementType: ORTTensorElementDataType.float, shape: melsShape)
+        
+        // create input name -> input tensor map
+        let inputTensors: [String: ORTValue] = ["mels": melTensor]
 
-        if isCancelled() {
-            return Data()
+        let output = try! session.run(withInputs: inputTensors, outputNames: ["Identity"], runOptions: nil)
+        let audio = try! output["Identity"]!.tensorData()
+        let audioShapeInfo = try! output["Identity"]?.tensorTypeAndShapeInfo()
+        
+        // Convert audio NSMutableData to [[[Float]]]
+        let audioPointer = audio.bytes.assumingMemoryBound(to: Float.self)
+        let audioDims = audioShapeInfo!.shape.map{ Int(truncating: $0) }
+
+        var audioArray: [[[Float]]] = Array(repeating: Array(repeating: Array(repeating: 0.0, count: audioDims[2]), count: audioDims[1]), count: audioDims[0])
+
+        for i in 0..<audioDims[0] {
+            for j in 0..<audioDims[1] {
+                for k in 0..<audioDims[2] {
+                    audioArray[i][j][k] = audioPointer[i*audioDims[1]*audioDims[2] + j*audioDims[2] + k]
+                }
+            }
         }
         
-        try interpreter.invoke()
-
-        if isCancelled() {
-            return Data()
-        }
-        return try interpreter.output(at: 0).data
+        let audioFloatArr = audioArray[0].flatMap { $0 }.map { Float($0) }
+        let data = audioFloatArr.withUnsafeBufferPointer { Data(buffer: $0) }
+        return data
     }
 }

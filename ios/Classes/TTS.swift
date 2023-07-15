@@ -7,8 +7,8 @@
 
 import Foundation
 import AVFoundation
-import TensorFlowLite
 import Flutter
+import onnxruntime_objc
 
 public class BufferHolder {
     static let shared: BufferHolder = BufferHolder()
@@ -55,14 +55,15 @@ public class TTS {
                         return
                     }
                     
-                    self.fastSpeech2 = FastSpeech2(url: fastSpeechUrl, threadCount: self.threadCount)
-                    self.mbMelGan = MBMelGan(url: melganUrl, threadCount: self.threadCount)
+                    let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
+                    self.fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
+                    self.mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
                     self.modelMap[key] = true
                     onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
                 }
             } else {
-                let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "tflite")
-                let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "tflite")
+                let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "onnx")
+                let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "onnx")
                 guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
                     if self.logEnabled {
                         print("can't read model url \(fastSpeechModel), \(melGanModel) ")
@@ -72,8 +73,9 @@ public class TTS {
                     return
                 }
                 
-                fastSpeech2 = FastSpeech2(url: fastSpeechUrl, threadCount: self.threadCount)
-                mbMelGan = MBMelGan(url: melganUrl, threadCount: self.threadCount)
+                let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
+                fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
+                mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
                 modelMap[key] = true
                 onCompleted(fastSpeech2 != nil && mbMelGan != nil)
             }
@@ -167,7 +169,8 @@ public class TTS {
             if logEnabled {
                 print("[Voice request] [generate cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
             }
-            result([])
+            let ret: [Double] = []
+            result(ret)
         }
         
         override func main() {
@@ -193,7 +196,7 @@ public class TTS {
                         return isCancelled
                     })
                     
-                    guard melSpectrogram.count == 2 else {
+                    guard melSpectrogram.hasData() else {
                         onCancelled()
                         return                        
                     }
@@ -202,7 +205,7 @@ public class TTS {
                         onCancelled()
                         return
                     }
-                    let data = try mbMelGan.getAudio(input: melSpectrogram[0], isCancelled: {
+                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
                         return isCancelled
                     })
                     
@@ -212,14 +215,13 @@ public class TTS {
                     }
                     
                     BufferHolder.shared.audioBuffers[requestId] = data
-                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-                    let arr = duration.map( { Double($0) })
+                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
                     if logEnabled {
                         print("[Voice request] [generate end] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
                     }
                     
                     DispatchQueue.main {
-                        self.result(arr)
+                        self.result(duration)
                     }
                 }
                 catch {
@@ -391,17 +393,16 @@ public class TTS {
                         return isCancelled
                     })
                     
-                    guard melSpectrogram.count == 2 else { return }
+                    guard melSpectrogram.hasData() else { return }
                     guard !isCancelled else { return }
-                    let data = try mbMelGan.getAudio(input: melSpectrogram[0], isCancelled: {
+                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
                         return isCancelled
                     })
                     
                     guard !isCancelled, !data.isEmpty else { return }
-                    let duration = Array<Int32>(unsafeData: melSpectrogram[1].data)!
-                    let arr = duration.map( { Double($0) })
+                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
                     DispatchQueue.main {
-                        self.result(arr)
+                        self.result(duration)
                     }
                     
                     guard !isCancelled, !data.isEmpty else { return }

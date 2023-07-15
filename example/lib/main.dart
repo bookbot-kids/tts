@@ -727,16 +727,16 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'fastspeech2_quan.tflite',
-          'mb_melgan.tflite',
+          'lightspeech_quant.onnx',
+          'mbmelgan.onnx',
           inputIds,
           visemes,
-          useDot: true,
+          useDot: false,
           speakerId: 0,
           singleThread: true,
           playerCompletedDelayed: 0,
           speed: 1.0,
-          useEos: true,
+          useEos: false,
           dot: Parameters.enDot,
           eos: Parameters.enEos,
         );
@@ -761,8 +761,8 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'id_lightspeech_quant.tflite',
-          'id_lightspeech_mbmelgan.tflite',
+          'id_lightspeech_quant.onnx',
+          'id_mbmelgan.onnx',
           inputIds,
           visemes,
           speakerId: 0,

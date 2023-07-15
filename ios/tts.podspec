@@ -4,28 +4,23 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'tts'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.version          = '1.0.0'
+  s.summary          = 'Text to speech plugin'
   s.description      = <<-DESC
-A new Flutter plugin project.
+A text to speech flutter plugin
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://www.bookbotkids.com/'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Bookbot' => 'team@bookbotkids.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
   s.static_framework = true
 
-  s.dependency 'TensorFlowLiteSwift', '0.0.1-nightly.20220831'
-  s.dependency 'TensorFlowLiteSelectTfOps', '0.0.1-nightly.20220831'
+  s.dependency 'onnxruntime-objc'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
-  s.xcconfig = {
-    'USER_HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/Headers/Private" "${PODS_ROOT}/Headers/Private/tflite" "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/Flutter" "${PODS_ROOT}/Headers/Public/TensorFlowLite/tensorflow_lite" "${PODS_ROOT}/Headers/Public/tflite" "${PODS_ROOT}/TensorFlowLite/Frameworks/tensorflow_lite.framework/Headers" "${PODS_ROOT}/TensorFlowLiteC/Frameworks/TensorFlowLiteC.framework/Headers" "${PODS_ROOT}/TensorFlowLiteSelectTfOps/Frameworks/TensorFlowLiteSelectTfOps.framework"',
-    'OTHER_LDFLAGS' => '$(inherited) -force_load "$(PODS_ROOT)/TensorFlowLiteSelectTfOps/Frameworks/TensorFlowLiteSelectTfOps.xcframework/ios-arm64/TensorFlowLiteSelectTfOps.framework/TensorFlowLiteSelectTfOps"' 
-  }
 end
