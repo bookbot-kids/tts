@@ -30,30 +30,33 @@ class TtsManager {
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
     var logEnabled = true
+
     fun init(context: Context, version: Int, threadCount: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
         val key = fastSpeechModel + melganModel
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
-                try {
-                    val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
-                    @Suppress("SpellCheckingInspection")
-                    val listener = fun (fastspeech: String, vocoder: String) {
-                        modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount, ortEnv), MBMelGan(vocoder, threadCount, ortEnv))
-                        callback?.invoke()
-                    }
-
-                    if(ProcessorHolder.processorStrategy != null) {
-                        ProcessorHolder.processorStrategy?.initModel(version, arrayListOf(fastSpeechModel, melganModel)) {
-                            listener(it[0], it[1])
+                ortEnv = ortEnv ?: OrtEnvironment.getEnvironment()
+                ortEnv?.let {env ->
+                    try {
+                        @Suppress("SpellCheckingInspection")
+                        val listener = fun (fastspeech: String, vocoder: String) {
+                            modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount, env), MBMelGan(vocoder, threadCount, env))
+                            callback?.invoke()
                         }
-                    } else {
-                        listener(copyFile(context, fastSpeechModel, version), copyFile(context, melganModel, version))
-                    }
 
-                } catch (e: Exception) {
-                    Log.e(TAG, "mWorker init failed", e)
+                        if(ProcessorHolder.processorStrategy != null) {
+                            ProcessorHolder.processorStrategy?.initModel(version, arrayListOf(fastSpeechModel, melganModel)) {
+                                listener(it[0], it[1])
+                            }
+                        } else {
+                            listener(copyFile(context, fastSpeechModel, version), copyFile(context, melganModel, version))
+                        }
+
+                    } catch (e: Exception) {
+                        Log.e(TAG, "mWorker init failed", e)
+                    }
+                    TtsStateDispatcher.instance.onTtsReady()
                 }
-                TtsStateDispatcher.instance.onTtsReady()
             }
 
             TtsStateDispatcher.instance.addListener(object : OnTtsStateListener {
@@ -220,5 +223,6 @@ class TtsManager {
     companion object {
         private const val TAG = "TtsManager"
         var instance: TtsManager = TtsManager()
+        private var ortEnv: OrtEnvironment? = null
     }
 }
