@@ -191,7 +191,9 @@ class TtsManager {
             }
 
             audioBuffers[request.requestId] = buff
-            request.result.success(dur)
+            // flatten and convert to double
+            val duration = dur.flatMap { it.asIterable() }.map { it.toDouble() }
+            request.result.success(duration)
         }
 
         val onCancelled: () -> Unit = {
