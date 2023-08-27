@@ -8,8 +8,7 @@ import com.bookbot.tts.ProcessorHolder
 import com.bookbot.tts.RequestInfo
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
-import com.tensorspeech.tensorflowtts.module.FastSpeech2
-import com.tensorspeech.tensorflowtts.module.MBMelGan
+import com.tensorspeech.tensorflowtts.module.Piper
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
 import java.io.File
 import java.io.FileOutputStream
@@ -22,12 +21,9 @@ import java.util.concurrent.Future
 class TtsManager {
     private val players = mutableMapOf<Int, TtsBufferPlayer>()
     private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
-    private val audioPlayerPool = ThreadPoolManager.instance.getSingleExecutor("tts")
     private var runningTask: Future<*>? = null
-    private val modelMap = mutableMapOf<String, Pair<FastSpeech2, MBMelGan>>()
+    private val modelMap = mutableMapOf<String, Piper>()
     private val tasks = mutableListOf<InputTask>()
-    private val generateTasks = mutableListOf<GenerateTask>()
-    private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
     var logEnabled = true
 
@@ -40,7 +36,7 @@ class TtsManager {
                     try {
                         @Suppress("SpellCheckingInspection")
                         val listener = fun (fastspeech: String, vocoder: String) {
-                            modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount, env), MBMelGan(vocoder, threadCount, env))
+                            modelMap[key] = Piper(fastspeech, threadCount, env)
                             callback?.invoke()
                         }
 
@@ -139,83 +135,9 @@ class TtsManager {
         val key = request.fastSpeechModel + request.melganModel
         val processors = modelMap[key] ?: return
         tasks.clear()
-        val task = InputTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, player, request.result )
+        val task = InputTask(processors, request.inputIds.map { it.toLong() }, request.speed.toFloat(), request.speakerId, player, request.result )
         tasks.add(task)
         runningTask = threadPool.submit(task)
-    }
-
-    fun playVoice(request: RequestInfo) {
-        val buffer = audioBuffers[request.requestId]
-        if (buffer != null) {
-            val player = getPlayer(request.sampleRate , request.hopSize) ?: return
-            val onCancelled: () -> Unit = {
-                audioBuffers.remove(request.requestId)
-                if(logEnabled) {
-                    Log.d(TAG, "[Voice request] [playVoice cancel] ${request.requestId}, ${audioBuffers.size}")
-                }
-                request.result.success(null)
-            }
-
-            val onComplete: () -> Unit = {
-                if(logEnabled) {
-                    Log.d(TAG, "[Voice request] [playVoice end] ${request.requestId}, ${audioBuffers.size}")
-                }
-
-                audioBuffers.remove(request.requestId)
-                request.result.success(null)
-            }
-
-            if(request.singleThread) {
-                playerTasks.forEach {
-                    it.stop = true
-                }
-            }
-
-            val audioTask = PlayVoiceTask(player, buffer, request.playerCompletedDelayed, onCancelled, onComplete)
-            playerTasks.add(audioTask)
-            audioPlayerPool.submit(audioTask)
-            if(logEnabled) {
-                Log.d(TAG, "[Voice request] [playVoice start] ${request.requestId}, ${audioBuffers.size}")
-            }
-        } else {
-            request.result.success(null)
-        }
-    }
-
-    fun generateVoice(request: RequestInfo) {
-        val key = request.fastSpeechModel + request.melganModel
-        val processors = modelMap[key] ?: return
-        val onComplete: (buffer: FloatArray, durations: Array<IntArray>) -> Unit = { buff, dur ->
-            if(logEnabled) {
-                Log.d(TAG, "[Voice request] [generate end] ${request.requestId}, ${audioBuffers.size}")
-            }
-
-            audioBuffers[request.requestId] = buff
-            // flatten and convert to double
-            val duration = dur.flatMap { it.asIterable() }.map { it.toDouble() }
-            request.result.success(duration)
-        }
-
-        val onCancelled: () -> Unit = {
-            audioBuffers.remove(request.requestId)
-            if(logEnabled) {
-                Log.d(TAG, "[Voice request] [generateVoice cancel] ${request.requestId}, ${audioBuffers.size}")
-            }
-            request.result.success(listOf<Double>())
-        }
-
-        if(request.singleThread) {
-            generateTasks.forEach {
-                it.stop = true
-            }
-        }
-
-        val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)
-        generateTasks.add(task)
-        runningTask = threadPool.submit(task)
-        if(logEnabled) {
-            Log.d(TAG, "[Voice request] [generate start] ${request.requestId}, ${audioBuffers.size}")
-        }
     }
 
     fun dispose() {

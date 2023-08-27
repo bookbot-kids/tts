@@ -52,26 +52,6 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           }
         }
       }
-      "playVoice" -> {
-        pluginBinding?.applicationContext?.let { context ->
-          val args = call.arguments as Map<*, *>
-          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
-          val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.fastSpeechModel, request.melganModel) {
-            TtsManager.instance.playVoice(request)
-          }
-        }
-      }
-      "generateVoice"-> {
-        pluginBinding?.applicationContext?.let { context ->
-          val args = call.arguments as Map<*, *>
-          TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
-          val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.fastSpeechModel, request.melganModel) {
-            TtsManager.instance.generateVoice(request)
-          }
-        }
-      }
       "dispose" -> {
         TtsManager.instance.dispose()
       }

@@ -32,7 +32,7 @@ class TtsBufferPlayer(val sampleRate: Int) {
     @Volatile var isInterrupt = false
     var task: Future<*>? = null
 
-    fun play(inputIds: List<Int>, audio: FloatArray, isCancelled: () -> Boolean) {
+    fun play(inputIds: List<Long>, audio: FloatArray, isCancelled: () -> Boolean) {
         Log.d(TAG, "start playing: $inputIds, audio ${audio.size}")
         if(isPlaying || isCancelled()) {
             isInterrupt = true
