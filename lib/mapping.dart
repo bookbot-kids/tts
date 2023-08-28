@@ -6,11 +6,10 @@ import 'package:flutter/services.dart';
 
 class MappingData {
   final String ipa;
-  final String arpabet;
   final List<int> inputIds;
   final List<String> visemes;
 
-  MappingData(this.ipa, this.arpabet, this.inputIds, this.visemes);
+  MappingData(this.ipa, this.inputIds, this.visemes);
 }
 
 class TTSMapping {
@@ -24,12 +23,10 @@ class TTSMapping {
     allRows.skip(1).forEach((row) {
       final map = mapping.putIfAbsent(language, () => {});
       String ipa = row[0];
-      String arpabet = row[1];
       String ids = row[2];
       String visemes = row[3];
       map[ipa] = MappingData(
           ipa,
-          arpabet,
           ids
               .split(' ')
               .where((element) => element.trim().isNotEmpty)
@@ -60,7 +57,7 @@ class TTSMapping {
         }
       }
 
-      map[symbol] = MappingData(symbol, symbol, [id], [vimes]);
+      map[symbol] = MappingData(symbol, [id], [vimes]);
     });
 
     allIPAs[language] = map.keys.toSet();
@@ -89,21 +86,18 @@ class TTSMapping {
     final map = mapping.putIfAbsent(language, () => {});
     final inputIds = <int>[];
     final visemes = <String>[];
-    final arpabets = <String>[];
     for (final ipa in ipas) {
       inputIds.addAll(map[ipa]?.inputIds ?? []);
       visemes.addAll(map[ipa]?.visemes ?? []);
-      arpabets.add(map[ipa]?.arpabet ?? '');
     }
 
     return {
       'inputIds': inputIds,
       'visemes': visemes,
-      'arpabet': arpabets,
     };
   }
 
-  Map<String, dynamic> buildInputIds(List<String> ipas,
+  Map<String, dynamic> generateInput(List<String> ipas,
       {String language = 'en'}) {
     // Add ^ in start and $ at end,
     ipas
@@ -114,7 +108,6 @@ class TTSMapping {
     for (int i = ipas.length - 1; i > 0; i--) {
       ipas.insert(i, '_');
     }
-
     // Finally map them into the IDs
     return search(ipas, language: language);
   }

@@ -6,6 +6,9 @@ class Parameters {
   static const enDot = 72;
   static const idDot = 6;
 
+  static const enSpace = 75; // change later
+  static const idSpace = 9;
+
   static const eosInputIds = <String, int>{
     'en': enEos,
     'id': idEos,
@@ -19,6 +22,7 @@ class Parameters {
       ':': 75,
       ';': 74,
       '?': 73,
+      ' ': enSpace,
     },
     'id': {
       '!': 7,
@@ -27,6 +31,7 @@ class Parameters {
       ':': 4,
       ';': 3,
       '?': 8,
+      ' ': idSpace,
     },
   };
 }
@@ -49,6 +54,7 @@ class RequestInfo {
   int modelVersion;
   bool logEnabled;
   int threadCount;
+  int space;
 
   /// delay time in milliseconds before notify complete
   int playerCompletedDelayed;
@@ -72,5 +78,6 @@ class RequestInfo {
     this.modelVersion = 1,
     this.logEnabled = true,
     this.threadCount = 1,
+    this.space = Parameters.enSpace,
   });
 }

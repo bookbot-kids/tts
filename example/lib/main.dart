@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, unused_element
+// ignore_for_file: avoid_print, unused_element, unused_field
 
 import 'dart:io';
 import 'package:duration/duration.dart';
@@ -182,43 +182,25 @@ class _MyAppState extends State<MyApp> {
           eos: Parameters.enEos,
         );
       } else {
-        final wordTexts = breakWords(text);
-        for (var wordText in wordTexts) {
-          var normalise = wordText
-              .replaceAll(curlyTagRegex, '')
-              .replaceAll(nonAlphaUnicodeWithContractedRegEx, '')
-              .toLowerCase();
-          if (normalise.trim().isEmpty) {
-            print('Word is empty $wordText');
-            continue;
-          }
-
-          final characters = await _findIPA(normalise, 'id');
-          final map = _ttsPlugin.ttsMapping.search(characters, language: 'id');
-          inputIds.addAll(map['inputIds'] as List<int>);
-          visemes.addAll(map['visemes'] as List<String>);
-          wordIPAs.add(characters);
-          wirdInputIds.add(map['inputIds']);
-        }
-
         final testText = text.characters.toList();
         final info =
-            _ttsPlugin.ttsMapping.buildInputIds(testText, language: 'id');
+            _ttsPlugin.ttsMapping.generateInput(testText, language: 'id');
         print('info $info');
-        final ids = info['inputIds'];
 
         request = RequestInfo(
           'id_vits.onnx',
           '',
-          ids,
-          visemes,
+          info['inputIds'],
+          info['visemes'],
           speakerId: 0,
           singleThread: true,
           playerCompletedDelayed: 0,
           speed: 1.2,
           useEos: false,
+          useDot: false,
           dot: Parameters.idDot,
           eos: Parameters.idEos,
+          space: Parameters.idSpace,
         );
       }
 
@@ -235,7 +217,11 @@ ${wirdInputIds.join('; ')}
       });
 
       final totalTime = DateTime.now().millisecondsSinceEpoch - startTime;
-      print('output: $output');
+      print('------ output --------');
+      for (var element in output) {
+        print(element);
+      }
+      print('------ end --------');
       setState(() {
         _result +=
             'Duration:\n ${output.join('\n')}\n\nExecute in ${printDuration(

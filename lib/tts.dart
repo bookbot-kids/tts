@@ -28,6 +28,7 @@ class Tts {
       if (requestInfo.useDot &&
           requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
               requestInfo.dot) {
+        requestInfo.inputIds.add(requestInfo.space);
         requestInfo.inputIds.add(requestInfo.dot);
       }
 
@@ -37,8 +38,8 @@ class Tts {
     }
 
     if (debug) {
-      // ignore: avoid_print
-      print('inputIds: ${requestInfo.inputIds}');
+      debugPrint('inputIds: ${requestInfo.inputIds}');
+      debugPrint('visemes: ${requestInfo.visemes}');
     }
 
     requestInfo.modelVersion = version;
