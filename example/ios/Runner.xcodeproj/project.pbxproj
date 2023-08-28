@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		52C928672A9C842D00305160 /* id_vits.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52C928662A9C55A000305160 /* id_vits.onnx */; };
 		52EF65372A61895D00426AC5 /* id_lightspeech_quant.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65332A61895D00426AC5 /* id_lightspeech_quant.onnx */; };
 		52EF65382A61895D00426AC5 /* mbmelgan.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65342A61895D00426AC5 /* mbmelgan.onnx */; };
 		52EF65392A61895D00426AC5 /* id_mbmelgan.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */; };
@@ -37,6 +38,7 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		52C928662A9C55A000305160 /* id_vits.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = id_vits.onnx; path = ../../android/app/src/main/assets/id_vits.onnx; sourceTree = "<group>"; };
 		52EF65332A61895D00426AC5 /* id_lightspeech_quant.onnx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = id_lightspeech_quant.onnx; path = ../../android/app/src/main/assets/id_lightspeech_quant.onnx; sourceTree = "<group>"; };
 		52EF65342A61895D00426AC5 /* mbmelgan.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = mbmelgan.onnx; path = ../../android/app/src/main/assets/mbmelgan.onnx; sourceTree = "<group>"; };
 		52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = id_mbmelgan.onnx; path = ../../android/app/src/main/assets/id_mbmelgan.onnx; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				52EF65332A61895D00426AC5 /* id_lightspeech_quant.onnx */,
 				52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */,
 				52EF65362A61895D00426AC5 /* lightspeech_quant.onnx */,
+				52C928662A9C55A000305160 /* id_vits.onnx */,
 				52EF65342A61895D00426AC5 /* mbmelgan.onnx */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
@@ -199,6 +202,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52C928672A9C842D00305160 /* id_vits.onnx in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				52EF65372A61895D00426AC5 /* id_lightspeech_quant.onnx in Resources */,

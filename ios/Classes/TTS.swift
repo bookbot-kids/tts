@@ -16,8 +16,7 @@ public class BufferHolder {
 }
 
 public class TTS {
-    var fastSpeech2: FastSpeech2?
-    var mbMelGan: MBMelGan?
+    var piper: Piper?
     private var modelMap = [String:Bool]()
     
     private var engine: AVAudioEngine?
@@ -50,23 +49,21 @@ public class TTS {
             modelMap.removeAll()
             if(MlProcessorStrategy.shared().delegate != nil) {
                 MlProcessorStrategy.shared().delegate.urls(for: [fastSpeechModel, melGanModel]) { urls in
-                    guard let modelUrls = urls, let fastSpeechUrl = modelUrls[0] as? URL, let melganUrl = modelUrls[1] as? URL else {
+                    guard let modelUrls = urls, let fastSpeechUrl = modelUrls[0] as? URL else {
                         onCompleted(false)
                         return
                     }
                     
                     let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
-                    self.fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
-                    self.mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
+                    self.piper = Piper(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
                     self.modelMap[key] = true
-                    onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
+                    onCompleted(self.piper != nil)
                 }
             } else {
                 let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "onnx")
-                let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "onnx")
-                guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
+                guard let fastSpeechUrl = fastSpeechUrl else {
                     if self.logEnabled {
-                        print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                        print("can't read model url \(fastSpeechModel) ")
                     }
                     
                     onCompleted(false)
@@ -74,10 +71,9 @@ public class TTS {
                 }
                 
                 let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
-                fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
-                mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
+                piper = Piper(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
                 modelMap[key] = true
-                onCompleted(fastSpeech2 != nil && mbMelGan != nil)
+                onCompleted(piper != nil)
             }
         } else {
             onCompleted(true)
@@ -87,7 +83,7 @@ public class TTS {
     public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
-            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+            guard modelCompletedResult, let piper = self.piper else {
                 if self.logEnabled {
                     print("model initialzed failed")
                 }
@@ -96,268 +92,18 @@ public class TTS {
             }
             
             self.operationQueue.cancelAllOperations()
-            let requestTask = RequesTask(fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
+            let requestTask = RequesTask(piper: piper, inputIds: inputIds.map { Int64($0) }, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
-    
-    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
         
-        self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
-            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
-                if self.logEnabled {
-                    print("model initialzed failed")
-                }
-                 
-                return
-            }
-            
-            if singleThread {
-                self.operationQueue.cancelAllOperations()
-            }
-            
-            let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
-            self.operationQueue.addOperation(requestTask)
-        }
-    }
-    
-    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
-        
-        if singleThread {
-            self.audioOperationQueue.cancelAllOperations()
-        }
-        
-        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: playerCompletedDelayed, logEnabled: self.logEnabled,  result: result)
-        self.audioOperationQueue.addOperation(requestTask)
-    }
-    
     public func dispose() {
         BufferHolder.shared.audioBuffers.removeAll()
     }
     
-    class GenerateTask: Operation {
-        let fastSpeech2: FastSpeech2
-        let mbMelGan: MBMelGan
-        let inputIds: [Int32]
-        let speakerId: Int32
-        let speed: Float
-        let sampleRate: Int
-        let hopSize: Int
-        let result: FlutterResult
-        let engine: AVAudioEngine?
-        let player: AVAudioPlayerNode?
-        let requestId: String
-        let logEnabled: Bool
-        
-        init(requestId: String, fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
-            self.requestId = requestId
-            self.fastSpeech2 = fastSpeech2
-            self.mbMelGan = mbMelGan
-            self.inputIds = inputIds
-            self.speakerId = speakerId
-            self.speed = speed
-            self.sampleRate = sampleRate
-            self.hopSize = hopSize
-            self.result = result
-            self.engine = engine
-            self.player = player
-            self.logEnabled = logEnabled
-        }
-        
-        func onCancelled() {
-            BufferHolder.shared.audioBuffers.removeValue(forKey: requestId)
-            if logEnabled {
-                print("[Voice request] [generate cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
-            }
-            let ret: [Double] = []
-            result(ret)
-        }
-        
-        override func main() {
-               guard !isCancelled else {
-                   onCancelled()
-                   return
-               }
-                
-                do {
-                    if BufferHolder.shared.audioBuffers.count > 3 {
-                        if logEnabled {
-                            print("[Voice request] [generate something wrong] \(requestId), there are \(BufferHolder.shared.audioBuffers.count) cached items")
-                        }
-                        
-                        BufferHolder.shared.audioBuffers.removeAll()
-                    }
-                    
-                    if logEnabled {
-                        print("[Voice request] [generate start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
-                    }
-                    
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
-                        return isCancelled
-                    })
-                    
-                    guard melSpectrogram.hasData() else {
-                        onCancelled()
-                        return                        
-                    }
-                    
-                    guard !isCancelled else {
-                        onCancelled()
-                        return
-                    }
-                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
-                        return isCancelled
-                    })
-                    
-                    guard !isCancelled, !data.isEmpty else {
-                        onCancelled()
-                        return
-                    }
-                    
-                    BufferHolder.shared.audioBuffers[requestId] = data
-                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
-                    if logEnabled {
-                        print("[Voice request] [generate end] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
-                    }
-                    
-                    DispatchQueue.main {
-                        self.result(duration)
-                    }
-                }
-                catch {
-                    print(error)
-                }
-           }
-    }
-    
-    class PlayVoiceTask: Operation {
-        let engine: AVAudioEngine?
-        let player: AVAudioPlayerNode?
-        let requestId: String
-        let result: FlutterResult
-        let sampleRate: Int
-        let playerCompletedDelayed: Int
-        let logEnabled: Bool
-        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, logEnabled: Bool, result: @escaping FlutterResult) {
-            self.requestId = requestId
-            self.result = result
-            self.engine = engine
-            self.player = player
-            self.sampleRate = sampleRate
-            self.playerCompletedDelayed = playerCompletedDelayed
-            self.logEnabled = logEnabled
-        }
-        
-        func onCancelled() {
-            BufferHolder.shared.audioBuffers.removeValue(forKey: requestId)
-            if logEnabled {
-                print("[Voice request] [play cancelled] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
-            }
-            
-            result(nil)
-        }
-        
-        override func main() {
-               guard !isCancelled else {
-                   onCancelled()
-                   return
-               }
-               
-            if logEnabled {
-                print("[Voice request] [play start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
-            }
-            
-            
-            guard let buffer = BufferHolder.shared.audioBuffers[requestId] else {
-                if logEnabled {
-                    print("buffer is null")
-                }
-                
-                onCancelled()
-                return
-            }
-            
-            if MlProcessorStrategy.shared().delegate != nil {
-                MlProcessorStrategy.shared().delegate?.playBuffer(buffer, withSampleRate: Int32(sampleRate), withCancelled: {
-                    if self.isCancelled {
-                        self.onCancelled()
-                    }
-                    
-                    return self.isCancelled
-                }, withCompleted: {
-                    if self.logEnabled {
-                        print("[Voice request] [play end] \(self.requestId), \(BufferHolder.shared.audioBuffers.count)")
-                    }
-                    BufferHolder.shared.audioBuffers.removeValue(forKey: self.requestId)
-                    if self.playerCompletedDelayed == 0 {
-                        self.result(nil)
-                    } else {
-                        DispatchQueue.main(delay: Double(self.playerCompletedDelayed) / 1000) {
-                            self.result(nil)
-                        }
-                    }
-                    
-                })
-            } else {
-                self.playBuffer(data: buffer, sampleRate: sampleRate)
-            }
-        }
-        
-        private func playBuffer(data: Data, sampleRate: Int) {
-            guard let player = self.player, let engine = self.engine, let audioFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate), channels: 1) else {
-                print("engine does not initialize yet")
-                result(nil)
-                return
-            }
-            
-            guard !isCancelled else { return result(nil)}
-            let mixer = engine.mainMixerNode
-            engine.attach(player)
-            engine.connect(player, to: mixer, format: audioFormat)
-            
-            do {
-                engine.prepare()
-                try engine.start()
-            } catch {
-                print("Error info: \(error)")
-            }
-            
-            guard !isCancelled else { return result(nil)}
-            guard let buffer = data.makePCMBuffer(format: audioFormat)  else {
-                result(nil)
-               return
-            }
-            
-            guard !isCancelled else {
-                result(nil)
-                return
-            }
-            guard player.engine?.isRunning == true else {
-                print("engine does not start yet")
-                result(nil)
-                return
-            }
-            
-            guard !isCancelled else { return }
-            player.play()
-            guard !isCancelled else { return }
-            player.scheduleBuffer(buffer) {
-                if self.playerCompletedDelayed == 0 {
-                    self.result(nil)
-                } else {
-                    DispatchQueue.main(delay: Double(self.playerCompletedDelayed) / 1000) {
-                        self.result(nil)
-                    }
-                }
-            }
-        }
-    }
-    
-    
     class RequesTask: Operation {
-        let fastSpeech2: FastSpeech2
-        let mbMelGan: MBMelGan
-        let inputIds: [Int32]
+        let piper: Piper
+        let inputIds: [Int64]
         let speakerId: Int32
         let speed: Float
         let sampleRate: Int
@@ -367,9 +113,8 @@ public class TTS {
         let player: AVAudioPlayerNode?
         let logEnabled: Bool
         
-        init(fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
-            self.fastSpeech2 = fastSpeech2
-            self.mbMelGan = mbMelGan
+        init(piper: Piper, inputIds: [Int64], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
+            self.piper = piper
             self.inputIds = inputIds
             self.speakerId = speakerId
             self.speed = speed
@@ -389,18 +134,16 @@ public class TTS {
                
             
                 do {
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
+                    let output = try piper.infer(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
                         return isCancelled
                     })
                     
-                    guard melSpectrogram.hasData() else { return }
+                    guard output.hasData() else { return }
                     guard !isCancelled else { return }
-                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
-                        return isCancelled
-                    })
+                    let data = output.mels.withUnsafeBufferPointer { Data(buffer: $0) }
                     
                     guard !isCancelled, !data.isEmpty else { return }
-                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
+                    let duration = output.durations.compactMap { $0 }.map { Double($0) }
                     DispatchQueue.main {
                         self.result(duration)
                     }
