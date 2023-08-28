@@ -3,11 +3,11 @@ import Foundation
 import onnxruntime_objc
 
 struct PiperOutputs {
-    let mels: [[[Float]]]
+    let audio: [Float]
     let durations: [Float]
     
     func hasData() -> Bool {
-        return mels.count > 0 && durations.count > 0
+        return audio.count > 0 && durations.count > 0
     }
 }
 
@@ -35,7 +35,7 @@ class Piper: BaseProcessor {
     
     func infer(inputIds: [Int64], speedRatio: Float, speakerId: Int32 = 0,
                            isCancelled: (() -> Bool)) throws -> PiperOutputs {
-        var result = PiperOutputs(mels: [], durations: [])
+        var result = PiperOutputs(audio: [], durations: [])
         
         if isCancelled() { return result }
         initSession()
@@ -80,7 +80,7 @@ class Piper: BaseProcessor {
         
         // Convert audio NSMutableData to [[[Float]]]
         let audioPointer = audio.bytes.assumingMemoryBound(to: Float.self)
-        let audioDims = durationShapeInfo!.shape.map{ Int(truncating: $0) }
+        let audioDims = audioShapeInfo!.shape.map{ Int(truncating: $0) }
 
         var audioArray: [[[Float]]] = Array(repeating: Array(repeating: Array(repeating: 0.0, count: audioDims[2]), count: audioDims[1]), count: audioDims[0])
 
@@ -98,17 +98,17 @@ class Piper: BaseProcessor {
         let durationsPointer = durations.bytes.assumingMemoryBound(to: Float.self)
         let durationsDims = durationShapeInfo!.shape.map{ Int(truncating: $0) }
         
-        var durationsArray: [[Float]] = Array(repeating: Array(repeating: 0, count: durationsDims[1]), count: durationsDims[0])
+        var durationsArray: [[Float]] = Array(repeating: Array(repeating: 0, count: durationsDims[3]), count: durationsDims[2])
 
-        for i in 0..<durationsDims[0] {
-            for j in 0..<durationsDims[1] {
-                durationsArray[i][j] = durationsPointer[i*durationsDims[1] + j]
+        for i in 0..<durationsDims[2] {
+            for j in 0..<durationsDims[3] {
+                durationsArray[i][j] = durationsPointer[i*durationsDims[3] + j]
             }
         }
         
         
         let dur = sumVertically(array: durationsArray)
-        result = PiperOutputs(mels: audioArray, durations: dur)
+        result = PiperOutputs(audio: audioArray[0][0], durations: dur)
         return result
     }
 }

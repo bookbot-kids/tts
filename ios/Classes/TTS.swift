@@ -140,7 +140,7 @@ public class TTS {
                     
                     guard output.hasData() else { return }
                     guard !isCancelled else { return }
-                    let data = output.mels.withUnsafeBufferPointer { Data(buffer: $0) }
+                    let data = output.audio.withUnsafeBufferPointer { Data(buffer: $0) }
                     
                     guard !isCancelled, !data.isEmpty else { return }
                     let duration = output.durations.compactMap { $0 }.map { Double($0) }

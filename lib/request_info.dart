@@ -1,10 +1,10 @@
 class Parameters {
   static const enSampleRate = 44100;
-  static const enHopSize = 512;
+  static const enHopSize = 256;
   static const enEos = 77;
   static const idEos = 38;
   static const enDot = 72;
-  static const idDot = 33;
+  static const idDot = 6;
 
   static const eosInputIds = <String, int>{
     'en': enEos,
@@ -21,12 +21,12 @@ class Parameters {
       '?': 73,
     },
     'id': {
-      '!': 31,
-      ',': 32,
+      '!': 7,
+      ',': 5,
       '.': idDot,
-      ':': 36,
-      ';': 35,
-      '?': 34,
+      ':': 4,
+      ';': 3,
+      '?': 8,
     },
   };
 }
@@ -68,7 +68,7 @@ class RequestInfo {
     this.requestId = '',
     this.singleThread = true,
     this.playerCompletedDelayed = 0,
-    this.useEos = true,
+    this.useEos = false,
     this.modelVersion = 1,
     this.logEnabled = true,
     this.threadCount = 1,
