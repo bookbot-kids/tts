@@ -216,7 +216,7 @@ class _MyAppState extends State<MyApp> {
           singleThread: true,
           playerCompletedDelayed: 0,
           speed: 1.2,
-          useEos: true,
+          useEos: false,
           dot: Parameters.idDot,
           eos: Parameters.idEos,
         );
