@@ -20,21 +20,21 @@ class Tts {
     double minDurationInSecond = 0.05,
     bool debug = false,
   }) async {
-    if (requestInfo.inputIds.isEmpty) {
-      if (requestInfo.useEos) {
-        requestInfo.inputIds.add(requestInfo.eos);
-      }
-    } else {
-      if (requestInfo.useDot &&
-          requestInfo.inputIds[requestInfo.inputIds.length - 1] !=
-              requestInfo.dot) {
-        requestInfo.inputIds.add(requestInfo.space);
-        requestInfo.inputIds.add(requestInfo.dot);
-      }
+    // insert dot before eos
+    if (requestInfo.useDot) {
+      requestInfo.inputIds.insert(
+          requestInfo.inputIds.length - 2, Parameters.intersperse); // add 0
+      requestInfo.inputIds.insert(
+          requestInfo.inputIds.length - 2, requestInfo.space); // add space
+      requestInfo.inputIds.insert(
+          requestInfo.inputIds.length - 2, Parameters.intersperse); // add 0
+      requestInfo.inputIds
+          .insert(requestInfo.inputIds.length - 2, requestInfo.dot); // add dot
+    }
 
-      if (requestInfo.useEos) {
-        requestInfo.inputIds.add(requestInfo.eos);
-      }
+    if (requestInfo.useEos) {
+      requestInfo.inputIds.add(Parameters.intersperse);
+      requestInfo.inputIds.add(requestInfo.eos);
     }
 
     if (debug) {

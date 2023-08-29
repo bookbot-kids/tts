@@ -2,9 +2,10 @@ class Parameters {
   static const enSampleRate = 44100;
   static const enHopSize = 256;
   static const enEos = 77;
-  static const idEos = 38;
+  static const idEos = 2;
   static const enDot = 72;
   static const idDot = 6;
+  static const intersperse = 0;
 
   static const enSpace = 75; // change later
   static const idSpace = 9;
