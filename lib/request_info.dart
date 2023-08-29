@@ -6,6 +6,8 @@ class Parameters {
   static const enDot = 72;
   static const idDot = 6;
   static const intersperse = 0;
+  static const idBos = 1;
+  static const enBos = 1;
 
   static const enSpace = 75; // change later
   static const idSpace = 9;
@@ -13,6 +15,11 @@ class Parameters {
   static const eosInputIds = <String, int>{
     'en': enEos,
     'id': idEos,
+  };
+
+  static const bosInputIds = <String, int>{
+    'en': enBos,
+    'id': idBos,
   };
 
   static const specialInputIds = <String, Map<String, int>>{

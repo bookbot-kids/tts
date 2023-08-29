@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
+import 'package:tts/request_info.dart';
 
 class MappingData {
   final String ipa;
@@ -97,12 +98,41 @@ class TTSMapping {
     };
   }
 
-  Map<String, dynamic> generateInput(List<String> ipas,
+  List<int> normalizeInputIds(List<int> inputIds, {String language = 'en'}) {
+    inputIds.insert(0, Parameters.bosInputIds[language]!); // bos
+    inputIds.insert(inputIds.length, Parameters.intersperse); // -
+    inputIds.insert(inputIds.length, Parameters.eosInputIds[language]!); // eos
+    return inputIds;
+  }
+
+  List<String> normalizeVisemes(List<String> visemes,
       {String language = 'en'}) {
-    // Add ^ in start and $ at end,
-    ipas
-      ..insert(0, '^')
-      ..insert(ipas.length, '\$');
+    final map = mapping.putIfAbsent(language, () => {});
+    for (final item in (map['^']?.visemes ?? <String>[])) {
+      visemes.insert(0, item);
+    }
+
+    // insert bos
+    final bos = map['^']?.visemes.first;
+    visemes.insert(0, bos!);
+
+    // insert silent
+    visemes.insert(visemes.length, '-');
+
+    // insert eos
+    final eos = map['\$']?.visemes.first;
+    visemes.insert(visemes.length, eos!);
+    return visemes;
+  }
+
+  Map<String, dynamic> generateInput(List<String> ipas,
+      {String language = 'en', bool normalizeSentence = false}) {
+    if (normalizeSentence) {
+      // Add ^ in start and $ at end,
+      ipas
+        ..insert(0, '^')
+        ..insert(ipas.length, '\$');
+    }
 
     //after each phoneme, we need to “intersperse” padding _ token
     for (int i = ipas.length - 1; i > 0; i--) {
