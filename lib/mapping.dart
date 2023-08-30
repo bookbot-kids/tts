@@ -4,6 +4,7 @@ import 'package:csv/csv.dart';
 import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
 import 'package:tts/request_info.dart';
+import 'package:tuple/tuple.dart';
 
 class MappingData {
   final String ipa;
@@ -98,31 +99,51 @@ class TTSMapping {
     };
   }
 
-  List<int> normalizeInputIds(List<int> inputIds, {String language = 'en'}) {
-    inputIds.insert(0, Parameters.bosInputIds[language]!); // bos
-    inputIds.insert(inputIds.length, Parameters.intersperse); // -
-    inputIds.insert(inputIds.length, Parameters.eosInputIds[language]!); // eos
-    return inputIds;
-  }
-
-  List<String> normalizeVisemes(List<String> visemes,
-      {String language = 'en'}) {
+  Tuple2<List<int>, List<String>> insertInput(
+    List<int> inputIds,
+    List<String> visemes,
+    String language, {
+    bool insertEos = true,
+    bool insertBos = true,
+    bool insertSpace = false,
+  }) {
     final map = mapping.putIfAbsent(language, () => {});
-    for (final item in (map['^']?.visemes ?? <String>[])) {
-      visemes.insert(0, item);
+    if (insertBos) {
+      // insert bos
+      inputIds.insert(0, Parameters.intersperse); // 0
+      inputIds.insert(0, Parameters.bosInputIds[language]!); // bos
+
+      visemes.insert(0, '-'); // silent
+      final bos = map['^']?.visemes.first;
+      visemes.insert(0, bos!);
     }
 
-    // insert bos
-    final bos = map['^']?.visemes.first;
-    visemes.insert(0, bos!);
+    if (insertEos) {
+      inputIds.insert(inputIds.length, Parameters.intersperse); // -
+      inputIds.insert(
+          inputIds.length, Parameters.eosInputIds[language]!); // eos
 
-    // insert silent
-    visemes.insert(visemes.length, '-');
+      // insert silent
+      visemes.insert(visemes.length, '-');
 
-    // insert eos
-    final eos = map['\$']?.visemes.first;
-    visemes.insert(visemes.length, eos!);
-    return visemes;
+      // insert eos
+      final eos = map['\$']?.visemes.first;
+      visemes.insert(visemes.length, eos!);
+    }
+
+    if (insertSpace) {
+      // insert pad, space, pad at the end
+      inputIds.insert(inputIds.length, Parameters.intersperse);
+      inputIds.insert(
+          inputIds.length, Parameters.specialInputIds[language]![' ']!);
+      inputIds.insert(inputIds.length, Parameters.intersperse);
+
+      visemes.insert(visemes.length, '-');
+      visemes.insert(visemes.length, '-');
+      visemes.insert(visemes.length, '-');
+    }
+
+    return Tuple2(inputIds, visemes);
   }
 
   Map<String, dynamic> generateInput(List<String> ipas,
