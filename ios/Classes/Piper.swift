@@ -41,7 +41,7 @@ class Piper: BaseProcessor {
         initSession()
         
         let inputLength = [Int64(inputIds.count)]
-        let scales: [Float] = [0.667, 1.0, 0.8]
+        let scales: [Float] = [0.667, 1.2, 0.8]
         //let sid: Any? = nil
         
         let inputShape: [Int64] = [1, Int64(inputIds.count)]

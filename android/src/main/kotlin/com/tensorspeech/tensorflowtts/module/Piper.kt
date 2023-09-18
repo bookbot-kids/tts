@@ -29,7 +29,7 @@ ortEnv: OrtEnvironment
     fun infer(inputIds: LongArray, speakerId: Int, isCancelled: () -> Boolean): Pair<Array<Array<FloatArray>>, FloatArray>? {
         if(isCancelled()) return null
         val inputLength = longArrayOf(inputIds.size.toLong())
-        val scales = floatArrayOf(0.667F, 1.0F, 0.8F)
+        val scales = floatArrayOf(0.667F, 1.2F, 0.8F)
         // TODO: change if multispeaker! only `null` if single-speaker
         val sid = null
 
