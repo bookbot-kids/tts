@@ -20,7 +20,7 @@ class InputTask(private val piper: Piper,
             stop || Thread.interrupted()
         }
         if (isStopping())  return
-        val output = piper.infer(inputIds.toLongArray(), speakerId, isStopping) ?: return
+        val output = piper.infer(inputIds.toLongArray(), speakerId, speed, isStopping) ?: return
 
         if (isStopping())  return
         val audioData = output.first
