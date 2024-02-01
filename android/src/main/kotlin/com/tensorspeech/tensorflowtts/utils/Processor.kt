@@ -53,8 +53,8 @@ class Processor {
         return text
     }
 
-    private fun removeCommasFromNumbers(text: String): String {
-        var text = text
+    private fun removeCommasFromNumbers(inputText: String): String {
+        var text = inputText
         val m = COMMA_NUMBER_RE.matcher(text)
         while (m.find()) {
             val s = m.group().replace(",".toRegex(), "")
@@ -157,16 +157,16 @@ class Processor {
         return text
     }
 
-    fun textToIds(text: String?): IntArray {
-        var text = text
+    fun textToIds(inputText: String?): IntArray {
+        var text = inputText
         val sequence: MutableList<Int?> = ArrayList()
-        while (text != null && text.isNotEmpty()) {
+        while (!text.isNullOrEmpty()) {
             val m = CURLY_RE.matcher(text)
             if (!m.find()) {
                 sequence.addAll(symbolsToSequence(cleanTextForEnglish(text)))
                 break
             }
-            sequence.addAll(symbolsToSequence(cleanTextForEnglish(m.group(1))))
+            sequence.addAll(symbolsToSequence(cleanTextForEnglish(m.group(1) ?: "")))
             sequence.addAll(arpabetToSequence(m.group(2)))
             text = m.group(3)
         }

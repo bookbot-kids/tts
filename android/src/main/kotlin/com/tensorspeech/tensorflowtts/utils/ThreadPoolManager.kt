@@ -101,7 +101,7 @@ class ThreadPoolManager private constructor() {
          */
         init {
             val s = System.getSecurityManager()
-            group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup
+            group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup!!
             namePrefix = threadName + "-" + POOL_NUMBER.getAndIncrement()
             this.priority = priority
         }
