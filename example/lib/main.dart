@@ -392,7 +392,7 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'lightspeech_quant.onnx',
+          'convnext-tts-en.onnx',
           'mbmelgan.onnx',
           inputIds,
           visemes,

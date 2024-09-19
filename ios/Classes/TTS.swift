@@ -16,8 +16,7 @@ public class BufferHolder {
 }
 
 public class TTS {
-    var fastSpeech2: FastSpeech2?
-    var mbMelGan: MBMelGan?
+    var opti: Opti?
     private var modelMap = [String:Bool]()
     
     private var engine: AVAudioEngine?
@@ -56,15 +55,13 @@ public class TTS {
                     }
                     
                     let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
-                    self.fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
-                    self.mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
+                    self.opti = Opti(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
                     self.modelMap[key] = true
-                    onCompleted(self.fastSpeech2 != nil && self.mbMelGan != nil)
+                    onCompleted(self.opti != nil)
                 }
             } else {
-                let fastSpeechUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "onnx")
-                let melganUrl =  Bundle.main.url(forResource: (melGanModel as NSString).deletingPathExtension, withExtension: "onnx")
-                guard let fastSpeechUrl = fastSpeechUrl, let melganUrl = melganUrl else {
+                let modelUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "onnx")
+                guard let modelUrl = modelUrl else {
                     if self.logEnabled {
                         print("can't read model url \(fastSpeechModel), \(melGanModel) ")
                     }
@@ -74,20 +71,19 @@ public class TTS {
                 }
                 
                 let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
-                fastSpeech2 = FastSpeech2(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
-                mbMelGan = MBMelGan(ortEnv: ortEnv, url: melganUrl, threadCount: self.threadCount)
+                self.opti = Opti(ortEnv: ortEnv, url: modelUrl, threadCount: self.threadCount)
                 modelMap[key] = true
-                onCompleted(fastSpeech2 != nil && mbMelGan != nil)
+                onCompleted(opti != nil)
             }
         } else {
             onCompleted(true)
         }
     }
 
-    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
-            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+            guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
                 }
@@ -96,15 +92,15 @@ public class TTS {
             }
             
             self.operationQueue.cancelAllOperations()
-            let requestTask = RequesTask(fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
+            let requestTask = RequesTask(opti: opti, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
     
-    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
+    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
         
         self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
-            guard modelCompletedResult, let fastSpeech2 = self.fastSpeech2, let mbMelGan = self.mbMelGan else {
+            guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
                 }
@@ -116,12 +112,12 @@ public class TTS {
                 self.operationQueue.cancelAllOperations()
             }
             
-            let requestTask = GenerateTask(requestId: requestId, fastSpeech2: fastSpeech2, mbMelGan: mbMelGan, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
+            let requestTask = GenerateTask(requestId: requestId, opti: opti, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
     
-    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int32], speakerId: Int32 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
+    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
         
         if singleThread {
             self.audioOperationQueue.cancelAllOperations()
@@ -136,10 +132,9 @@ public class TTS {
     }
     
     class GenerateTask: Operation {
-        let fastSpeech2: FastSpeech2
-        let mbMelGan: MBMelGan
-        let inputIds: [Int32]
-        let speakerId: Int32
+        let opti: Opti
+        let inputIds: [Int64]
+        let speakerId: Int64
         let speed: Float
         let sampleRate: Int
         let hopSize: Int
@@ -149,10 +144,9 @@ public class TTS {
         let requestId: String
         let logEnabled: Bool
         
-        init(requestId: String, fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
+        init(requestId: String, opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
             self.requestId = requestId
-            self.fastSpeech2 = fastSpeech2
-            self.mbMelGan = mbMelGan
+            self.opti = opti
             self.inputIds = inputIds
             self.speakerId = speakerId
             self.speed = speed
@@ -192,11 +186,11 @@ public class TTS {
                         print("[Voice request] [generate start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
                     }
                     
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
+                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, isCancelled: {
                         return isCancelled
                     })
                     
-                    guard melSpectrogram.hasData() else {
+                    guard optiResult.hasData() else {
                         onCancelled()
                         return                        
                     }
@@ -205,17 +199,10 @@ public class TTS {
                         onCancelled()
                         return
                     }
-                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
-                        return isCancelled
-                    })
                     
-                    guard !isCancelled, !data.isEmpty else {
-                        onCancelled()
-                        return
-                    }
-                    
+                    let data = optiResult.audioData()
                     BufferHolder.shared.audioBuffers[requestId] = data
-                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
+                    let duration = optiResult.durations
                     if logEnabled {
                         print("[Voice request] [generate end] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
                     }
@@ -355,10 +342,9 @@ public class TTS {
     
     
     class RequesTask: Operation {
-        let fastSpeech2: FastSpeech2
-        let mbMelGan: MBMelGan
-        let inputIds: [Int32]
-        let speakerId: Int32
+        let opti: Opti
+        let inputIds: [Int64]
+        let speakerId: Int64
         let speed: Float
         let sampleRate: Int
         let hopSize: Int
@@ -367,9 +353,8 @@ public class TTS {
         let player: AVAudioPlayerNode?
         let logEnabled: Bool
         
-        init(fastSpeech2: FastSpeech2, mbMelGan: MBMelGan, inputIds: [Int32], speakerId: Int32, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
-            self.fastSpeech2 = fastSpeech2
-            self.mbMelGan = mbMelGan
+        init(opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
+            self.opti = opti
             self.inputIds = inputIds
             self.speakerId = speakerId
             self.speed = speed
@@ -389,18 +374,16 @@ public class TTS {
                
             
                 do {
-                    let melSpectrogram = try fastSpeech2.getMelSpectrogram(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, isCancelled: {
+                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, isCancelled: {
                         return isCancelled
                     })
                     
-                    guard melSpectrogram.hasData() else { return }
+                    guard optiResult.hasData() else { return }
                     guard !isCancelled else { return }
-                    let data = try mbMelGan.getAudio(mels: melSpectrogram.mels, isCancelled: {
-                        return isCancelled
-                    })
+                    let data = optiResult.audioData()
                     
                     guard !isCancelled, !data.isEmpty else { return }
-                    let duration = melSpectrogram.durations.flatMap { $0 }.map { Double($0) }
+                    let duration = optiResult.durations
                     DispatchQueue.main {
                         self.result(duration)
                     }
