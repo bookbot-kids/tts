@@ -32,8 +32,7 @@ class Parameters {
 }
 
 class RequestInfo {
-  final String fastSpeechModel;
-  final String melganModel;
+  final List<String> models;
   final List<int> inputIds;
   final List<String> visemes;
   double speed;
@@ -54,8 +53,7 @@ class RequestInfo {
   int playerCompletedDelayed;
 
   RequestInfo(
-    this.fastSpeechModel,
-    this.melganModel,
+    this.models,
     this.inputIds,
     this.visemes, {
     this.speed = 1.0,

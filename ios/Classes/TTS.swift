@@ -43,27 +43,27 @@ public class TTS {
         player = AVAudioPlayerNode()
     }
     
-    public func initModel(fastSpeechModel:String, melGanModel: String, onCompleted:@escaping((Bool) -> Void)) {
-        let key  = fastSpeechModel + melGanModel
+    public func initModel(models: [String], onCompleted:@escaping((Bool) -> Void)) {
+        let key  = models.first ?? ""
         if(modelMap[key] == nil) {
             modelMap.removeAll()
             if(MlProcessorStrategy.shared().delegate != nil) {
-                MlProcessorStrategy.shared().delegate.urls(for: [fastSpeechModel, melGanModel]) { urls in
-                    guard let modelUrls = urls, let fastSpeechUrl = modelUrls[0] as? URL, let melganUrl = modelUrls[1] as? URL else {
+                MlProcessorStrategy.shared().delegate.urls(for: models) { urls in
+                    guard let modelUrls = urls, let modelUrl = modelUrls[0] as? URL else {
                         onCompleted(false)
                         return
                     }
                     
                     let ortEnv = try? ORTEnv(loggingLevel: ORTLoggingLevel.warning)
-                    self.opti = Opti(ortEnv: ortEnv, url: fastSpeechUrl, threadCount: self.threadCount)
+                    self.opti = Opti(ortEnv: ortEnv, url: modelUrl, threadCount: self.threadCount)
                     self.modelMap[key] = true
                     onCompleted(self.opti != nil)
                 }
             } else {
-                let modelUrl =  Bundle.main.url(forResource: (fastSpeechModel as NSString).deletingPathExtension, withExtension: "onnx")
+                let modelUrl =  Bundle.main.url(forResource: (key as NSString).deletingPathExtension, withExtension: "onnx")
                 guard let modelUrl = modelUrl else {
                     if self.logEnabled {
-                        print("can't read model url \(fastSpeechModel), \(melGanModel) ")
+                        print("can't read model url \(key) ")
                     }
                     
                     onCompleted(false)
@@ -80,9 +80,9 @@ public class TTS {
         }
     }
 
-    public func speak(fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+    public func speak(models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
         
-        self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
+        self.initModel(models: models) { modelCompletedResult in
             guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
@@ -97,9 +97,9 @@ public class TTS {
         }
     }
     
-    public func generateVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
+    public func generateVoice(requestId: String, models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
         
-        self.initModel(fastSpeechModel: fastSpeechModel, melGanModel: melGanModel) { modelCompletedResult in
+        self.initModel(models: models) { modelCompletedResult in
             guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
@@ -117,7 +117,7 @@ public class TTS {
         }
     }
     
-    public func playVoice(requestId: String, fastSpeechModel:String, melGanModel: String, inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
+    public func playVoice(requestId: String, models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
         
         if singleThread {
             self.audioOperationQueue.cancelAllOperations()

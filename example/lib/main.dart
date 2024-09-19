@@ -392,8 +392,7 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'convnext-tts-en.onnx',
-          'mbmelgan.onnx',
+          ['convnext-tts-en.onnx'],
           inputIds,
           visemes,
           useDot: false,
@@ -426,8 +425,7 @@ class _MyAppState extends State<MyApp> {
         }
 
         request = RequestInfo(
-          'id_lightspeech_quant.onnx',
-          'id_mbmelgan.onnx',
+          ['convnext-tts-en.onnx'],
           inputIds,
           visemes,
           speakerId: 0,
