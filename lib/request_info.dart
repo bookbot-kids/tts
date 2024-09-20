@@ -1,24 +1,27 @@
 class Parameters {
   static const enSampleRate = 44100;
   static const enHopSize = 512;
-  static const enEos = 77;
+  static const enEos = 2;
+  static const enDot = 12;
   static const idEos = 38;
-  static const enDot = 72;
   static const idDot = 33;
+  static const swEos = 2;
+  static const swDot = 12;
 
   static const eosInputIds = <String, int>{
     'en': enEos,
+    'sw': swEos,
     'id': idEos,
   };
 
   static const specialInputIds = <String, Map<String, int>>{
     'en': {
-      '!': 70,
-      ',': 71,
+      '!': 4,
+      ',': 10,
       '.': enDot,
-      ':': 75,
-      ';': 74,
-      '?': 73,
+      ':': 13,
+      ';': 14,
+      '?': 15,
     },
     'id': {
       '!': 31,
@@ -27,6 +30,14 @@ class Parameters {
       ':': 36,
       ';': 35,
       '?': 34,
+    },
+    'sw': {
+      '!': 4,
+      ',': 10,
+      '.': swDot,
+      ':': 13,
+      ';': 14,
+      '?': 15,
     },
   };
 }
