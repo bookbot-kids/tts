@@ -10,6 +10,7 @@ import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
 import com.tensorspeech.tensorflowtts.module.FastSpeech2
 import com.tensorspeech.tensorflowtts.module.MBMelGan
+import com.tensorspeech.tensorflowtts.module.Opti
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
 import java.io.File
 import java.io.FileOutputStream
@@ -24,32 +25,32 @@ class TtsManager {
     private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
     private val audioPlayerPool = ThreadPoolManager.instance.getSingleExecutor("tts")
     private var runningTask: Future<*>? = null
-    private val modelMap = mutableMapOf<String, Pair<FastSpeech2, MBMelGan>>()
+    private val modelMap = mutableMapOf<String, Opti>()
     private val tasks = mutableListOf<InputTask>()
     private val generateTasks = mutableListOf<GenerateTask>()
     private val playerTasks = mutableListOf<PlayVoiceTask>()
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
     var logEnabled = true
 
-    fun init(context: Context, version: Int, threadCount: Int, fastSpeechModel: String, melganModel: String, callback: (() -> Unit)? = null) {
-        val key = fastSpeechModel + melganModel
+    fun init(context: Context, version: Int, threadCount: Int, models: List<String>, callback: (() -> Unit)? = null) {
+        val key = models.first()
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 ortEnv = ortEnv ?: OrtEnvironment.getEnvironment()
                 ortEnv?.let {env ->
                     try {
                         @Suppress("SpellCheckingInspection")
-                        val listener = fun (fastspeech: String, vocoder: String) {
-                            modelMap[key] = Pair(FastSpeech2(fastspeech, threadCount, env), MBMelGan(vocoder, threadCount, env))
+                        val listener = fun (fastspeech: String) {
+                            modelMap[key] = Opti(fastspeech, threadCount, env)
                             callback?.invoke()
                         }
 
                         if(ProcessorHolder.processorStrategy != null) {
-                            ProcessorHolder.processorStrategy?.initModel(version, arrayListOf(fastSpeechModel, melganModel)) {
-                                listener(it[0], it[1])
+                            ProcessorHolder.processorStrategy?.initModel(version, models) {
+                                listener(it[0])
                             }
                         } else {
-                            listener(copyFile(context, fastSpeechModel, version), copyFile(context, melganModel, version))
+                            listener(copyFile(context, key, version))
                         }
 
                     } catch (e: Exception) {
@@ -136,10 +137,11 @@ class TtsManager {
     fun speak(request: RequestInfo) {
         stopTts()
         val player = getPlayer(request.sampleRate , request.hopSize)
-        val key = request.fastSpeechModel + request.melganModel
+        val key = request.models.first()
         val processors = modelMap[key] ?: return
         tasks.clear()
-        val task = InputTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, player, request.result )
+        val task = InputTask(processors, request.inputIds, request.speed.toFloat(),
+            request.speakerId, request.hopSize, request.sampleRate, player, request.result )
         tasks.add(task)
         runningTask = threadPool.submit(task)
     }
@@ -183,17 +185,15 @@ class TtsManager {
     }
 
     fun generateVoice(request: RequestInfo) {
-        val key = request.fastSpeechModel + request.melganModel
+        val key = request.models.first()
         val processors = modelMap[key] ?: return
-        val onComplete: (buffer: FloatArray, durations: Array<IntArray>) -> Unit = { buff, dur ->
+        val onComplete: (buffer: FloatArray, durations: DoubleArray) -> Unit = { buff, dur ->
             if(logEnabled) {
                 Log.d(TAG, "[Voice request] [generate end] ${request.requestId}, ${audioBuffers.size}")
             }
 
             audioBuffers[request.requestId] = buff
-            // flatten and convert to double
-            val duration = dur.flatMap { it.asIterable() }.map { it.toDouble() }
-            request.result.success(duration)
+            request.result.success(dur.toList())
         }
 
         val onCancelled: () -> Unit = {
@@ -210,7 +210,8 @@ class TtsManager {
             }
         }
 
-        val task = GenerateTask(processors.first, processors.second, request.inputIds, request.speed.toFloat(), request.speakerId, onComplete, onCancelled)
+        val task = GenerateTask(processors, request.inputIds, request.speed.toFloat(), request.speakerId,
+            request.hopSize, request.sampleRate, onComplete, onCancelled)
         generateTasks.add(task)
         runningTask = threadPool.submit(task)
         if(logEnabled) {

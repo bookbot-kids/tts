@@ -1,13 +1,13 @@
 package com.tensorspeech.tensorflowtts.tts
 
 import android.util.Log
-import com.tensorspeech.tensorflowtts.module.FastSpeech2
-import com.tensorspeech.tensorflowtts.module.MBMelGan
+import com.tensorspeech.tensorflowtts.module.Opti
 
-class GenerateTask(private val fastspeech: FastSpeech2, private val mbMelGan: MBMelGan,
-                    private val inputIds: List<Int>, private val speed: Float,
-                    private val speakerId: Int = 0,
-                   private val onCompleted: (buffer: FloatArray, durations: Array<IntArray>) -> Unit,
+class GenerateTask(private val opti: Opti,
+                    private val inputIds: List<Long>, private val speed: Float,
+                    private val speakerId: Long = 0,
+                   private val hopSize: Int, private val sampleRate: Int,
+                   private val onCompleted: (buffer: FloatArray, durations: DoubleArray) -> Unit,
                    private val onCancelled: () -> Unit
 ): Runnable {
     var stop: Boolean = false
@@ -26,15 +26,10 @@ class GenerateTask(private val fastspeech: FastSpeech2, private val mbMelGan: MB
             checking
         }
         if (isStopping())  return
-        val output =
-            fastspeech.getMelSpectrogram(inputIds.toIntArray(), speed, speakerId, isStopping)
-                ?: return
-
+        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, isStopping) ?: return
         if (isStopping())  return
-        val audioData = mbMelGan.getAudio(output.first, isStopping) ?: return
+        val audio = output.first
         val durations = output.second
-
-        val audio = audioData.flatMap { it.asIterable() }.flatMap { it.asIterable() }.toFloatArray()
         onCompleted(audio, durations)
     }
 

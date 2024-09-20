@@ -1,0 +1,57 @@
+package com.tensorspeech.tensorflowtts.module
+
+import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
+import java.nio.FloatBuffer
+import java.nio.LongBuffer
+
+class Opti (modulePath: String, threadCount: Int,
+            ortEnv: OrtEnvironment
+) : AbstractModule(threadCount, modulePath, ortEnv) {
+    @Suppress("UNCHECKED_CAST")
+    fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
+        if (isCancelled()) return null
+
+        val x = inputIds
+        val xLengths = longArrayOf(inputIds.size.toLong())
+        val scales = floatArrayOf(speed, 1.0f, 1.0f)
+        val sids = longArrayOf(speakerId)
+
+        // Define shapes
+        val xShape = longArrayOf(1, x.size.toLong())
+        val xLengthsShape = longArrayOf(1)
+        val scalesShape = longArrayOf(3)
+        val sidsShape = longArrayOf(1)
+
+        // Create input tensors
+        val xTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(x), xShape)
+        val xLengthsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(xLengths), xLengthsShape)
+        val scalesTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(scales), scalesShape)
+        val sidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(sids), sidsShape)
+
+        val inputTensors = mapOf(
+            "x" to xTensor,
+            "x_lengths" to xLengthsTensor,
+            "scales" to scalesTensor,
+            "sids" to sidsTensor
+        )
+
+        if (isCancelled()) return null
+
+        val output = session.run(inputTensors)
+        output.use {
+            if (isCancelled()) return null
+            val audioOrtValue = output.firstOrNull { it.key == "wav" }?.value as? OnnxTensor
+            val durationsOrtValue = output.firstOrNull { it.key == "durations" }?.value as? OnnxTensor
+            if (audioOrtValue == null || durationsOrtValue == null) {
+                return null
+            }
+
+            val audioArray = (audioOrtValue.value as Array<FloatArray>)[0]
+            val durationsArray = (durationsOrtValue.value as Array<LongArray>)[0]
+            // convert to seconds
+            val durationsInSeconds = durationsArray.map { it.toDouble() * hopSize / sampleRate }.toDoubleArray()
+            return audioArray to durationsInSeconds
+        }
+    }
+}

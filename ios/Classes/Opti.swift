@@ -43,7 +43,7 @@ class Opti: BaseProcessor {
         // Prepare inputs
         let x = inputIds
         let x_lengths: [Int64] = [Int64(inputIds.count)]
-        let scales: [Float] = [1.0, 1.0, 1.0]
+        let scales: [Float] = [speedRatio, 1.0, 1.0]
         let sids: [Int64] = [speakerId]
         
         // Shapes for inputs

@@ -1,6 +1,5 @@
 package com.bookbot.tts
 
-import androidx.annotation.NonNull
 import com.tensorspeech.tensorflowtts.tts.TtsManager
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -19,25 +18,24 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
   private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
 
 
-  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "tts")
     channel.setMethodCallHandler(this)
     pluginBinding = flutterPluginBinding
   }
 
   @Suppress("UNCHECKED_CAST")
-  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+  override fun onMethodCall(call: MethodCall, result: Result) {
     val wrapper = TtsMethodResultWrapper(result)
     when(call.method){
       "initModels" -> {
         pluginBinding?.applicationContext?.let { context ->
           val args = call.arguments as Map<*, *>
-          val fastSpeechModel = args["fastSpeechModel"] as String
-          val melganModel = args["melganModel"] as String
+          val models = args["models"] as List<String>
           val modelVersion = args["modelVersion"] as Int
           val threadCount = args["threadCount"] as Int
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
-          TtsManager.instance.init(context, modelVersion, threadCount, fastSpeechModel, melganModel) {
+          TtsManager.instance.init(context, modelVersion, threadCount, models) {
             wrapper.success(null)
           }
         }
@@ -47,7 +45,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
             TtsManager.instance.speak(request)
           }
         }
@@ -57,7 +55,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
             TtsManager.instance.playVoice(request)
           }
         }
@@ -67,7 +65,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) ?: true
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.fastSpeechModel, request.melganModel) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
             TtsManager.instance.generateVoice(request)
           }
         }
@@ -79,7 +77,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
     }
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     pluginBinding = null
   }
