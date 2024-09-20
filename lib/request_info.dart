@@ -42,12 +42,24 @@ class Parameters {
   };
 }
 
+enum Speaker {
+  us(2),
+  au(0),
+  gb(1),
+  id(0),
+  sw(0);
+
+  final int speakerId;
+
+  const Speaker(this.speakerId);
+}
+
 class RequestInfo {
   final List<String> models;
   final List<int> inputIds;
   final List<String> visemes;
   double speed;
-  int speakerId;
+  Speaker speaker;
   bool useDot;
   int sampleRate;
   int hopSize;
@@ -68,7 +80,7 @@ class RequestInfo {
     this.inputIds,
     this.visemes, {
     this.speed = 1.0,
-    this.speakerId = 0,
+    this.speaker = Speaker.us,
     this.useDot = true,
     this.sampleRate = Parameters.enSampleRate,
     this.hopSize = Parameters.enHopSize,

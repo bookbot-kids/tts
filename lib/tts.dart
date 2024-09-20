@@ -66,8 +66,8 @@ class Tts {
           i < requestInfo.visemes.length ? requestInfo.visemes[i] : silent;
 
       result.add({
-        'start': dur * requestInfo.hopSize / requestInfo.sampleRate,
-        'duration': output[i] * requestInfo.hopSize / requestInfo.sampleRate,
+        'start': dur,
+        'duration': output[i],
         'token': token,
         'enabled': true,
       });
