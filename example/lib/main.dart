@@ -82,21 +82,18 @@ class _MyAppState extends State<MyApp> {
 
     switch (language) {
       case 'id':
-        return _ttsPlugin.breakIPA(ipa
-            .replaceAll('.', '')
-            .characters
-            .map((e) => e.toLowerCase())
-            .where((e) => e.isNotEmpty)
-            .join(''));
-      case 'sw':
         final normalize = _ttsPlugin.normalizeIPA(ipa, language: language);
-        return _ttsPlugin.breakIPA(normalize
-            .replaceAll('.', ' ')
-            .split(' ')
-            .map((e) => e.toLowerCase())
-            .where((e) => e.isNotEmpty)
-            .join(''));
+        return _ttsPlugin.breakIPA(
+          normalize
+              .replaceAll('.', '')
+              .split(' ')
+              .map((e) => e.toLowerCase())
+              .where((e) => e.isNotEmpty)
+              .join(''),
+          language: 'id',
+        );
       case 'en':
+      case 'sw':
       default:
         final normalize = _ttsPlugin.normalizeIPA(ipa, language: language);
         return _ttsPlugin.breakIPA(normalize
@@ -106,28 +103,6 @@ class _MyAppState extends State<MyApp> {
             .where((e) => e.isNotEmpty)
             .join(''));
     }
-  }
-
-  List<String> ipaCharacters(Set<String> allIPAs, List ipas) {
-    final result = <String>[];
-    for (String ipa in ipas) {
-      var characters = ipa.characters.toList();
-      for (var i = 0; i < characters.length; i += 2) {
-        if (i < characters.length - 1) {
-          final combine = '${characters[i]}${characters[i + 1]}';
-          if (allIPAs.contains(combine)) {
-            result.add(combine);
-          } else {
-            result.add(characters[i]);
-            result.add(characters[i + 1]);
-          }
-        } else {
-          result.add(characters[i]);
-        }
-      }
-    }
-
-    return result;
   }
 
   static List<String> breakWords(String sentence) {
@@ -167,11 +142,11 @@ class _MyAppState extends State<MyApp> {
               continue;
             }
 
-            final characters = await _findIPA(normalise, 'id');
-            final map = _ttsPlugin.search(characters, language: 'id');
+            final ipas = await _findIPA(normalise, 'id');
+            final map = _ttsPlugin.search(ipas, language: 'id');
             inputIds.addAll(map['inputIds'] as List<int>);
             visemes.addAll(map['visemes'] as List<String>);
-            wordIPAs.add(characters);
+            wordIPAs.add(ipas);
             wirdInputIds.add(map['inputIds']);
           }
 
@@ -194,12 +169,10 @@ class _MyAppState extends State<MyApp> {
               .map((e) => e.trim())
               .where((element) => element.isNotEmpty)
               .toList();
-          final allAvailableIPAs = _ttsPlugin.allIPAs['sw']!;
           for (final word in words) {
             final ipa = await _findIPA(word, 'sw');
-            final characters = ipaCharacters(allAvailableIPAs, ipa);
-            wordIPAs.add(characters);
-            final map = _ttsPlugin.search(characters);
+            wordIPAs.add(ipa);
+            final map = _ttsPlugin.search(ipa, language: 'sw');
             inputIds.addAll(map['inputIds'] as List<int>);
             visemes.addAll(map['visemes'] as List<String>);
             wirdInputIds.add(map['inputIds']);
@@ -226,12 +199,10 @@ class _MyAppState extends State<MyApp> {
               .map((e) => e.trim())
               .where((element) => element.isNotEmpty)
               .toList();
-          final allAvailableIPAs = _ttsPlugin.allIPAs['en']!;
           for (final word in words) {
             final ipa = await _findIPA(word, 'en');
-            final characters = ipaCharacters(allAvailableIPAs, ipa);
-            wordIPAs.add(characters);
-            final map = _ttsPlugin.search(characters);
+            wordIPAs.add(ipa);
+            final map = _ttsPlugin.search(ipa, language: 'en');
             inputIds.addAll(map['inputIds'] as List<int>);
             visemes.addAll(map['visemes'] as List<String>);
             wirdInputIds.add(map['inputIds']);
