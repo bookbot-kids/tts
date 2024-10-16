@@ -1,12 +1,9 @@
 class Parameters {
-  static const enSampleRate = 44100;
-  static const enHopSize = 512;
+  static const defaultSampleRate = 44100;
+  static const defaultHopSize = 512;
   static const enEos = 2;
-  static const enDot = 12;
   static const idEos = 2;
-  static const idDot = 12;
   static const swEos = 2;
-  static const swDot = 12;
 
   static const eosInputIds = <String, int>{
     'en': enEos,
@@ -18,26 +15,29 @@ class Parameters {
     'en': {
       '!': 4,
       ',': 10,
-      '.': enDot,
+      '.': 12,
       ':': 13,
       ';': 14,
       '?': 15,
+      ' ': 3,
     },
     'id': {
       '!': 4,
       ',': 10,
-      '.': idDot,
+      '.': 12,
       ':': 13,
       ';': 14,
       '?': 15,
+      ' ': 3,
     },
     'sw': {
       '!': 4,
       ',': 10,
-      '.': swDot,
+      '.': 12,
       ':': 13,
       ';': 14,
       '?': 15,
+      ' ': 3,
     },
   };
 }
@@ -73,6 +73,9 @@ class RequestInfo {
   int modelVersion;
   bool logEnabled;
   int threadCount;
+  bool useEndSpace;
+  final String language;
+  int space;
 
   /// delay time in milliseconds before notify complete
   int playerCompletedDelayed;
@@ -80,14 +83,15 @@ class RequestInfo {
   RequestInfo(
     this.models,
     this.inputIds,
-    this.visemes, {
+    this.visemes,
+    this.language, {
     this.speed = 1.0,
     this.speaker = Speaker.us,
-    this.useDot = true,
-    this.sampleRate = Parameters.enSampleRate,
-    this.hopSize = Parameters.enHopSize,
-    this.eos = Parameters.enEos,
-    this.dot = Parameters.enDot,
+    this.useDot = false,
+    this.sampleRate = Parameters.defaultSampleRate,
+    this.hopSize = Parameters.defaultHopSize,
+    this.eos = 0,
+    this.dot = 0,
     this.requestId = '',
     this.singleThread = true,
     this.playerCompletedDelayed = 0,
@@ -95,5 +99,11 @@ class RequestInfo {
     this.modelVersion = 1,
     this.logEnabled = true,
     this.threadCount = 1,
-  });
+    this.useEndSpace = false,
+    this.space = 0,
+  }) {
+    eos = Parameters.eosInputIds[language]!;
+    dot = Parameters.specialInputIds[language]!['.']!;
+    space = Parameters.specialInputIds[language]![' ']!;
+  }
 }

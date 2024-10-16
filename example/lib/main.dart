@@ -168,13 +168,13 @@ class _MyAppState extends State<MyApp> {
             ['convnext-tts-id.onnx'],
             inputIds,
             visemes,
+            'id',
             speaker: Speaker.id,
             singleThread: true,
             playerCompletedDelayed: 0,
-            speed: 1.0,
+            speed: 0.95,
             useEos: false,
-            dot: Parameters.idDot,
-            eos: Parameters.idEos,
+            useEndSpace: true,
           );
           break;
         case Langage.sw:
@@ -197,14 +197,14 @@ class _MyAppState extends State<MyApp> {
             ['convnext-tts-sw.onnx'],
             inputIds,
             visemes,
+            'sw',
             useDot: false,
             speaker: Speaker.sw,
             singleThread: true,
             playerCompletedDelayed: 0,
-            speed: 1.0,
+            speed: 0.95,
             useEos: false,
-            dot: Parameters.enDot,
-            eos: Parameters.enEos,
+            useEndSpace: true,
           );
           break;
         case Langage.en:
@@ -228,14 +228,14 @@ class _MyAppState extends State<MyApp> {
             ['convnext-tts-en.onnx'],
             inputIds,
             visemes,
+            'en',
             useDot: false,
             speaker: Speaker.us,
             singleThread: true,
             playerCompletedDelayed: 0,
-            speed: 1.0,
+            speed: 0.95,
             useEos: false,
-            dot: Parameters.enDot,
-            eos: Parameters.enEos,
+            useEndSpace: true,
           );
           break;
       }
