@@ -36,6 +36,7 @@ dependencies:
   csv: ^6.0.0
   uuid: ^4.3.3
   collection: ^1.19.0
+  more: ^4.3.0
 
 dependency_overrides:
   collection: ^1.19.0

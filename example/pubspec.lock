@@ -179,6 +179,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
+  more:
+    dependency: "direct main"
+    description:
+      name: more
+      sha256: "55cb4f276d4e75249748cf06eed0dc96905d97d466e9b138566a124c0b3a4ebd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.3.0"
   path:
     dependency: "direct main"
     description:
