@@ -15,26 +15,30 @@ class Opti (modulePath: String, threadCount: Int,
         val x = inputIds
         val xLengths = longArrayOf(inputIds.size.toLong())
         val scales = floatArrayOf(speed, 1.0f, 1.0f)
-        val sids = longArrayOf(speakerId)
 
         // Define shapes
         val xShape = longArrayOf(1, x.size.toLong())
         val xLengthsShape = longArrayOf(1)
         val scalesShape = longArrayOf(3)
-        val sidsShape = longArrayOf(1)
 
         // Create input tensors
         val xTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(x), xShape)
         val xLengthsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(xLengths), xLengthsShape)
         val scalesTensor = OnnxTensor.createTensor(ortEnv, FloatBuffer.wrap(scales), scalesShape)
-        val sidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(sids), sidsShape)
 
-        val inputTensors = mapOf(
+
+        val inputTensors = mutableMapOf(
             "x" to xTensor,
             "x_lengths" to xLengthsTensor,
             "scales" to scalesTensor,
-            "sids" to sidsTensor
         )
+
+        if(speakerId > 0) {
+            val sids = longArrayOf(speakerId)
+            val sidsShape = longArrayOf(1)
+            val sidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(sids), sidsShape)
+            inputTensors["sids"] = sidsTensor
+        }
 
         if (isCancelled()) return null
 

@@ -3,8 +3,8 @@ class Parameters {
   static const enHopSize = 512;
   static const enEos = 2;
   static const enDot = 12;
-  static const idEos = 38;
-  static const idDot = 33;
+  static const idEos = 2;
+  static const idDot = 12;
   static const swEos = 2;
   static const swDot = 12;
 
@@ -24,12 +24,12 @@ class Parameters {
       '?': 15,
     },
     'id': {
-      '!': 31,
-      ',': 32,
+      '!': 4,
+      ',': 10,
       '.': idDot,
-      ':': 36,
-      ';': 35,
-      '?': 34,
+      ':': 13,
+      ';': 14,
+      '?': 15,
     },
     'sw': {
       '!': 4,
@@ -46,8 +46,10 @@ enum Speaker {
   us(2),
   au(0),
   gb(1),
-  id(0),
-  sw(0);
+  // no speaker id
+  id(-1),
+  // no speaker id
+  sw(-1);
 
   final int speakerId;
 

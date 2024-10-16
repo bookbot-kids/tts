@@ -51,7 +51,7 @@ class Tts {
       }
     }
 
-    if (debug) {
+    if (debug || requestInfo.logEnabled) {
       // ignore: avoid_print
       print('inputIds: ${requestInfo.inputIds}');
     }

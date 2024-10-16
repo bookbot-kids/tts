@@ -14,6 +14,8 @@
 		52EF65382A61895D00426AC5 /* mbmelgan.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65342A61895D00426AC5 /* mbmelgan.onnx */; };
 		52EF65392A61895D00426AC5 /* id_mbmelgan.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */; };
 		52EF653A2A61895D00426AC5 /* lightspeech_quant.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52EF65362A61895D00426AC5 /* lightspeech_quant.onnx */; };
+		52FE0BED2CBF971800507B8D /* convnext-tts-sw.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52FE0BEC2CBF971700507B8D /* convnext-tts-sw.onnx */; };
+		52FE0BEE2CBF971800507B8D /* convnext-tts-id.onnx in Resources */ = {isa = PBXBuildFile; fileRef = 52FE0BEB2CBF971700507B8D /* convnext-tts-id.onnx */; };
 		658A9D5663F0D8BFA76BBA42 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D1751477B72FB88796451FC /* Pods_Runner.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -43,6 +45,8 @@
 		52EF65342A61895D00426AC5 /* mbmelgan.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = mbmelgan.onnx; path = ../../android/app/src/main/assets/mbmelgan.onnx; sourceTree = "<group>"; };
 		52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = id_mbmelgan.onnx; path = ../../android/app/src/main/assets/id_mbmelgan.onnx; sourceTree = "<group>"; };
 		52EF65362A61895D00426AC5 /* lightspeech_quant.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = lightspeech_quant.onnx; path = ../../android/app/src/main/assets/lightspeech_quant.onnx; sourceTree = "<group>"; };
+		52FE0BEB2CBF971700507B8D /* convnext-tts-id.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = "convnext-tts-id.onnx"; path = "../android/app/src/main/assets/convnext-tts-id.onnx"; sourceTree = SOURCE_ROOT; };
+		52FE0BEC2CBF971700507B8D /* convnext-tts-sw.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = "convnext-tts-sw.onnx"; path = "../android/app/src/main/assets/convnext-tts-sw.onnx"; sourceTree = SOURCE_ROOT; };
 		69C4336D35587E7F4F534510 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -112,6 +116,8 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				52FE0BEB2CBF971700507B8D /* convnext-tts-id.onnx */,
+				52FE0BEC2CBF971700507B8D /* convnext-tts-sw.onnx */,
 				5200C6A82C9C0E2A0005F3F5 /* convnext-tts-en.onnx */,
 				52EF65332A61895D00426AC5 /* id_lightspeech_quant.onnx */,
 				52EF65352A61895D00426AC5 /* id_mbmelgan.onnx */,
@@ -207,6 +213,8 @@
 				5200C6A92C9C0E2A0005F3F5 /* convnext-tts-en.onnx in Resources */,
 				52EF65372A61895D00426AC5 /* id_lightspeech_quant.onnx in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				52FE0BED2CBF971800507B8D /* convnext-tts-sw.onnx in Resources */,
+				52FE0BEE2CBF971800507B8D /* convnext-tts-id.onnx in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				52EF65392A61895D00426AC5 /* id_mbmelgan.onnx in Resources */,
 				52EF65382A61895D00426AC5 /* mbmelgan.onnx in Resources */,

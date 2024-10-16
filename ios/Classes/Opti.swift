@@ -44,23 +44,28 @@ class Opti: BaseProcessor {
         let x = inputIds
         let x_lengths: [Int64] = [Int64(inputIds.count)]
         let scales: [Float] = [speedRatio, 1.0, 1.0]
-        let sids: [Int64] = [speakerId]
         
         // Shapes for inputs
         let xShape: [NSNumber] = [1, NSNumber(value: x.count)]
         let xLengthsShape: [NSNumber] = [1]
         let scalesShape: [NSNumber] = [3]
-        let sidsShape: [NSNumber] = [1]
         
-        let inputNames = ["x", "x_lengths", "scales", "sids"]
+        var inputNames = ["x", "x_lengths", "scales"]
         
         // Create input tensors
         let xTensor = try createTensor(data: x, shape: xShape, dataType: .int64)
         let xLengthsTensor = try createTensor(data: x_lengths, shape: xLengthsShape, dataType: .int64)
         let scalesTensor = try createTensor(data: scales, shape: scalesShape, dataType: .float)
-        let sidsTensor = try createTensor(data: sids, shape: sidsShape, dataType: .int64)
+        var inputTensors = [xTensor, xLengthsTensor, scalesTensor]
         
-        let inputTensors = [xTensor, xLengthsTensor, scalesTensor, sidsTensor]
+        if speakerId > 0 {
+            let sids: [Int64] = [speakerId]
+            let sidsShape: [NSNumber] = [1]
+            inputNames.append("sids")
+            let sidsTensor = try createTensor(data: sids, shape: sidsShape, dataType: .int64)
+            inputTensors.append(sidsTensor)
+        }
+        
         
         // Map input names to tensors
         var inputMap: [String: ORTValue] = [:]

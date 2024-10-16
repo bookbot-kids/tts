@@ -22,7 +22,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-enum Langage { en, id }
+enum Langage { en, id, sw }
 
 class _MyAppState extends State<MyApp> {
   final _ttsPlugin = Tts(threadCount: 1);
@@ -32,6 +32,8 @@ class _MyAppState extends State<MyApp> {
       'library aback ables hello world may then them single they she go do it love me so much join us';
   static const _defaultIdText =
       'Saat kamu mengetuk kamu akan secara otomatis mengubah halaman ketika kamu selesai kecuali kamu';
+  static const _defaultSwText =
+      'ting ajabu chakula vitabu hatafuti panya kutafuta hiki hivyo siwezi ana mkubwa';
   final _textController = TextEditingController()..text = _defaultEnText;
   var _result = '';
   Langage? _language = Langage.en;
@@ -72,15 +74,25 @@ class _MyAppState extends State<MyApp> {
 
   Future<List<String>> _findIPA(String word, String language) async {
     final item = wordDb.firstWhereOrNull((e) {
-      return e['language'] == language && e['word'] == word;
+      return e['language'] == language &&
+          e['word'] == word &&
+          e['ipa'].toString().isNotEmpty;
     });
-    final ipa = item?['ipa'] ?? '';
+    final String ipa = item?['ipa'] ?? '';
 
     switch (language) {
       case 'id':
         return _ttsPlugin.breakIPA(ipa
             .replaceAll('.', '')
             .characters
+            .map((e) => e.toLowerCase())
+            .where((e) => e.isNotEmpty)
+            .join(''));
+      case 'sw':
+        final normalize = _ttsPlugin.normalizeIPA(ipa, language: language);
+        return _ttsPlugin.breakIPA(normalize
+            .replaceAll('.', ' ')
+            .split(' ')
             .map((e) => e.toLowerCase())
             .where((e) => e.isNotEmpty)
             .join(''));
@@ -142,71 +154,106 @@ class _MyAppState extends State<MyApp> {
       List wordIPAs = []; // ipa for each word
       List wirdInputIds = []; // input id for each word
       RequestInfo request;
-      if (_language == Langage.en) {
-        final words = text
-            .split(' ')
-            .map((e) => e.trim())
-            .where((element) => element.isNotEmpty)
-            .toList();
-        final allAvailableIPAs = _ttsPlugin.allIPAs['en']!;
-        for (final word in words) {
-          final ipa = await _findIPA(word, 'en');
-          final characters = ipaCharacters(allAvailableIPAs, ipa);
-          wordIPAs.add(characters);
-          final map = _ttsPlugin.search(characters);
-          inputIds.addAll(map['inputIds'] as List<int>);
-          visemes.addAll(map['visemes'] as List<String>);
-          wirdInputIds.add(map['inputIds']);
-        }
+      switch (_language) {
+        case Langage.id:
+          final wordTexts = breakWords(text);
+          for (var wordText in wordTexts) {
+            var normalise = wordText
+                .replaceAll(curlyTagRegex, '')
+                .replaceAll(nonAlphaUnicodeWithContractedRegEx, '')
+                .toLowerCase();
+            if (normalise.trim().isEmpty) {
+              print('Word is empty $wordText');
+              continue;
+            }
 
-        request = RequestInfo(
-          ['convnext-tts-en.onnx'],
-          inputIds,
-          visemes,
-          useDot: false,
-          speaker: Speaker.us,
-          singleThread: true,
-          playerCompletedDelayed: 0,
-          speed: 1.0,
-          useEos: false,
-          dot: Parameters.enDot,
-          eos: Parameters.enEos,
-        );
-      } else {
-        final wordTexts = breakWords(text);
-        for (var wordText in wordTexts) {
-          var normalise = wordText
-              .replaceAll(curlyTagRegex, '')
-              .replaceAll(nonAlphaUnicodeWithContractedRegEx, '')
-              .toLowerCase();
-          if (normalise.trim().isEmpty) {
-            print('Word is empty $wordText');
-            continue;
+            final characters = await _findIPA(normalise, 'id');
+            final map = _ttsPlugin.search(characters, language: 'id');
+            inputIds.addAll(map['inputIds'] as List<int>);
+            visemes.addAll(map['visemes'] as List<String>);
+            wordIPAs.add(characters);
+            wirdInputIds.add(map['inputIds']);
           }
 
-          final characters = await _findIPA(normalise, 'id');
-          final map = _ttsPlugin.search(characters, language: 'id');
-          inputIds.addAll(map['inputIds'] as List<int>);
-          visemes.addAll(map['visemes'] as List<String>);
-          wordIPAs.add(characters);
-          wirdInputIds.add(map['inputIds']);
-        }
+          request = RequestInfo(
+            ['convnext-tts-id.onnx'],
+            inputIds,
+            visemes,
+            speaker: Speaker.id,
+            singleThread: true,
+            playerCompletedDelayed: 0,
+            speed: 1.0,
+            useEos: false,
+            dot: Parameters.idDot,
+            eos: Parameters.idEos,
+          );
+          break;
+        case Langage.sw:
+          final words = text
+              .split(' ')
+              .map((e) => e.trim())
+              .where((element) => element.isNotEmpty)
+              .toList();
+          final allAvailableIPAs = _ttsPlugin.allIPAs['sw']!;
+          for (final word in words) {
+            final ipa = await _findIPA(word, 'sw');
+            final characters = ipaCharacters(allAvailableIPAs, ipa);
+            wordIPAs.add(characters);
+            final map = _ttsPlugin.search(characters);
+            inputIds.addAll(map['inputIds'] as List<int>);
+            visemes.addAll(map['visemes'] as List<String>);
+            wirdInputIds.add(map['inputIds']);
+          }
 
-        request = RequestInfo(
-          ['convnext-tts-en.onnx'],
-          inputIds,
-          visemes,
-          speaker: Speaker.id,
-          singleThread: true,
-          playerCompletedDelayed: 0,
-          speed: 1.2,
-          useEos: true,
-          dot: Parameters.idDot,
-          eos: Parameters.idEos,
-        );
+          request = RequestInfo(
+            ['convnext-tts-sw.onnx'],
+            inputIds,
+            visemes,
+            useDot: false,
+            speaker: Speaker.sw,
+            singleThread: true,
+            playerCompletedDelayed: 0,
+            speed: 1.0,
+            useEos: false,
+            dot: Parameters.enDot,
+            eos: Parameters.enEos,
+          );
+          break;
+        case Langage.en:
+        default:
+          final words = text
+              .split(' ')
+              .map((e) => e.trim())
+              .where((element) => element.isNotEmpty)
+              .toList();
+          final allAvailableIPAs = _ttsPlugin.allIPAs['en']!;
+          for (final word in words) {
+            final ipa = await _findIPA(word, 'en');
+            final characters = ipaCharacters(allAvailableIPAs, ipa);
+            wordIPAs.add(characters);
+            final map = _ttsPlugin.search(characters);
+            inputIds.addAll(map['inputIds'] as List<int>);
+            visemes.addAll(map['visemes'] as List<String>);
+            wirdInputIds.add(map['inputIds']);
+          }
+
+          request = RequestInfo(
+            ['convnext-tts-en.onnx'],
+            inputIds,
+            visemes,
+            useDot: false,
+            speaker: Speaker.us,
+            singleThread: true,
+            playerCompletedDelayed: 0,
+            speed: 1.0,
+            useEos: false,
+            dot: Parameters.enDot,
+            eos: Parameters.enEos,
+          );
+          break;
       }
 
-      final output = await _ttsPlugin.speakText(request);
+      final output = await _ttsPlugin.speakText(request, debug: true);
       setState(() {
         _result += '''
 IPA:
@@ -242,6 +289,8 @@ ${wirdInputIds.join('; ')}
         language: 'en');
     await _ttsPlugin.loadIPAsMapping('assets/tts/id_tts_mapping.csv',
         language: 'id');
+    await _ttsPlugin.loadIPAsMapping('assets/tts/sw_tts_mapping.csv',
+        language: 'sw');
 
     final assetContent =
         await rootBundle.loadString('assets/WordUniversal.json');
@@ -309,6 +358,19 @@ ${wirdInputIds.join('; ')}
                   setState(() {
                     _language = value;
                     _textController.text = _defaultIdText;
+                  });
+                },
+              ),
+            ),
+            ListTile(
+              title: const Text('sw'),
+              leading: Radio<Langage>(
+                value: Langage.sw,
+                groupValue: _language,
+                onChanged: (Langage? value) {
+                  setState(() {
+                    _language = value;
+                    _textController.text = _defaultSwText;
                   });
                 },
               ),
