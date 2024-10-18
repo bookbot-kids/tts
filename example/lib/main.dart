@@ -230,7 +230,7 @@ class _MyAppState extends State<MyApp> {
             visemes,
             'en',
             useDot: false,
-            speaker: Speaker.us,
+            speaker: Speaker.au,
             singleThread: true,
             playerCompletedDelayed: 0,
             speed: 0.95,

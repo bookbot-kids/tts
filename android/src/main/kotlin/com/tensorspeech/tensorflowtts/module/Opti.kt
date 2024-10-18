@@ -33,7 +33,7 @@ class Opti (modulePath: String, threadCount: Int,
             "scales" to scalesTensor,
         )
 
-        if(speakerId > 0) {
+        if(speakerId >= 0) {
             val sids = longArrayOf(speakerId)
             val sidsShape = longArrayOf(1)
             val sidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(sids), sidsShape)

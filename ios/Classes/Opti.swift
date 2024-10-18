@@ -58,7 +58,7 @@ class Opti: BaseProcessor {
         let scalesTensor = try createTensor(data: scales, shape: scalesShape, dataType: .float)
         var inputTensors = [xTensor, xLengthsTensor, scalesTensor]
         
-        if speakerId > 0 {
+        if speakerId >= 0 {
             let sids: [Int64] = [speakerId]
             let sidsShape: [NSNumber] = [1]
             inputNames.append("sids")
