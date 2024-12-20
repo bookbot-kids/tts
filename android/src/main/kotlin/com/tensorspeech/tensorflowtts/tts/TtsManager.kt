@@ -8,8 +8,6 @@ import com.bookbot.tts.ProcessorHolder
 import com.bookbot.tts.RequestInfo
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
-import com.tensorspeech.tensorflowtts.module.FastSpeech2
-import com.tensorspeech.tensorflowtts.module.MBMelGan
 import com.tensorspeech.tensorflowtts.module.Opti
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
 import java.io.File
@@ -141,7 +139,7 @@ class TtsManager {
         val processors = modelMap[key] ?: return
         tasks.clear()
         val task = InputTask(processors, request.inputIds, request.speed.toFloat(),
-            request.speakerId, request.hopSize, request.sampleRate, player, request.result )
+            request.speakerId, request.hopSize, request.sampleRate, request.enableLids, player, request.result )
         tasks.add(task)
         runningTask = threadPool.submit(task)
     }
@@ -211,7 +209,7 @@ class TtsManager {
         }
 
         val task = GenerateTask(processors, request.inputIds, request.speed.toFloat(), request.speakerId,
-            request.hopSize, request.sampleRate, onComplete, onCancelled)
+            request.hopSize, request.sampleRate, request.enableLids, onComplete, onCancelled)
         generateTasks.add(task)
         runningTask = threadPool.submit(task)
         if(logEnabled) {

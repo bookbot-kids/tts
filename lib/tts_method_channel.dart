@@ -12,20 +12,7 @@ class MethodChannelTts extends TtsPlatform {
 
   @override
   Future<List> speakText(RequestInfo requestInfo) async {
-    return await methodChannel.invokeMethod('speakText', {
-      'models': requestInfo.models,
-      'inputIds': requestInfo.inputIds,
-      'speed': requestInfo.speed,
-      'speakerId': requestInfo.speaker.speakerId,
-      'sampleRate': requestInfo.sampleRate,
-      'hopSize': requestInfo.hopSize,
-      'requestId': requestInfo.requestId,
-      'singleThread': requestInfo.singleThread,
-      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
-      'modelVersion': requestInfo.modelVersion,
-      'logEnabled': requestInfo.logEnabled,
-      'threadCount': requestInfo.threadCount,
-    });
+    return await methodChannel.invokeMethod('speakText', requestInfo.toMap());
   }
 
   @override
@@ -42,38 +29,13 @@ class MethodChannelTts extends TtsPlatform {
 
   @override
   Future<void> playVoice(RequestInfo requestInfo) async {
-    await methodChannel.invokeMethod('playVoice', {
-      'models': requestInfo.models,
-      'inputIds': requestInfo.inputIds,
-      'speed': requestInfo.speed,
-      'speakerId': requestInfo.speaker.speakerId,
-      'sampleRate': requestInfo.sampleRate,
-      'hopSize': requestInfo.hopSize,
-      'requestId': requestInfo.requestId,
-      'singleThread': requestInfo.singleThread,
-      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
-      'modelVersion': requestInfo.modelVersion,
-      'logEnabled': requestInfo.logEnabled,
-      'threadCount': requestInfo.threadCount,
-    });
+    await methodChannel.invokeMethod('playVoice', requestInfo.toMap());
   }
 
   @override
   Future<List> generateVoice(RequestInfo requestInfo) async {
-    return await methodChannel.invokeMethod('generateVoice', {
-      'models': requestInfo.models,
-      'inputIds': requestInfo.inputIds,
-      'speed': requestInfo.speed,
-      'speakerId': requestInfo.speaker.speakerId,
-      'sampleRate': requestInfo.sampleRate,
-      'hopSize': requestInfo.hopSize,
-      'requestId': requestInfo.requestId,
-      'singleThread': requestInfo.singleThread,
-      'playerCompletedDelayed': requestInfo.playerCompletedDelayed,
-      'modelVersion': requestInfo.modelVersion,
-      'logEnabled': requestInfo.logEnabled,
-      'threadCount': requestInfo.threadCount,
-    });
+    return await methodChannel.invokeMethod(
+        'generateVoice', requestInfo.toMap());
   }
 
   @override

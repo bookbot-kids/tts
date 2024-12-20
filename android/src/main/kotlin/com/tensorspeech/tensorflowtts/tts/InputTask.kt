@@ -7,6 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 class InputTask(private val opti: Opti,
                 private val inputIds: List<Long>, private val speed: Float,
                 private val speakerId: Long = 0, private val hopSize: Int, private val sampleRate: Int,
+                private val enableLids: Boolean,
                 private val player: TtsBufferPlayer?,
                 private val result: MethodChannel.Result
 ): Runnable {
@@ -21,7 +22,7 @@ class InputTask(private val opti: Opti,
             stop || Thread.interrupted()
         }
         if (isStopping())  return
-        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, isStopping) ?: return
+        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, enableLids, isStopping) ?: return
 
         if (isStopping())  return
         val audio = output.first

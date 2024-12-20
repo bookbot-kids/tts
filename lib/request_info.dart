@@ -76,6 +76,7 @@ class RequestInfo {
   bool useEndSpace;
   final String language;
   int space;
+  bool enableLids;
 
   /// delay time in milliseconds before notify complete
   int playerCompletedDelayed;
@@ -101,9 +102,26 @@ class RequestInfo {
     this.threadCount = 1,
     this.useEndSpace = false,
     this.space = 0,
+    this.enableLids = false,
   }) {
     eos = Parameters.eosInputIds[language]!;
     dot = Parameters.specialInputIds[language]!['.']!;
     space = Parameters.specialInputIds[language]![' ']!;
   }
+
+  Map toMap() => {
+        'models': models,
+        'inputIds': inputIds,
+        'speed': speed,
+        'speakerId': speaker.speakerId,
+        'sampleRate': sampleRate,
+        'hopSize': hopSize,
+        'requestId': requestId,
+        'singleThread': singleThread,
+        'playerCompletedDelayed': playerCompletedDelayed,
+        'modelVersion': modelVersion,
+        'logEnabled': logEnabled,
+        'threadCount': threadCount,
+        'enableLids': enableLids
+      };
 }

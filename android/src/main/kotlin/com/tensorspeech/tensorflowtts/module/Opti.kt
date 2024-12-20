@@ -9,7 +9,7 @@ class Opti (modulePath: String, threadCount: Int,
             ortEnv: OrtEnvironment
 ) : AbstractModule(threadCount, modulePath, ortEnv) {
     @Suppress("UNCHECKED_CAST")
-    fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
+    fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, enableLids: Boolean, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
         if (isCancelled()) return null
 
         val x = inputIds
@@ -39,6 +39,13 @@ class Opti (modulePath: String, threadCount: Int,
             val sidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(sids), sidsShape)
             inputTensors["sids"] = sidsTensor
         }
+
+        if (enableLids) {
+            val lids = longArrayOf(0)
+            val lidsShape = longArrayOf(1)
+            val lidsTensor = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(lids), lidsShape)
+            inputTensors["lids"] = lidsTensor
+        }        
 
         if (isCancelled()) return null
 

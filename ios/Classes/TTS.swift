@@ -15,6 +15,37 @@ public class BufferHolder {
     var audioBuffers = Dictionary<String, Data>()
 }
 
+public class RequestInfo {
+    let models: [String]
+    let inputIds: [Int64]
+    let speed: Float
+    let speakerId: Int64
+    let sampleRate: Int
+    let hopSize: Int
+    let requestId: String
+    let singleThread: Bool
+    let playerCompletedDelayed: Int
+    let logEnabled: Bool
+    let threadCount: Int
+    let enableLids: Bool
+    
+    init(args: [String: Any]) {
+        self.models = args["models"] as! Array<String>
+        self.inputIds = args["inputIds"] as! Array<Int64>
+        self.speed = Float(truncating: args["speed"] as! NSNumber)
+        self.speakerId = Int64(args["speakerId"] as! Int)
+        self.sampleRate = args["sampleRate"] as! Int
+        self.hopSize = args["hopSize"] as! Int
+        self.requestId = args["requestId"] as! String
+        self.singleThread = args["singleThread"] as! Bool
+        self.playerCompletedDelayed = args["playerCompletedDelayed"] as? Int ?? 0
+        self.logEnabled = args["logEnabled"] as? Bool ?? true
+        self.threadCount = args["threadCount"] as? Int ?? 1
+        self.enableLids = args["enableLids"] as? Bool ?? false        
+    }
+}
+
+
 public class TTS {
     var opti: Opti?
     private var modelMap = [String:Bool]()
@@ -80,9 +111,9 @@ public class TTS {
         }
     }
 
-    public func speak(models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, result: @escaping FlutterResult) {
+    public func speak(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
-        self.initModel(models: models) { modelCompletedResult in
+        self.initModel(models: requestInfo.models) { modelCompletedResult in
             guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
@@ -92,14 +123,14 @@ public class TTS {
             }
             
             self.operationQueue.cancelAllOperations()
-            let requestTask = RequesTask(opti: opti, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
+            let requestTask = RequesTask(opti: opti, inputIds: requestInfo.inputIds, speakerId: requestInfo.speakerId, speed: requestInfo.speed, sampleRate: requestInfo.sampleRate, hopSize: requestInfo.hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, enableLids: requestInfo.enableLids, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
     
-    public func generateVoice(requestId: String, models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, result: @escaping FlutterResult) {
+    public func generateVoice(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
-        self.initModel(models: models) { modelCompletedResult in
+        self.initModel(models: requestInfo.models) { modelCompletedResult in
             guard modelCompletedResult, let opti = self.opti else {
                 if self.logEnabled {
                     print("model initialzed failed")
@@ -108,22 +139,22 @@ public class TTS {
                 return
             }
             
-            if singleThread {
+            if requestInfo.singleThread {
                 self.operationQueue.cancelAllOperations()
             }
             
-            let requestTask = GenerateTask(requestId: requestId, opti: opti, inputIds: inputIds, speakerId: speakerId, speed: speed, sampleRate: sampleRate, hopSize: hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, result: result)
+            let requestTask = GenerateTask(requestId: requestInfo.requestId, opti: opti, inputIds: requestInfo.inputIds, speakerId: requestInfo.speakerId, speed: requestInfo.speed, sampleRate: requestInfo.sampleRate, hopSize: requestInfo.hopSize, engine: self.engine, player: self.player, logEnabled: self.logEnabled, enableLids: requestInfo.enableLids, result: result)
             self.operationQueue.addOperation(requestTask)
         }
     }
     
-    public func playVoice(requestId: String, models: [String], inputIds: [Int64], speakerId: Int64 = 0, speed: Float = 1.0, sampleRate: Int, hopSize: Int, singleThread: Bool, playerCompletedDelayed: Int = 0, result: @escaping FlutterResult) {
+    public func playVoice(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
-        if singleThread {
+        if requestInfo.singleThread {
             self.audioOperationQueue.cancelAllOperations()
         }
         
-        let requestTask = PlayVoiceTask(requestId: requestId, sampleRate: sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: playerCompletedDelayed, logEnabled: self.logEnabled,  result: result)
+        let requestTask = PlayVoiceTask(requestId: requestInfo.requestId, sampleRate: requestInfo.sampleRate, player: self.player, engine: self.engine, playerCompletedDelayed: requestInfo.playerCompletedDelayed, logEnabled: self.logEnabled, enableLids: requestInfo.enableLids, result: result)
         self.audioOperationQueue.addOperation(requestTask)
     }
     
@@ -143,8 +174,9 @@ public class TTS {
         let player: AVAudioPlayerNode?
         let requestId: String
         let logEnabled: Bool
+        let enableLids: Bool
         
-        init(requestId: String, opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
+        init(requestId: String, opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, enableLids: Bool, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.opti = opti
             self.inputIds = inputIds
@@ -156,6 +188,7 @@ public class TTS {
             self.engine = engine
             self.player = player
             self.logEnabled = logEnabled
+            self.enableLids = enableLids
         }
         
         func onCancelled() {
@@ -186,7 +219,7 @@ public class TTS {
                         print("[Voice request] [generate start] \(requestId), \(BufferHolder.shared.audioBuffers.count)")
                     }
                     
-                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, isCancelled: {
+                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, enableLids: enableLids, isCancelled: {
                         return isCancelled
                     })
                     
@@ -225,7 +258,8 @@ public class TTS {
         let sampleRate: Int
         let playerCompletedDelayed: Int
         let logEnabled: Bool
-        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, logEnabled: Bool, result: @escaping FlutterResult) {
+        let enableLids: Bool
+        init(requestId: String, sampleRate: Int, player: AVAudioPlayerNode?, engine: AVAudioEngine?, playerCompletedDelayed: Int, logEnabled: Bool, enableLids: Bool, result: @escaping FlutterResult) {
             self.requestId = requestId
             self.result = result
             self.engine = engine
@@ -233,6 +267,7 @@ public class TTS {
             self.sampleRate = sampleRate
             self.playerCompletedDelayed = playerCompletedDelayed
             self.logEnabled = logEnabled
+            self.enableLids = enableLids
         }
         
         func onCancelled() {
@@ -352,8 +387,9 @@ public class TTS {
         let engine: AVAudioEngine?
         let player: AVAudioPlayerNode?
         let logEnabled: Bool
+        let enableLids: Bool
         
-        init(opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, result: @escaping FlutterResult) {
+        init(opti: Opti, inputIds: [Int64], speakerId: Int64, speed: Float, sampleRate: Int, hopSize: Int,engine: AVAudioEngine?, player: AVAudioPlayerNode?, logEnabled: Bool, enableLids: Bool, result: @escaping FlutterResult) {
             self.opti = opti
             self.inputIds = inputIds
             self.speakerId = speakerId
@@ -364,6 +400,7 @@ public class TTS {
             self.engine = engine
             self.player = player
             self.logEnabled = logEnabled
+            self.enableLids = enableLids
         }
         
         override func main() {
@@ -374,7 +411,7 @@ public class TTS {
                
             
                 do {
-                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, isCancelled: {
+                    let optiResult = try opti.process(inputIds: inputIds, speedRatio: speed, speakerId: speakerId, hopSize: hopSize, sampleRate: sampleRate, enableLids: enableLids, isCancelled: {
                         return isCancelled
                     })
                     

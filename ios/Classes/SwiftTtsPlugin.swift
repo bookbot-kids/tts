@@ -22,44 +22,24 @@ public class SwiftTtsPlugin: NSObject, FlutterPlugin {
             break
           case "speakText":
             let argurments = call.arguments as! Dictionary<String, Any>
-            let models = argurments["models"] as! Array<String>
-            let inputIds = argurments["inputIds"] as! Array<Int64>
-            let speed = argurments["speed"] as! NSNumber
-            let speakerId = argurments["speakerId"] as! Int
-            let sampleRate = argurments["sampleRate"] as! Int
-            let hopSize = argurments["hopSize"] as! Int
-            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
-            tts.threadCount = argurments["threadCount"] as? Int ?? 1
-            tts.speak(models: models, inputIds: inputIds, speakerId: Int64(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, result: result)
+            let requestInfo = RequestInfo(args: argurments)
+            tts.logEnabled =  requestInfo.logEnabled
+            tts.threadCount = requestInfo.threadCount
+            tts.speak(requestInfo: requestInfo, result: result)
             break
           case "generateVoice":
             let argurments = call.arguments as! Dictionary<String, Any>
-            let models = argurments["models"] as! Array<String>
-            let inputIds = argurments["inputIds"] as! Array<Int64>
-            let speed = argurments["speed"] as! NSNumber
-            let speakerId = argurments["speakerId"] as! Int
-            let sampleRate = argurments["sampleRate"] as! Int
-            let hopSize = argurments["hopSize"] as! Int
-            let requestId = argurments["requestId"] as! String
-            let singleThread = argurments["singleThread"] as! Bool
-            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
-            tts.threadCount = argurments["threadCount"] as? Int ?? 1
-            tts.generateVoice(requestId: requestId, models: models, inputIds: inputIds, speakerId: Int64(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, result: result)
+            let requestInfo = RequestInfo(args: argurments)
+            tts.logEnabled =  requestInfo.logEnabled
+            tts.threadCount = requestInfo.threadCount
+            tts.generateVoice(requestInfo: requestInfo, result: result)
             break
           case "playVoice":
             let argurments = call.arguments as! Dictionary<String, Any>
-            let models = argurments["models"] as! Array<String>
-            let inputIds = argurments["inputIds"] as! Array<Int64>
-            let speed = argurments["speed"] as! NSNumber
-            let speakerId = argurments["speakerId"] as! Int
-            let sampleRate = argurments["sampleRate"] as! Int
-            let hopSize = argurments["hopSize"] as! Int
-            let requestId = argurments["requestId"] as! String
-            let singleThread = argurments["singleThread"] as! Bool
-            let playerCompletedDelayed = argurments["playerCompletedDelayed"] as! Int
-            tts.logEnabled = argurments["logEnabled"] as? Bool ?? true
-            tts.threadCount = argurments["threadCount"] as? Int ?? 1
-            tts.playVoice(requestId: requestId, models: models, inputIds: inputIds, speakerId: Int64(speakerId), speed: Float(truncating: speed), sampleRate: sampleRate, hopSize: hopSize, singleThread:singleThread, playerCompletedDelayed: playerCompletedDelayed, result: result)
+            let requestInfo = RequestInfo(args: argurments)
+            tts.logEnabled =  requestInfo.logEnabled
+            tts.threadCount = requestInfo.threadCount
+            tts.playVoice(requestInfo: requestInfo, result: result)
             break
             case "dispose":
             tts.dispose()

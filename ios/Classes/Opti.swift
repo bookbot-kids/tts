@@ -26,7 +26,7 @@ class Opti: BaseProcessor {
         super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
     
-    func process(inputIds: [Int64], speedRatio: Float, speakerId: Int64 = 0, hopSize: Int, sampleRate: Int,
+    func process(inputIds: [Int64], speedRatio: Float, speakerId: Int64 = 0, hopSize: Int, sampleRate: Int, enableLids: Bool,
                  isCancelled: (() -> Bool)) throws -> OptiOutputs{
         var result = OptiOutputs(audio: [], durations: [])
                 
@@ -66,6 +66,13 @@ class Opti: BaseProcessor {
             inputTensors.append(sidsTensor)
         }
         
+        if enableLids {
+            let lids: [Int64] = [0]
+            let lidsShape: [NSNumber] = [1]
+            inputNames.append("lids")
+            let lidsTensor = try createTensor(data: lids, shape: lidsShape, dataType: .int64)
+            inputTensors.append(lidsTensor)
+        }
         
         // Map input names to tensors
         var inputMap: [String: ORTValue] = [:]
