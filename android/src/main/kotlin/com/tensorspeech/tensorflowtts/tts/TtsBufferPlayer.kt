@@ -42,7 +42,7 @@ class TtsBufferPlayer(val sampleRate: Int) {
         submitTask(audio, isCancelled)
     }
 
-    private fun getAudioTrack(): AudioTrack {
+    fun getAudioTrack(): AudioTrack {
         return ProcessorHolder.processorStrategy?.audioTrack(sampleRate, CHANNEL, FORMAT) ?: audioTrack
     }
 
