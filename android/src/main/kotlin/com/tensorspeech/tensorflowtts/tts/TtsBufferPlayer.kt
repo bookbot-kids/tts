@@ -14,7 +14,7 @@ import kotlin.math.min
 class TtsBufferPlayer(val sampleRate: Int) {
     val threadPool = ThreadPoolManager.instance.getSingleExecutor("audio")
     val bufferSize = AudioTrack.getMinBufferSize(sampleRate, CHANNEL, FORMAT)
-    val audioTrack: AudioTrack = AudioTrack(
+    private val audioTrack: AudioTrack = AudioTrack(
         AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -42,15 +42,19 @@ class TtsBufferPlayer(val sampleRate: Int) {
         submitTask(audio, isCancelled)
     }
 
+    private fun getAudioTrack(): AudioTrack {
+        return ProcessorHolder.processorStrategy?.audioTrack(sampleRate, CHANNEL, FORMAT) ?: audioTrack
+    }
+
     private fun submitTask(audio: FloatArray, isCancelled: () -> Boolean) {
         task = threadPool.submit {
             if(ProcessorHolder.processorStrategy?.playBuffer(this, audio, isCancelled) != true) {
                 isPlaying = true
                 var index = 0
-                audioTrack.play()
+                getAudioTrack().play()
                 while (index < audio.size && !isInterrupt && !isCancelled()) {
                     val buffer = min(bufferSize, audio.size - index)
-                    audioTrack.write(
+                    getAudioTrack().write(
                         audio,
                         index,
                         buffer,
@@ -70,10 +74,10 @@ class TtsBufferPlayer(val sampleRate: Int) {
         if(ProcessorHolder.processorStrategy?.playBuffer(this, audio, isCancelled) != true) {
             isPlaying = true
             var index = 0
-            audioTrack.play()
+            getAudioTrack().play()
             while (index < audio.size && !isInterrupt && !isCancelled()) {
                 val buffer = min(bufferSize, audio.size - index)
-                audioTrack.write(
+                getAudioTrack().write(
                     audio,
                     index,
                     buffer,
