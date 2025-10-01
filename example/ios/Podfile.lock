@@ -1,16 +1,16 @@
 PODS:
   - Flutter (1.0.0)
-  - onnxruntime-c (1.22.0)
-  - onnxruntime-objc (1.22.0):
-    - onnxruntime-objc/Core (= 1.22.0)
-  - onnxruntime-objc/Core (1.22.0):
-    - onnxruntime-c (= 1.22.0)
+  - onnxruntime-c (1.17.1)
+  - onnxruntime-objc (1.17.1):
+    - onnxruntime-objc/Core (= 1.17.1)
+  - onnxruntime-objc/Core (1.17.1):
+    - onnxruntime-c (= 1.17.1)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - tts (1.0.0):
     - Flutter
-    - onnxruntime-objc (~> 1.22.0)
+    - onnxruntime-objc (~> 1.17.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -31,12 +31,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/tts/ios"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  onnxruntime-c: 7f778680e96145956c0a31945f260321eed2611a
-  onnxruntime-objc: 83d28b87525bd971259a66e153ea32b5d023de19
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
-  tts: 72d5ddf3bcd6cf2cf938c54137b8ae9b9adc7bd4
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  onnxruntime-c: 58803cb3fcc1fb0a7baa9b16b2bad119d6e3eb78
+  onnxruntime-objc: 089530244113a131305642b7e03fa6f8a9ee9ae6
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  tts: 69e45dd79dd64c4aed848b392ee31238540a8c7c
 
-PODFILE CHECKSUM: 949015c4f2feabccb1eb00460c7ec10a1527e304
+PODFILE CHECKSUM: 4e8f8b2be68aeea4c0d5beb6ff1e79fface1d048
 
 COCOAPODS: 1.16.2
