@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:tts_example/tts_controller.dart';
 
+/// Entry point for the TTS example application.
 void main() {
   runApp(const MyApp());
 }
 
+/// Root widget for the TTS example app.
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -12,8 +14,15 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+/// State for [MyApp] that owns the [TtsController] and text input.
+///
+/// Uses [ListenableBuilder] to rebuild the UI whenever the controller
+/// notifies of state changes (language switch, synthesis result, etc.).
 class _MyAppState extends State<MyApp> {
+  /// Business-logic controller for TTS operations.
   final _controller = TtsController();
+
+  /// Text field controller, pre-filled with the default English sample text.
   final _textController = TextEditingController()
     ..text = Language.en.defaultText;
 
