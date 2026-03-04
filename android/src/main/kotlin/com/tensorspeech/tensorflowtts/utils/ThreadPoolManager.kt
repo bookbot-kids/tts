@@ -6,10 +6,11 @@ import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
- * Created 2020-07-20 17:25
+ * Manages a shared [ThreadPoolExecutor] and provides named single-thread
+ * executors for TTS inference and audio playback tasks.
  */
 class ThreadPoolManager private constructor() {
+    /** Core thread pool for general-purpose background work. */
     private val mExecutor: ThreadPoolExecutor
 
     /**

@@ -8,12 +8,22 @@
 import Foundation
 import onnxruntime_objc
 
+/// Multi-Band MelGAN vocoder processor (legacy two-stage pipeline).
+///
+/// Converts a mel spectrogram (produced by ``FastSpeech2``) into raw PCM
+/// audio data suitable for playback.
 class MBMelGan : BaseProcessor {
-    
+
     override init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
         super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
-    
+
+    /// Runs MelGAN inference on the given mel spectrogram.
+    ///
+    /// - Parameters:
+    ///   - mels: 3-D mel spectrogram (batch × time × mel_channels).
+    ///   - isCancelled: Closure checked at key points to allow early exit.
+    /// - Returns: Raw PCM Float32 audio as `Data`.
     func getAudio(mels: [[[Float]]], isCancelled: (() -> Bool)) throws -> Data {        
         guard !isCancelled() else {
             return Data()

@@ -8,10 +8,15 @@ import java.util.*
 import java.util.regex.Pattern
 
 /**
- * @author []" "M. Yusuf Sarıgöz"">&quot;mailto:yusufsarigoz@gmail.com&quot; &quot;M. Yusuf Sarıgöz&quot;
- * Created 2020-07-25 17:25
+ * Text-to-sequence processor for English input (legacy pipeline).
+ *
+ * Handles text normalisation (abbreviations, numbers, currency, ordinals)
+ * and converts cleaned text into symbol-ID sequences suitable for the
+ * acoustic model. Supports inline ARPAbet notation via curly braces
+ * (e.g. `"hello {HH AH0 L OW1}"`).
  */
 class Processor {
+    /** Maps each character in [symbols] to its integer ID. */
     private fun symbolsToSequence(symbols: String): List<Int?> {
         val sequence: MutableList<Int?> = ArrayList()
         for (i in 0 until symbols.length) {
@@ -25,6 +30,7 @@ class Processor {
         return sequence
     }
 
+    /** Converts space-separated ARPAbet symbols to their integer IDs (prefixed with `@`). */
     private fun arpabetToSequence(symbols: String?): List<Int?> {
         val sequence: MutableList<Int?> = ArrayList()
         if (symbols != null) {
@@ -36,15 +42,18 @@ class Processor {
         return sequence
     }
 
+    /** Strips non-ASCII characters from [text]. */
     private fun convertToAscii(text: String): String {
         val bytes = text.toByteArray(StandardCharsets.US_ASCII)
         return String(bytes)
     }
 
+    /** Collapses consecutive whitespace into a single space. */
     private fun collapseWhitespace(text: String): String {
         return text.replace("\\s+".toRegex(), " ")
     }
 
+    /** Expands common abbreviations (e.g. "mr." → "mister"). */
     private fun expandAbbreviations(text: String): String {
         var text = text
         for ((key, value) in ABBREVIATIONS) {
@@ -53,6 +62,7 @@ class Processor {
         return text
     }
 
+    /** Strips commas from number strings (e.g. "1,000" → "1000"). */
     private fun removeCommasFromNumbers(inputText: String): String {
         var text = inputText
         val m = COMMA_NUMBER_RE.matcher(text)
@@ -63,6 +73,7 @@ class Processor {
         return text
     }
 
+    /** Appends "pounds" to £-prefixed amounts. */
     private fun expandPounds(text: String): String {
         var text = text
         val m = POUNDS_RE.matcher(text)
@@ -72,6 +83,7 @@ class Processor {
         return text
     }
 
+    /** Expands $-prefixed amounts into "X dollars Y cents". */
     private fun expandDollars(text: String): String {
         var text = text
         val m = DOLLARS_RE.matcher(text)
@@ -98,6 +110,7 @@ class Processor {
         return text
     }
 
+    /** Replaces decimal points with "point" (e.g. "3.14" → "3 point 14"). */
     private fun expandDecimals(text: String): String {
         var text = text
         val m = DECIMAL_RE.matcher(text)
@@ -108,6 +121,7 @@ class Processor {
         return text
     }
 
+    /** Converts ordinal numbers (e.g. "1st") to their English spelling ("first"). */
     private fun expandOrdinals(text: String): String {
         var text = text
         val m = ORDINAL_RE.matcher(text)
@@ -120,6 +134,7 @@ class Processor {
         return text
     }
 
+    /** Converts cardinal numbers (e.g. "42") to their English spelling ("forty-two"). */
     private fun expandCardinals(text: String): String {
         var text = text
         val m = NUMBER_RE.matcher(text)
@@ -131,6 +146,7 @@ class Processor {
         return text
     }
 
+    /** Runs the full number-expansion pipeline (commas, currency, decimals, ordinals, cardinals). */
     private fun expandNumbers(text: String): String {
         var text = text
         text = removeCommasFromNumbers(text)
@@ -142,6 +158,7 @@ class Processor {
         return text
     }
 
+    /** Full English text normalisation: ASCII, lowercase, abbreviations, numbers, whitespace. */
     private fun cleanTextForEnglish(text: String): String {
         var text = text
         text = convertToAscii(text)
@@ -157,6 +174,13 @@ class Processor {
         return text
     }
 
+    /**
+     * Converts raw English text into a sequence of integer symbol IDs.
+     *
+     * Supports inline ARPAbet via curly braces: plain text is cleaned and
+     * mapped character-by-character, while `{...}` blocks are interpreted
+     * as space-separated ARPAbet phonemes.
+     */
     fun textToIds(inputText: String?): IntArray {
         var text = inputText
         val sequence: MutableList<Int?> = ArrayList()

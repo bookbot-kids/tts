@@ -8,24 +8,42 @@
 import Foundation
 import onnxruntime_objc
 
+/// Output of a ``FastSpeech2`` inference pass.
 struct LightSpeechOutputs {
+    /// 3-D mel spectrogram array (batch × time × mel_channels).
     let mels: [[[Float]]]
+    /// Per-phoneme duration frames (batch × phonemes).
     let durations: [[Int32]]
-    
+
+    /// Returns `true` if both mels and durations contain data.
     func hasData() -> Bool {
         return mels.count > 0 && durations.count > 0
     }
 }
 
-class FastSpeech2: BaseProcessor {    
+/// FastSpeech 2 acoustic model processor (legacy two-stage pipeline).
+///
+/// Converts phoneme token IDs into a mel spectrogram and per-phoneme
+/// duration frames. The mel output is then fed to ``MBMelGan`` to
+/// synthesise raw PCM audio.
+class FastSpeech2: BaseProcessor {
+    /// F0 (pitch) scaling ratio.
     var f0Ratio: Float = 1
+    /// Energy scaling ratio.
     var energyRatio: Float = 1
-    
-    
+
     override init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
         super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
-    
+
+    /// Runs FastSpeech 2 inference to produce a mel spectrogram.
+    ///
+    /// - Parameters:
+    ///   - inputIds: Phoneme token IDs.
+    ///   - speedRatio: Speech speed multiplier.
+    ///   - speakerId: Speaker embedding index.
+    ///   - isCancelled: Closure checked at key points to allow early exit.
+    /// - Returns: ``LightSpeechOutputs`` with mel spectrogram and durations.
     func getMelSpectrogram(inputIds: [Int32], speedRatio: Float, speakerId: Int32 = 0,
                            isCancelled: (() -> Bool)) throws -> LightSpeechOutputs {
         var result = LightSpeechOutputs(mels: [], durations: [])

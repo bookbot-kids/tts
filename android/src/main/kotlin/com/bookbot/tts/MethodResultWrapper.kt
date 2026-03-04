@@ -2,7 +2,15 @@ package com.bookbot.tts
 
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * Thread-safe wrapper around [MethodChannel.Result] that ensures only the
+ * first call to [success], [error], or [notImplemented] is forwarded.
+ *
+ * Prevents `IllegalStateException` when a result is submitted multiple
+ * times due to concurrent or racing callbacks.
+ */
 class TtsMethodResultWrapper(private val methodResult: MethodChannel.Result): MethodChannel.Result {
+    /** Guards against duplicate submissions. */
     private var hasSubmitted: Boolean
 
     init {

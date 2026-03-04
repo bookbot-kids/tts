@@ -5,9 +5,22 @@ import ai.onnxruntime.OrtEnvironment
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
 
+/**
+ * Optimised end-to-end ONNX TTS processor (single-model architecture).
+ *
+ * Accepts phoneme token IDs and returns raw PCM audio plus per-phoneme
+ * durations in a single ONNX inference pass. Supports multi-speaker models
+ * via [speakerId] and optional language IDs via [enableLids].
+ */
 class Opti (modulePath: String, threadCount: Int,
             ortEnv: OrtEnvironment
 ) : AbstractModule(threadCount, modulePath, ortEnv) {
+    /**
+     * Runs ONNX inference on the given [inputIds].
+     *
+     * @return A [Pair] of (audio PCM Float32 array, per-phoneme durations in
+     *         seconds), or `null` if cancelled.
+     */
     @Suppress("UNCHECKED_CAST")
     fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, enableLids: Boolean, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
         if (isCancelled()) return null

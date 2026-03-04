@@ -4,6 +4,11 @@ import android.util.Log
 import com.tensorspeech.tensorflowtts.module.Opti
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * Runnable task that runs ONNX inference and immediately plays the resulting
+ * audio (speak-and-play). Returns per-phoneme durations via the Flutter
+ * [MethodChannel.Result] callback before playback starts.
+ */
 class InputTask(private val opti: Opti,
                 private val inputIds: List<Long>, private val speed: Float,
                 private val speakerId: Long = 0, private val hopSize: Int, private val sampleRate: Int,

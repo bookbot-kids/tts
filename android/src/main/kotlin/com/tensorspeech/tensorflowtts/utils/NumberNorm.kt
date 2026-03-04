@@ -1,6 +1,10 @@
 package com.tensorspeech.tensorflowtts.utils
 
-// Borrowed from https://rosettacode.org/wiki/Spelling_of_ordinal_numbers
+/**
+ * Number-to-English-text converter for cardinal and ordinal numbers.
+ *
+ * Borrowed from https://rosettacode.org/wiki/Spelling_of_ordinal_numbers
+ */
 object NumberNorm {
     private val ordinalMap: MutableMap<String?, String> = HashMap()
     @JvmStatic

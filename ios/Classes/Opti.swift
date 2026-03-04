@@ -8,24 +8,45 @@
 import Foundation
 import onnxruntime_objc
 
+/// Output of a single ``Opti`` inference pass.
 struct OptiOutputs {
+    /// Raw PCM Float32 audio samples.
     let audio: [Float]
+    /// Per-phoneme durations in seconds.
     let durations: [Double]
-    
+
+    /// Returns `true` if both audio and durations contain data.
     func hasData() -> Bool {
         return audio.count > 0 && durations.count > 0
     }
-    
+
+    /// Converts the audio `[Float]` array to raw `Data` for caching / playback.
     func audioData() -> Data {
         return audio.withUnsafeBufferPointer { Data(buffer: $0) }
     }
 }
 
+/// Optimised end-to-end ONNX TTS processor (single-model architecture).
+///
+/// Accepts phoneme token IDs and returns raw PCM audio plus per-phoneme
+/// durations in a single inference pass. Supports multi-speaker models
+/// via `speakerId` and optional language IDs via `enableLids`.
 class Opti: BaseProcessor {
     override init(ortEnv: ORTEnv?, url: URL, threadCount: Int) {
         super.init(ortEnv: ortEnv, url: url, threadCount: threadCount)
     }
-    
+
+    /// Runs ONNX inference on the given `inputIds`.
+    ///
+    /// - Parameters:
+    ///   - inputIds: Phoneme token IDs.
+    ///   - speedRatio: Speech speed multiplier.
+    ///   - speakerId: Speaker embedding index.
+    ///   - hopSize: Hop size for duration-to-seconds conversion.
+    ///   - sampleRate: Audio sample rate in Hz.
+    ///   - enableLids: Whether to include language ID input.
+    ///   - isCancelled: Closure checked at key points to allow early exit.
+    /// - Returns: ``OptiOutputs`` with audio and durations.
     func process(inputIds: [Int64], speedRatio: Float, speakerId: Int64 = 0, hopSize: Int, sampleRate: Int, enableLids: Bool,
                  isCancelled: (() -> Bool)) throws -> OptiOutputs{
         var result = OptiOutputs(audio: [], durations: [])
@@ -123,6 +144,7 @@ class Opti: BaseProcessor {
         return result
     }
     
+    /// Creates an `ORTValue` tensor from a Swift array.
     private func createTensor<T>(data: [T], shape: [NSNumber], dataType: ORTTensorElementDataType) throws -> ORTValue{
         let dataSize = data.count * MemoryLayout<T>.stride
         let tensorData = NSMutableData(bytes: data, length: dataSize)

@@ -10,25 +10,48 @@ import AVFoundation
 import Flutter
 import onnxruntime_objc
 
+/// Thread-safe singleton that caches generated audio buffers keyed by request ID.
+///
+/// Audio is stored as raw `Data` (PCM Float32) so it can be played later
+/// without re-running ONNX inference.
 public class BufferHolder {
+    /// Shared singleton instance.
     static let shared: BufferHolder = BufferHolder()
+
+    /// Map of request ID → raw PCM audio data.
     var audioBuffers = Dictionary<String, Data>()
 }
 
+/// Deserialized TTS request parameters received from the Dart side.
+///
+/// Populated from the `FlutterMethodCall.arguments` dictionary.
 public class RequestInfo {
+    /// ONNX model file names to load (typically a single entry).
     let models: [String]
+    /// Phoneme token IDs to feed to the ONNX model.
     let inputIds: [Int64]
+    /// Speech speed ratio (lower = slower).
     let speed: Float
+    /// Speaker embedding index for multi-speaker models.
     let speakerId: Int64
+    /// Audio sample rate in Hz (e.g. 44100).
     let sampleRate: Int
+    /// Hop size used to convert duration frames to seconds.
     let hopSize: Int
+    /// Unique identifier for this request, used as the buffer cache key.
     let requestId: String
+    /// When `true`, previous operations are cancelled before starting a new one.
     let singleThread: Bool
+    /// Delay in milliseconds after playback completes before returning the result.
     let playerCompletedDelayed: Int
+    /// Whether debug logging is enabled.
     let logEnabled: Bool
+    /// Number of ONNX Runtime intra-op threads.
     let threadCount: Int
+    /// Whether to include language ID (`lids`) as an ONNX input.
     let enableLids: Bool
-    
+
+    /// Initialises from a Flutter method-call arguments dictionary.
     init(args: [String: Any]) {
         self.models = args["models"] as! Array<String>
         self.inputIds = args["inputIds"] as! Array<Int64>
@@ -46,20 +69,37 @@ public class RequestInfo {
 }
 
 
+/// Core TTS engine for iOS.
+///
+/// Manages ONNX model loading (via ``Opti``), speech synthesis, audio
+/// playback (via `AVAudioEngine` / `AVAudioPlayerNode`), and request
+/// queueing through serial `OperationQueue`s.
 public class TTS {
+    /// ONNX inference processor; `nil` until a model is loaded.
     var opti: Opti?
+    /// Tracks which model keys have already been loaded (key → `true`).
     private var modelMap = [String:Bool]()
-    
+
+    /// Audio engine used for standalone playback (when no external processor is set).
     private var engine: AVAudioEngine?
+    /// Audio player node attached to `engine`.
     private var player: AVAudioPlayerNode?
+    /// Sample buffer synchronizer (reserved for advanced playback scenarios).
     private let sampleBufferRenderSynchronizer = AVSampleBufferRenderSynchronizer()
 
+    /// Sample buffer audio renderer (reserved for advanced playback scenarios).
     private let sampleBufferAudioRenderer = AVSampleBufferAudioRenderer()
+    /// Serial queue for inference operations (speak / generateVoice).
     var operationQueue: OperationQueue = OperationQueue()
+    /// Serial queue for audio playback operations (playVoice).
     var audioOperationQueue: OperationQueue = OperationQueue()
+    /// Whether debug logging is enabled.
     var logEnabled = true
+    /// Number of ONNX Runtime intra-op threads.
     var threadCount = 1
 
+    /// Configures serial operation queues and initialises the audio engine
+    /// (only when no external processor strategy delegate is set).
     init() {
         sampleBufferRenderSynchronizer.addRenderer(sampleBufferAudioRenderer)
         operationQueue.maxConcurrentOperationCount = 1
@@ -68,12 +108,21 @@ public class TTS {
             initAudioEngine()
         }
     }
-    
+
+    /// Creates a fresh `AVAudioEngine` and `AVAudioPlayerNode` for standalone playback.
     private func initAudioEngine() {
         engine = AVAudioEngine()
         player = AVAudioPlayerNode()
     }
     
+    /// Loads an ONNX model from the bundle or via the external processor strategy.
+    ///
+    /// The model is cached by its key (first element of `models`). Subsequent
+    /// calls with the same key return immediately via `onCompleted(true)`.
+    ///
+    /// - Parameters:
+    ///   - models: Array of model file names (only the first is used).
+    ///   - onCompleted: Callback indicating whether loading succeeded.
     public func initModel(models: [String], onCompleted:@escaping((Bool) -> Void)) {
         let key  = models.first ?? ""
         if(modelMap[key] == nil) {
@@ -111,6 +160,10 @@ public class TTS {
         }
     }
 
+    /// Runs ONNX inference and immediately plays the generated audio.
+    ///
+    /// Cancels any previously queued operations before submitting a new
+    /// ``RequesTask`` to the serial `operationQueue`.
     public func speak(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
         self.initModel(models: requestInfo.models) { modelCompletedResult in
@@ -128,6 +181,10 @@ public class TTS {
         }
     }
     
+    /// Runs ONNX inference and caches the audio buffer for later playback.
+    ///
+    /// The generated PCM data is stored in ``BufferHolder`` under the request's
+    /// `requestId`. Per-phoneme durations are returned via `result`.
     public func generateVoice(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
         self.initModel(models: requestInfo.models) { modelCompletedResult in
@@ -148,6 +205,9 @@ public class TTS {
         }
     }
     
+    /// Plays a previously cached audio buffer identified by `requestInfo.requestId`.
+    ///
+    /// Submits a ``PlayVoiceTask`` to the serial `audioOperationQueue`.
     public func playVoice(requestInfo: RequestInfo, result: @escaping FlutterResult) {
         
         if requestInfo.singleThread {
@@ -158,10 +218,16 @@ public class TTS {
         self.audioOperationQueue.addOperation(requestTask)
     }
     
+    /// Releases all cached audio buffers.
     public func dispose() {
         BufferHolder.shared.audioBuffers.removeAll()
     }
-    
+
+    /// `Operation` subclass that runs ONNX inference and caches the resulting
+    /// audio in ``BufferHolder`` without playing it.
+    ///
+    /// Returns per-phoneme durations (in seconds) to the Flutter side via the
+    /// `result` callback on the main queue.
     class GenerateTask: Operation {
         let opti: Opti
         let inputIds: [Int64]
@@ -250,6 +316,10 @@ public class TTS {
            }
     }
     
+    /// `Operation` subclass that plays a cached audio buffer from ``BufferHolder``.
+    ///
+    /// Uses either the external processor strategy delegate or the built-in
+    /// `AVAudioEngine` / `AVAudioPlayerNode` for playback.
     class PlayVoiceTask: Operation {
         let engine: AVAudioEngine?
         let player: AVAudioPlayerNode?
@@ -376,6 +446,11 @@ public class TTS {
     }
     
     
+    /// `Operation` subclass that runs ONNX inference **and** immediately plays
+    /// the resulting audio (speak-and-play in a single step).
+    ///
+    /// Returns per-phoneme durations to the Flutter side on the main queue,
+    /// then starts audio playback.
     class RequesTask: Operation {
         let opti: Opti
         let inputIds: [Int64]
@@ -506,7 +581,9 @@ extension Array {
   }
 }
 
+/// Convenience helpers for dispatching work on background and main queues.
 extension DispatchQueue {
+    /// Dispatches `background` on a global queue, then `completion` on the main queue after `delay`.
     static func background(delay: Double = 0.0, background: (()->Void)? = nil, completion: (() -> Void)? = nil) {
         DispatchQueue.global(qos: .background).async {
             background?()
@@ -518,12 +595,14 @@ extension DispatchQueue {
         }
     }
     
+    /// Dispatches `task` asynchronously on the main queue.
     static func main(_ task: @escaping () -> ()) {
         DispatchQueue.main.async {
            task()
         }
     }
     
+    /// Dispatches `task` on the main queue after `delay` seconds.
     static func main(delay: Double = 0.0, _ task: @escaping () -> ()) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: {
             task()
@@ -531,12 +610,15 @@ extension DispatchQueue {
     }
 }
 
+/// Helpers for converting between raw `Data` and `AVAudioPCMBuffer`.
 extension Data {
+    /// Creates raw byte data from a PCM audio buffer.
     init(buffer: AVAudioPCMBuffer, time: AVAudioTime) {
         let audioBuffer = buffer.audioBufferList.pointee.mBuffers
         self.init(bytes: audioBuffer.mData!, count: Int(audioBuffer.mDataByteSize))
     }
 
+    /// Converts raw byte data back into an `AVAudioPCMBuffer` suitable for playback.
     func makePCMBuffer(format: AVAudioFormat) -> AVAudioPCMBuffer? {
         let streamDesc = format.streamDescription.pointee
         let frameCapacity = UInt32(count) / streamDesc.mBytesPerFrame

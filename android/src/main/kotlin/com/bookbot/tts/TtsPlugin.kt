@@ -8,13 +8,17 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
 
-/** TtsPlugin */
+/**
+ * Flutter plugin entry point for Android TTS functionality.
+ *
+ * Registers a [MethodChannel] named `"tts"` and delegates incoming method
+ * calls (`initModels`, `speakText`, `generateVoice`, `playVoice`, `dispose`)
+ * to [TtsManager].
+ */
 class TtsPlugin: FlutterPlugin, MethodCallHandler {
-  /// The MethodChannel that will the communication between Flutter and native Android
-  ///
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-  /// when the Flutter Engine is detached from the Activity
+  /** Method channel for Flutter ↔ native Android communication. */
   private lateinit var channel : MethodChannel
+  /** Plugin binding used to obtain the application context. */
   private var pluginBinding: FlutterPlugin.FlutterPluginBinding? = null
 
 

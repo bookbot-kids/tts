@@ -1,11 +1,15 @@
 package com.tensorspeech.tensorflowtts.dispatcher
 
 /**
- * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
- * Created 2020-07-28 14:25
+ * Listener interface for TTS lifecycle events.
+ *
+ * Implementations are notified on the main thread via [TtsStateDispatcher].
  */
 interface OnTtsStateListener {
+    /** Called when the TTS engine has finished initialisation. */
     fun onTtsReady()
+    /** Called when speech synthesis begins for the given [inputIds]. */
     fun onTtsStart(inputIds: List<Int>)
+    /** Called when speech synthesis or playback is stopped. */
     fun onTtsStop()
 }

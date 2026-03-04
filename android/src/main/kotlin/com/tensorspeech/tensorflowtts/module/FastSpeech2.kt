@@ -7,12 +7,20 @@ import java.nio.IntBuffer
 import java.util.*
 
 /**
- * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
- * Created 2020-07-20 17:26
+ * FastSpeech 2 acoustic model processor (legacy two-stage pipeline).
+ *
+ * Converts phoneme token IDs into a mel spectrogram and per-phoneme
+ * duration frames. The mel output is then fed to [MBMelGan] to synthesise
+ * raw PCM audio.
  */
 class FastSpeech2(modulePath: String, threadCount: Int,
                    ortEnv: OrtEnvironment
 ) : AbstractModule(threadCount, modulePath, ortEnv) {
+    /**
+     * Runs FastSpeech 2 inference to produce a mel spectrogram.
+     *
+     * @return A [Pair] of (mel spectrogram, duration frames), or `null` if cancelled.
+     */
     fun getMelSpectrogram(inputIds: IntArray, speed: Float, speakerId: Int, isCancelled: () -> Boolean): Pair<Array<Array<FloatArray>>, Array<IntArray>>? {
         if(isCancelled()) return null
         val speakerIDs = intArrayOf(speakerId)

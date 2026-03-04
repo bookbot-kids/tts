@@ -15,21 +15,41 @@ import java.io.FileOutputStream
 import java.util.concurrent.Future
 
 /**
- * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
- * Created 2020-07-28 14:25
+ * Central TTS manager for Android.
+ *
+ * Manages ONNX model loading (via [Opti]), speech synthesis, audio buffer
+ * caching, and playback through [TtsBufferPlayer]. All inference and
+ * playback tasks are submitted to dedicated single-thread executors to
+ * prevent concurrent access to the ONNX Runtime session.
  */
 class TtsManager {
+    /** Per-sample-rate audio player cache. */
     private val players = mutableMapOf<Int, TtsBufferPlayer>()
+    /** Single-thread executor for inference tasks (speak / generateVoice). */
     private val threadPool = ThreadPoolManager.instance.getSingleExecutor("tts")
+    /** Single-thread executor for audio playback tasks. */
     private val audioPlayerPool = ThreadPoolManager.instance.getSingleExecutor("tts")
+    /** Currently running inference task future (for cancellation). */
     private var runningTask: Future<*>? = null
+    /** Loaded ONNX models keyed by model file name. */
     private val modelMap = mutableMapOf<String, Opti>()
+    /** Active speak-and-play tasks (for stop/cancel). */
     private val tasks = mutableListOf<InputTask>()
+    /** Active generate-only tasks (for stop/cancel). */
     private val generateTasks = mutableListOf<GenerateTask>()
+    /** Active play-voice tasks (for stop/cancel). */
     private val playerTasks = mutableListOf<PlayVoiceTask>()
+    /** Cached audio buffers keyed by request ID. */
     private val audioBuffers =  mutableMapOf<String, FloatArray>()
+    /** Whether debug logging is enabled. */
     var logEnabled = true
 
+    /**
+     * Loads an ONNX model from assets (or via [ProcessorHolder.processorStrategy]).
+     *
+     * The model is cached by its key (first element of [models]). Subsequent
+     * calls with the same key skip loading and invoke [callback] immediately.
+     */
     fun init(context: Context, version: Int, threadCount: Int, models: List<String>, callback: (() -> Unit)? = null) {
         val key = models.first()
         if(modelMap[key] == null) {
@@ -68,6 +88,7 @@ class TtsManager {
         }
     }
 
+    /** Copies an ONNX model from Flutter assets to internal storage (if not already present). */
     private fun copyFile(context: Context, strOutFileName: String, version: Int): String {
         if (logEnabled) {
             Log.d(TAG, "start copy file $strOutFileName")
@@ -110,6 +131,7 @@ class TtsManager {
         return f.absolutePath
     }
 
+    /** Cancels the running inference task and flags all active input tasks to stop. */
     private fun stopTts() {
         runningTask?.cancel(true)
         tasks.forEach {
@@ -117,6 +139,7 @@ class TtsManager {
         }
     }
 
+    /** Returns (or creates) a [TtsBufferPlayer] keyed by sample-rate + hop-size. */
     private fun getPlayer(sampleRate: Int, hopSize: Int): TtsBufferPlayer? {
         val playerKey = sampleRate + hopSize
         val player = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -132,6 +155,7 @@ class TtsManager {
         return player
     }
 
+    /** Runs ONNX inference and immediately plays the audio (speak-and-play). */
     fun speak(request: RequestInfo) {
         stopTts()
         val player = getPlayer(request.sampleRate , request.hopSize)
@@ -144,6 +168,7 @@ class TtsManager {
         runningTask = threadPool.submit(task)
     }
 
+    /** Plays a previously cached audio buffer identified by [RequestInfo.requestId]. */
     fun playVoice(request: RequestInfo) {
         val buffer = audioBuffers[request.requestId]
         if (buffer != null) {
@@ -182,6 +207,7 @@ class TtsManager {
         }
     }
 
+    /** Runs ONNX inference and caches the audio buffer for later playback via [playVoice]. */
     fun generateVoice(request: RequestInfo) {
         val key = request.models.first()
         val processors = modelMap[key] ?: return
@@ -217,6 +243,7 @@ class TtsManager {
         }
     }
 
+    /** Releases all cached audio buffers. */
     fun dispose() {
         audioBuffers.clear()
     }

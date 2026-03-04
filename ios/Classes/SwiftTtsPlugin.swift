@@ -1,14 +1,30 @@
 import Flutter
 import UIKit
 
+/// Flutter plugin entry point for iOS TTS functionality.
+///
+/// Registers a `FlutterMethodChannel` named `"tts"` and delegates incoming
+/// method calls (`initModels`, `speakText`, `generateVoice`, `playVoice`,
+/// `dispose`) to the underlying ``TTS`` engine.
 public class SwiftTtsPlugin: NSObject, FlutterPlugin {
+    /// Shared TTS engine instance used for all method-channel calls.
     private let tts = TTS()
+
+  /// Registers the plugin with the Flutter engine and sets up the method channel.
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "tts", binaryMessenger: registrar.messenger())
     let instance = SwiftTtsPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
+  /// Handles incoming method calls from the Dart side.
+  ///
+  /// Supported methods:
+  /// - `initModels` – pre-loads ONNX model files.
+  /// - `speakText` – runs inference and plays audio immediately.
+  /// - `generateVoice` – runs inference only, caches audio for later playback.
+  /// - `playVoice` – plays a previously cached audio buffer.
+  /// - `dispose` – releases all cached audio buffers.
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
       switch call.method {
           case "initModels":

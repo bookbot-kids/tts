@@ -3,6 +3,12 @@ package com.tensorspeech.tensorflowtts.tts
 import android.util.Log
 import com.tensorspeech.tensorflowtts.module.Opti
 
+/**
+ * Runnable task that runs ONNX inference without playing audio.
+ *
+ * On success, invokes [onCompleted] with the PCM audio buffer and
+ * per-phoneme durations. On cancellation, invokes [onCancelled].
+ */
 class GenerateTask(private val opti: Opti,
                     private val inputIds: List<Long>, private val speed: Float,
                     private val speakerId: Long = 0,

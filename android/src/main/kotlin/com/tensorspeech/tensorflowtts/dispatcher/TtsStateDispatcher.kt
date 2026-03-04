@@ -6,12 +6,16 @@ import android.util.Log
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * @author []" "Xuefeng Ding"">&quot;mailto:xuefeng.ding@outlook.com&quot; &quot;Xuefeng Ding&quot;
- * Created 2020-07-28 14:25
+ * Thread-safe dispatcher that broadcasts TTS lifecycle events to registered
+ * [OnTtsStateListener] instances on the main thread.
  */
 class TtsStateDispatcher {
+    /** Handler bound to the main looper for posting listener callbacks. */
     private val handler = Handler(Looper.getMainLooper())
+    /** Thread-safe list of registered listeners. */
     private val mListeners = CopyOnWriteArrayList<OnTtsStateListener>()
+
+    /** Removes all registered listeners. */
     fun release() {
         Log.d(TAG, "release: ")
         mListeners.clear()

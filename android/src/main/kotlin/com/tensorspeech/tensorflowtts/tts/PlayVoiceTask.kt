@@ -2,6 +2,12 @@ package com.tensorspeech.tensorflowtts.tts
 
 import android.util.Log
 
+/**
+ * Runnable task that plays a cached PCM audio buffer through [TtsBufferPlayer].
+ *
+ * After playback completes, waits for [playerCompletedDelayed] ms (if > 0)
+ * then invokes [onCompleted]. Invokes [onCancelled] if stopped mid-playback.
+ */
 class PlayVoiceTask(private val player: TtsBufferPlayer, private val buffer: FloatArray, private  val playerCompletedDelayed: Int, private val onCancelled: () -> Unit,  private val onCompleted: () -> Unit,): Runnable {
     var stop: Boolean = false
         set(value) {
