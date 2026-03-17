@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:csv/csv.dart';
-import 'package:csv/csv_settings_autodetection.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:tts/request_info.dart';
@@ -259,8 +258,8 @@ class Tts {
   }
 
   /// Looks up a list of IPA phonemes in the loaded mapping and returns
-  /// a map with `inputIds` (List<int>), `visemes` (List<String>), and
-  /// `arpabet` (List<String>) keys.
+  /// a map with `inputIds` (`List<int>`), `visemes` (`List<String>`), and
+  /// `arpabet` (`List<String>`) keys.
   Map<String, dynamic> search(List<String> ipas, {String language = 'en'}) {
     final map = mapping.putIfAbsent(language, () => {});
     final inputIds = <int>[];
@@ -283,20 +282,12 @@ class Tts {
   ///
   /// Auto-detects field delimiters (`,` or `;`) and returns rows as
   /// a list of lists with elements of type [E].
-  Future<List<List<E>>> readCSV<E extends dynamic>(String assetPath) async {
+  Future<List<List>> readCSV(String assetPath) async {
     final csvData = await rootBundle.loadString(assetPath);
-    var detector = const FirstOccurrenceSettingsDetector(
-        fieldDelimiters: [',', ';'],
-        textDelimiters: ['"'],
-        textEndDelimiters: ['"'],
-        eols: ['\r\n', '\n']);
-    var converter = CsvToListConverter(
-      csvSettingsDetector: detector,
-      shouldParseNumbers: false,
-      allowInvalid: true,
+    final codec = CsvCodec(
+      dynamicTyping: false,
     );
-
-    final rows = converter.convert<E>(csvData);
+    final rows = codec.decode(csvData);
     return rows;
   }
 

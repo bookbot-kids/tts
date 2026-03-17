@@ -111,6 +111,7 @@ class TtsController extends ChangeNotifier {
 
   /// Matches content inside curly braces (e.g. `{placeholder}`).
   static final _curlyTagRegex = RegExp(r'\{.*?\}');
+
   /// Matches any whitespace character (tab, newline, carriage return, space).
   static final _spaceRegEx = RegExp(r'[\t\n\r\s]');
 
@@ -226,11 +227,10 @@ ${wordInputIds.join('; ')}
 Duration:
  ${output.join('\n')}
 
-Execute in ${printDuration(
-        Duration(milliseconds: totalTime),
+Execute in ${Duration(milliseconds: totalTime).pretty(
         tersity: DurationTersity.millisecond,
         abbreviated: false,
-      )}''';
+      )} ''';
     } on PlatformException {
       print('Failed to run TTS');
     }
