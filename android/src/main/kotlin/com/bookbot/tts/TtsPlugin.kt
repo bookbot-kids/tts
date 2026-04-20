@@ -1,5 +1,6 @@
 package com.bookbot.tts
 
+import com.tensorspeech.tensorflowtts.module.AbstractModule
 import com.tensorspeech.tensorflowtts.tts.TtsManager
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -38,8 +39,9 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val models = args["models"] as List<String>
           val modelVersion = args["modelVersion"] as Int
           val threadCount = args["threadCount"] as Int
+          val provider = AbstractModule.Provider.fromString(args["provider"] as? String)
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) != false
-          TtsManager.instance.init(context, modelVersion, threadCount, models) {
+          TtsManager.instance.init(context, modelVersion, threadCount, models, provider) {
             wrapper.success(null)
           }
         }
@@ -49,7 +51,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) != false
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models, request.provider) {
             TtsManager.instance.speak(request)
           }
         }
@@ -59,7 +61,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) != false
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models, request.provider) {
             TtsManager.instance.playVoice(request)
           }
         }
@@ -69,7 +71,7 @@ class TtsPlugin: FlutterPlugin, MethodCallHandler {
           val args = call.arguments as Map<*, *>
           TtsManager.instance.logEnabled = (args["logEnabled"] as? Boolean) != false
           val request = RequestInfo(args, wrapper)
-          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models) {
+          TtsManager.instance.init(context, request.modelVersion, request.threadCount, request.models, request.provider) {
             TtsManager.instance.generateVoice(request)
           }
         }

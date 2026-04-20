@@ -1,5 +1,6 @@
 package com.bookbot.tts
 
+import com.tensorspeech.tensorflowtts.module.AbstractModule
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -17,13 +18,16 @@ import io.flutter.plugin.common.MethodChannel
  * @property modelVersion Model format version.
  * @property threadCount Number of ONNX Runtime intra-op threads.
  * @property enableLids  Whether to include language ID (`lids`) as an ONNX input.
+ * @property provider    ONNX Runtime execution provider (CPU / XNNPACK / NNAPI).
  * @property result      Flutter method-channel result callback.
  */
 @Suppress("UNCHECKED_CAST")
 data class RequestInfo (val requestId: String, val models: List<String>,
                         val inputIds: List<Long>, val speed: Double, val speakerId: Long = 0, val sampleRate: Int,
                         val hopSize: Int, val singleThread: Boolean, val playerCompletedDelayed: Int,
-                        var modelVersion: Int, val threadCount: Int, val enableLids: Boolean, val result: MethodChannel.Result
+                        var modelVersion: Int, val threadCount: Int, val enableLids: Boolean,
+                        val provider: AbstractModule.Provider,
+                        val result: MethodChannel.Result
 ) {
     /** Secondary constructor that deserializes from a Flutter arguments map. */
     constructor(map: Map<*, *>, result: MethodChannel.Result) : this(
@@ -39,6 +43,7 @@ data class RequestInfo (val requestId: String, val models: List<String>,
         map["modelVersion"] as Int,
         map["threadCount"] as Int,
         map["enableLids"] as Boolean,
+        AbstractModule.Provider.fromString(map["provider"] as? String),
         result
     )
 }

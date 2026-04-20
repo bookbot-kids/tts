@@ -13,8 +13,9 @@ import java.nio.LongBuffer
  * via [speakerId] and optional language IDs via [enableLids].
  */
 class Opti (modulePath: String, threadCount: Int,
-            ortEnv: OrtEnvironment
-) : AbstractModule(threadCount, modulePath, ortEnv) {
+            ortEnv: OrtEnvironment,
+            provider: Provider = Provider.CPU,
+) : AbstractModule(threadCount, modulePath, ortEnv, provider) {
     /**
      * Runs ONNX inference on the given [inputIds].
      *

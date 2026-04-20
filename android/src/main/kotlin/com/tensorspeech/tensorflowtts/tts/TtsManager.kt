@@ -8,6 +8,7 @@ import com.bookbot.tts.ProcessorHolder
 import com.bookbot.tts.RequestInfo
 import com.tensorspeech.tensorflowtts.dispatcher.OnTtsStateListener
 import com.tensorspeech.tensorflowtts.dispatcher.TtsStateDispatcher
+import com.tensorspeech.tensorflowtts.module.AbstractModule
 import com.tensorspeech.tensorflowtts.module.Opti
 import com.tensorspeech.tensorflowtts.utils.ThreadPoolManager
 import java.io.File
@@ -50,7 +51,14 @@ class TtsManager {
      * The model is cached by its key (first element of [models]). Subsequent
      * calls with the same key skip loading and invoke [callback] immediately.
      */
-    fun init(context: Context, version: Int, threadCount: Int, models: List<String>, callback: (() -> Unit)? = null) {
+    fun init(
+        context: Context,
+        version: Int,
+        threadCount: Int,
+        models: List<String>,
+        provider: AbstractModule.Provider = AbstractModule.Provider.CPU,
+        callback: (() -> Unit)? = null,
+    ) {
         val key = models.first()
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
@@ -59,7 +67,7 @@ class TtsManager {
                     try {
                         @Suppress("SpellCheckingInspection")
                         val listener = fun (fastspeech: String) {
-                            modelMap[key] = Opti(fastspeech, threadCount, env)
+                            modelMap[key] = Opti(fastspeech, threadCount, env, provider)
                             callback?.invoke()
                         }
 

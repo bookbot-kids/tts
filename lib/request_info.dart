@@ -52,6 +52,25 @@ class Parameters {
   };
 }
 
+/// ONNX Runtime execution provider used for inference.
+///
+/// Currently only honoured on Android; iOS always uses its default provider.
+enum OrtProvider {
+  /// Default ONNX Runtime CPU execution provider (most compatible).
+  cpu('cpu'),
+
+  /// XNNPACK EP — typically fastest on ARM with multi-threading.
+  xnnpack('xnnpack'),
+
+  /// Android NNAPI EP — may fail on unsupported ops (e.g. GATHER rank mismatch).
+  nnapi('nnapi');
+
+  /// Native-side identifier sent over the method channel.
+  final String nativeName;
+
+  const OrtProvider(this.nativeName);
+}
+
 /// Speaker variants for multi-speaker TTS models.
 ///
 /// The [speakerId] is passed to the ONNX model's `sids` input tensor.
@@ -147,6 +166,9 @@ class RequestInfo {
   /// Delay in milliseconds before notifying playback completion.
   int playerCompletedDelayed;
 
+  /// ONNX Runtime execution provider. Android-only; iOS ignores this.
+  OrtProvider provider;
+
   RequestInfo(
     this.models,
     this.inputIds,
@@ -169,6 +191,7 @@ class RequestInfo {
     this.useEndSpace = false,
     this.space = 0,
     this.enableLids = false,
+    this.provider = OrtProvider.cpu,
   }) {
     eos = Parameters.eosInputIds[language]!;
     dot = Parameters.specialInputIds[language]!['.']!;
@@ -189,6 +212,7 @@ class RequestInfo {
         'modelVersion': modelVersion,
         'logEnabled': logEnabled,
         'threadCount': threadCount,
-        'enableLids': enableLids
+        'enableLids': enableLids,
+        'provider': provider.nativeName,
       };
 }

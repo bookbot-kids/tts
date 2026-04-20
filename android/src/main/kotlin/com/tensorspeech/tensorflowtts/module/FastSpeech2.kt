@@ -14,8 +14,9 @@ import java.util.*
  * raw PCM audio.
  */
 class FastSpeech2(modulePath: String, threadCount: Int,
-                   ortEnv: OrtEnvironment
-) : AbstractModule(threadCount, modulePath, ortEnv) {
+                   ortEnv: OrtEnvironment,
+                   provider: Provider = Provider.CPU,
+) : AbstractModule(threadCount, modulePath, ortEnv, provider) {
     /**
      * Runs FastSpeech 2 inference to produce a mel spectrogram.
      *

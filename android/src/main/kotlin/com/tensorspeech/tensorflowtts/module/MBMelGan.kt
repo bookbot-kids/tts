@@ -11,7 +11,12 @@ import kotlin.math.ceil
  *
  * Converts a mel spectrogram (produced by [FastSpeech2]) into raw PCM audio.
  */
-class MBMelGan(private val modulePath: String, threadCount: Int, ortEnv: OrtEnvironment) : AbstractModule(threadCount, modulePath, ortEnv) {
+class MBMelGan(
+    private val modulePath: String,
+    threadCount: Int,
+    ortEnv: OrtEnvironment,
+    provider: Provider = Provider.CPU,
+) : AbstractModule(threadCount, modulePath, ortEnv, provider) {
     /** Hop size used for buffer-size calculations. */
     private val hopSize = 512
     /** Minimum audio buffer size in samples. */
