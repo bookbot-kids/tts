@@ -134,8 +134,10 @@ class TtsManager {
     /** Cancels the running inference task and flags all active input tasks to stop. */
     private fun stopTts() {
         runningTask?.cancel(true)
-        tasks.forEach {
-            it.stop = true
+        synchronized(tasks) {
+            tasks.forEach {
+                it.stop = true
+            }
         }
     }
 
@@ -157,15 +159,17 @@ class TtsManager {
 
     /** Runs ONNX inference and immediately plays the audio (speak-and-play). */
     fun speak(request: RequestInfo) {
-        stopTts()
-        val player = getPlayer(request.sampleRate , request.hopSize)
-        val key = request.models.first()
-        val processors = modelMap[key] ?: return
-        tasks.clear()
-        val task = InputTask(processors, request.inputIds, request.speed.toFloat(),
-            request.speakerId, request.hopSize, request.sampleRate, request.enableLids, player, request.result )
-        tasks.add(task)
-        runningTask = threadPool.submit(task)
+        synchronized(tasks) {
+            stopTts()
+            val player = getPlayer(request.sampleRate , request.hopSize)
+            val key = request.models.first()
+            val processors = modelMap[key] ?: return
+            tasks.clear()
+            val task = InputTask(processors, request.inputIds, request.speed.toFloat(),
+                request.speakerId, request.hopSize, request.sampleRate, request.enableLids, player, request.result )
+            tasks.add(task)
+            runningTask = threadPool.submit(task)
+        }
     }
 
     /** Plays a previously cached audio buffer identified by [RequestInfo.requestId]. */
@@ -190,14 +194,15 @@ class TtsManager {
                 request.result.success(null)
             }
 
-            if(request.singleThread) {
-                playerTasks.forEach {
-                    it.stop = true
-                }
-            }
-
             val audioTask = PlayVoiceTask(player, buffer, request.playerCompletedDelayed, onCancelled, onComplete)
-            playerTasks.add(audioTask)
+            synchronized(playerTasks) {
+                if (request.singleThread) {
+                    playerTasks.forEach {
+                        it.stop = true
+                    }
+                }
+                playerTasks.add(audioTask)
+            }
             audioPlayerPool.submit(audioTask)
             if(logEnabled) {
                 Log.d(TAG, "[Voice request] [playVoice start] ${request.requestId}, ${audioBuffers.size}")
@@ -228,16 +233,17 @@ class TtsManager {
             request.result.success(listOf<Double>())
         }
 
-        if(request.singleThread) {
-            generateTasks.forEach {
-                it.stop = true
-            }
-        }
-
         val task = GenerateTask(processors, request.inputIds, request.speed.toFloat(), request.speakerId,
             request.hopSize, request.sampleRate, request.enableLids, onComplete, onCancelled)
-        generateTasks.add(task)
-        runningTask = threadPool.submit(task)
+        synchronized(generateTasks) {
+            if (request.singleThread) {
+                generateTasks.forEach {
+                    it.stop = true
+                }
+            }
+            generateTasks.add(task)
+            runningTask = threadPool.submit(task)
+        }
         if(logEnabled) {
             Log.d(TAG, "[Voice request] [generate start] ${request.requestId}, ${audioBuffers.size}")
         }
