@@ -60,6 +60,9 @@ class TtsManager {
         callback: (() -> Unit)? = null,
     ) {
         val key = models.first()
+        if (logEnabled) {
+            Log.d(TAG, "init TTS with thread count $threadCount, provider ${provider.name}")
+        }
         if(modelMap[key] == null) {
             ThreadPoolManager.instance.getSingleExecutor("init").execute {
                 ortEnv = ortEnv ?: OrtEnvironment.getEnvironment()
