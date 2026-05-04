@@ -1,8 +1,16 @@
 """Subprocess-isolated peak-RSS + wall-clock harness."""
 import json
+import os
 import subprocess
 import sys
 import time
+
+# Phonemizer (used by the Bookbot adapter) needs to find libespeak-ng at
+# runtime. On macOS Homebrew it lives at /opt/homebrew/lib. Pre-populate the
+# env var here so the orchestrator works without callers exporting it.
+_DEFAULT_ESPEAK_LIB = "/opt/homebrew/lib/libespeak-ng.dylib"
+if "PHONEMIZER_ESPEAK_LIBRARY" not in os.environ and os.path.exists(_DEFAULT_ESPEAK_LIB):
+    os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = _DEFAULT_ESPEAK_LIB
 
 
 def run_in_subprocess(adapter_module: str, text: str, out_wav: str) -> dict:
