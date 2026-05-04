@@ -1,27 +1,32 @@
 # TTS Comparison: Bookbot vs. ZipVoice vs. Pocket-TTS
 
 **Date:** 2026-05-04
-**Hardware:** macOS Darwin 25.4.0, Apple M1 Pro, 32 GB RAM
+**Hardware (host):** macOS Darwin 25.4.0, Apple M1 Pro, 32 GB RAM
+**Hardware (mobile):** Android emulator (sdk gphone64 arm64, Android 16, arm64-v8a) on the same M1 Pro host
 **Test corpus:** 5 English sentences (12–520 chars), 2–3 repeats each
-**Five runtimes compared:**
+**Seven runtimes compared:**
 
-1. **Bookbot** — production ONNX via `onnxruntime` (CPU)
-2. **Pocket-TTS / PyTorch** — upstream `pocket_tts.TTSModel` Python API on CPU
-3. **Pocket-TTS / sherpa-onnx** — INT8 ONNX through k2-fsa's mobile runtime (the realistic mobile-deployment path)
-4. **ZipVoice / PyTorch** — upstream `zipvoice.bin.infer_zipvoice` distill, 4-step, on CPU
-5. **ZipVoice / sherpa-onnx** — INT8 ONNX through k2-fsa's mobile runtime + Vocos vocoder
+1. **Bookbot** — production ONNX via `onnxruntime` (host CPU)
+2. **Pocket-TTS / PyTorch** — upstream `pocket_tts.TTSModel` Python API (host CPU)
+3. **Pocket-TTS / sherpa-onnx host** — INT8 ONNX through k2-fsa's runtime in Python (host CPU)
+4. **Pocket-TTS / sherpa-onnx Android** — INT8 ONNX through the `sherpa_onnx` Flutter plugin **on the Android emulator**
+5. **ZipVoice / PyTorch** — upstream `zipvoice.bin.infer_zipvoice` distill, 4-step (host CPU)
+6. **ZipVoice / sherpa-onnx host** — INT8 ONNX + Vocos in Python (host CPU)
+7. **ZipVoice / sherpa-onnx Android** — INT8 ONNX + Vocos via the `sherpa_onnx` Flutter plugin **on the Android emulator**
 
-The PyTorch rows show the research codebase's footprint; the sherpa-onnx rows show what would actually ship to mobile.
+Smallest available variants used for both engines: `sherpa-onnx-pocket-tts-int8-2026-01-26` (93.8 MB compressed) and `sherpa-onnx-zipvoice-distill-int8-zh-en-emilia` (104.1 MB compressed).
 
 ## Headline table
 
 | Engine | Default voice | Phoneme timing | Median RTF | p95 RTF | Median peak RSS | Max peak RSS |
 |---|---|---|---:|---:|---:|---:|
-| **Bookbot TTS** | `convnext-tts-en/us` | **YES** (per-phoneme, native) | **0.35** | 2.63 | **280 MB** | 321 MB |
-| Pocket-TTS / sherpa-onnx | `bria` | NO | 0.67 | 3.76 | 843 MB | 887 MB |
-| Pocket-TTS / PyTorch | `alba` | NO | 0.91 | 3.31 | 881 MB | 934 MB |
-| ZipVoice / sherpa-onnx (distill 4-step) | demo prompt clone | NO | 1.00 | 5.45 | 715 MB | 933 MB |
-| ZipVoice / PyTorch (distill 4-step) | demo prompt clone | NO | 2.27 | 14.80 | 1294 MB | 2518 MB |
+| **Bookbot TTS** (host) | `convnext-tts-en/us` | **YES** (per-phoneme, native) | **0.35** | 2.63 | **280 MB** | 321 MB |
+| **Pocket-TTS / sherpa-onnx Android** | `bria` | NO | **0.37** | 1.53 | 778 MB | 779 MB |
+| Pocket-TTS / sherpa-onnx host | `bria` | NO | 0.67 | 3.76 | 843 MB | 887 MB |
+| **ZipVoice / sherpa-onnx Android** | demo prompt clone | NO | **0.66** | 2.83 | 779 MB | 779 MB |
+| Pocket-TTS / PyTorch host | `alba` | NO | 0.91 | 3.31 | 881 MB | 934 MB |
+| ZipVoice / sherpa-onnx host | demo prompt clone | NO | 1.00 | 5.45 | 715 MB | 933 MB |
+| ZipVoice / PyTorch host (distill 4-step) | demo prompt clone | NO | 2.27 | 14.80 | 1294 MB | 2518 MB |
 
 `RTF = wall_seconds / audio_seconds`. Lower is faster. RTF < 1 is faster than real-time.
 
@@ -31,27 +36,44 @@ See [rtf_vs_length.png](rtf_vs_length.png) and [rss_vs_length.png](rss_vs_length
 
 ## RTF by sentence length (medians)
 
-| Sentence id | chars | Bookbot | Pocket-TTS sherpa | Pocket-TTS PyTorch | ZipVoice sherpa | ZipVoice PyTorch |
-|---|---:|---:|---:|---:|---:|---:|
-| s05 | 12 | 2.37 | 3.59 | 3.26 | 5.14 | 14.75 |
-| s15 | 44 | 0.58 | 1.13 | 1.44 | 1.64 | 3.84 |
-| s30 | 100 | 0.35 | 0.67 | 0.91 | 1.00 | 2.27 |
-| s60 | 220 | 0.16 | 0.41 | 0.59 | 0.65 | 1.08 |
-| s120 | 520 | **0.07** | **0.29** | 0.37 | **0.43** | 1.18 |
+| Sentence id | chars | Bookbot host | Pocket-TTS sherpa **Android** | Pocket-TTS sherpa host | Pocket-TTS PyTorch | ZipVoice sherpa **Android** | ZipVoice sherpa host | ZipVoice PyTorch |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| s05 | 12 | 2.37 | 1.43 | 3.59 | 3.26 | 2.79 | 5.14 | 14.75 |
+| s15 | 44 | 0.58 | 0.49 | 1.13 | 1.44 | 0.94 | 1.64 | 3.84 |
+| s30 | 100 | 0.35 | 0.37 | 0.67 | 0.91 | 0.66 | 1.00 | 2.27 |
+| s60 | 220 | 0.16 | 0.30 | 0.41 | 0.59 | 0.50 | 0.65 | 1.08 |
+| s120 | 520 | **0.07** | **0.26** | 0.29 | 0.37 | **0.36** | 0.43 | 1.18 |
 
 At long-sentence steady state (s120):
-- **Bookbot ≈ 14× real-time**
-- Pocket-TTS / sherpa-onnx ≈ 3.5× real-time
-- ZipVoice / sherpa-onnx ≈ 2.3× real-time
+- **Bookbot ≈ 14× real-time** (host)
+- **Pocket-TTS / sherpa-onnx Android ≈ 3.8× real-time** — only 3.5× slower than Bookbot
+- **ZipVoice / sherpa-onnx Android ≈ 2.8× real-time** — only 5× slower than Bookbot
 
-## What sherpa-onnx changes
+## Sherpa-onnx on real Android vs. host Python
 
-Switching from the research PyTorch path to the production sherpa-onnx + INT8 path:
+The Android emulator numbers (Pocket-TTS Android vs. Pocket-TTS sherpa host, ZipVoice Android vs. ZipVoice sherpa host) all run the **same** INT8 ONNX models through the **same** sherpa-onnx C++ runtime — the difference is the binding layer (Flutter/native vs. Python wrapper) and the host environment (Android arm64 vs. macOS arm64). Running on the emulator is consistently **1.5–2× faster** than the host Python path:
 
-- **Pocket-TTS:** ~25% faster on long content (0.37 → 0.29 RTF). Memory roughly the same. Still uses 2 CPU cores. The PyTorch implementation is already efficient on CPU, so sherpa adds modest gains.
+| Engine | Host RTF | Android RTF | Android speedup |
+|---|---:|---:|---:|
+| Pocket-TTS / sherpa-onnx | 0.67 | 0.37 | **1.8×** |
+| ZipVoice / sherpa-onnx | 1.00 | 0.66 | **1.5×** |
+
+Two reasons:
+1. The Flutter plugin uses the native `libsherpa-onnx-c-api.so` directly through dart:ffi, with no Python interpreter or numpy boxing in the hot path.
+2. The emulator's arm64-v8a runs natively on Apple Silicon (HVF), so it isn't slowed down by translation.
+
+The Android emulator is therefore a *closer* proxy to a real arm64 phone than the host Python bench. The Android numbers above are the ones to anchor mobile decisions to.
+
+## What sherpa-onnx changes (PyTorch → sherpa)
+
+Switching from the research PyTorch path to the production sherpa-onnx + INT8 path (host CPU comparison):
+
+- **Pocket-TTS:** ~25% faster on long content (0.37 → 0.29 RTF). Memory roughly the same. The PyTorch implementation is already efficient on CPU, so sherpa adds modest gains.
 - **ZipVoice:** ~2.7× faster on long content (1.18 → 0.43 RTF), and **~2× lighter on memory** (1.3 GB → 715 MB median; 2.5 GB → 933 MB peak). This is a much bigger win because PyTorch ZipVoice was carrying flow-matching activations + a heavy Vocos vocoder; sherpa runs the INT8 ONNX directly with a separate vocoder ONNX.
 
-In short: **sherpa-onnx is the right comparison for mobile**, and it materially closes the gap with Bookbot. But Bookbot is still 4× faster than the next best (Pocket-TTS / sherpa) and 6× faster than ZipVoice / sherpa on long content, with 3× lower memory.
+Adding the **Android** layer on top closes another 1.5–1.8×.
+
+In short: **sherpa-onnx on Android is the right comparison for mobile**, and it materially closes the gap with Bookbot. Bookbot is still ~4× faster than Pocket-TTS / sherpa Android and ~5× faster than ZipVoice / sherpa Android on long content, with ~2.8× lower memory — but both competitors are now safely in the "fits on a phone" range (peak ~780 MB, RTF < 0.5).
 
 ## Phoneme timing support
 

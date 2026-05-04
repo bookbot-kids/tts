@@ -32,3 +32,12 @@ bench/.venv/
 bench/results/*.wav
 bench/third_party/
 bench/sherpa_models/
+bench/flutter_bench/build/
+bench/flutter_bench/.dart_tool/
+bench/flutter_bench/.flutter-plugins
+bench/flutter_bench/.flutter-plugins-dependencies
+bench/flutter_bench/flutter_bench.iml
+bench/flutter_bench/android/.gradle/
+bench/flutter_bench/android/local.properties
+bench/flutter_bench/android/.kotlin/
+bench/flutter_bench/android/app/.cxx/

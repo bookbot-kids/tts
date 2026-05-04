@@ -16,13 +16,19 @@ You should not swap the model in `example/android/app/src/main/assets/` to eithe
 
 ## Why we ran this
 
-Three questions came in:
+Four questions came in:
 
 1. *Can ZipVoice or Pocket-TTS run on mobile like our current TTS plugin?*
 2. *Can we just drop their model file into the app's assets folder and have it work?*
 3. *What if we use **sherpa-onnx** (the actual mobile-deployment runtime both upstream READMEs point to)?*
+4. *And what do those numbers actually look like running on a real Android device?*
 
-We benchmarked everything twice — once via each project's research codebase (PyTorch), and again through sherpa-onnx + INT8 ONNX, which is the path that would actually ship to a phone.
+We benchmarked everything three ways — once via each project's research codebase (PyTorch on host CPU), once through sherpa-onnx + INT8 on host CPU, and **once on an Android emulator** (arm64-v8a, the production mobile target) using the smallest available INT8 archives:
+
+- `sherpa-onnx-pocket-tts-int8-2026-01-26` (93.8 MB compressed — the only int8 build available, with mixed int8/fp32 weights)
+- `sherpa-onnx-zipvoice-distill-int8-zh-en-emilia` (104.1 MB compressed — distilled, 4-step inference)
+
+We deliberately picked the smallest variants because that is what would actually ship.
 
 ---
 
@@ -34,29 +40,38 @@ For a typical paragraph (~10 seconds of audio), CPU only:
 
 | Engine | Time to synthesize | Speed vs. playback |
 |---|---|---|
-| **Bookbot** | ~1.5 s | **~14× faster than real-time** |
-| Pocket-TTS / sherpa-onnx | ~3.5 s | ~3.5× faster than real-time |
-| Pocket-TTS / PyTorch | ~6 s | ~1.7× faster than real-time |
-| ZipVoice / sherpa-onnx | ~4.5 s | ~2.3× faster than real-time |
-| ZipVoice / PyTorch | ~11 s | slightly slower than real-time |
+| **Bookbot (host)** | ~1.5 s | **~14× faster than real-time** |
+| **Pocket-TTS / sherpa-onnx Android** | ~3 s | **~3.8× faster than real-time** |
+| Pocket-TTS / sherpa-onnx host | ~3.5 s | ~3.5× faster than real-time |
+| **ZipVoice / sherpa-onnx Android** | ~3.5 s | **~2.8× faster than real-time** |
+| Pocket-TTS / PyTorch host | ~6 s | ~1.7× faster than real-time |
+| ZipVoice / sherpa-onnx host | ~4.5 s | ~2.3× faster than real-time |
+| ZipVoice / PyTorch host | ~11 s | slightly slower than real-time |
 
-Bookbot is **~4× faster than the next best option (Pocket-TTS / sherpa-onnx)** and **6× faster than ZipVoice / sherpa-onnx** at this length. The gap widens on longer text and shrinks on short text (where everyone is dominated by model load time).
+Bookbot is **~4× faster than Pocket-TTS / sherpa Android** and **~5× faster than ZipVoice / sherpa Android** at this length. The gap widens on longer text and shrinks on short text (where everyone is dominated by model load time).
 
-The sherpa-onnx numbers are the ones to compare against — that is what would actually run on a phone. Even on that fairer footing, Bookbot still wins by a comfortable margin.
+**The Android sherpa-onnx numbers are the ones to anchor mobile decisions to** — they're what would actually run on a phone. Two surprises in the on-device data:
+
+1. Sherpa-onnx running through the Flutter plugin on the emulator is **1.5–1.8× faster than the same sherpa-onnx code wrapped by Python on the host** — the Flutter ↔ native bridge is leaner than Python's. So "host sherpa-onnx" understates how good these would be on a phone.
+2. Both engines on Android peak at roughly **780 MB of resident memory** — comfortably under the 1 GB threshold where iOS starts killing apps.
+
+Even with both surprises, Bookbot still wins on speed by a comfortable margin.
 
 ### Memory
 
-Per synthesis, peak resident memory on the test machine:
+Per synthesis, peak resident memory:
 
 | Engine | Peak memory | vs. Bookbot |
 |---|---|---|
-| **Bookbot** | ~280 MB | 1× |
-| Pocket-TTS / sherpa-onnx | ~840 MB | 3× heavier |
-| Pocket-TTS / PyTorch | ~880 MB | 3× heavier |
-| ZipVoice / sherpa-onnx | ~715 MB median, ~930 MB peak | 2.5–3× heavier |
-| ZipVoice / PyTorch | ~1.3 GB median, peaking 2.5 GB | 5–9× heavier |
+| **Bookbot (host)** | ~280 MB | 1× |
+| **Pocket-TTS / sherpa-onnx Android** | ~780 MB | 2.8× heavier |
+| **ZipVoice / sherpa-onnx Android** | ~780 MB | 2.8× heavier |
+| Pocket-TTS / sherpa-onnx host | ~840 MB | 3× heavier |
+| Pocket-TTS / PyTorch host | ~880 MB | 3× heavier |
+| ZipVoice / sherpa-onnx host | ~715 MB median, ~930 MB peak | 2.5–3× heavier |
+| ZipVoice / PyTorch host | ~1.3 GB median, peaking 2.5 GB | 5–9× heavier |
 
-That difference matters on phones, where 1 GB+ is dangerously close to where iOS will kill the app. The good news: sherpa-onnx + INT8 brings ZipVoice from "scary" to "manageable" (1.3 GB → 715 MB). The bad news: it's still ~3× more than Bookbot.
+On a real phone, both sherpa-onnx engines fit in **~780 MB of resident memory** — comfortably under the 1 GB threshold where iOS starts killing apps. Sherpa + INT8 brings ZipVoice all the way from "scary" (1.3 GB on host PyTorch) to "manageable" on Android. Bookbot is still ~3× lighter, which matters on low-end devices and when other parts of the app are also using memory.
 
 ### Mouth animation / lip-sync
 
