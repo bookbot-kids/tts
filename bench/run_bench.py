@@ -7,7 +7,13 @@ from pathlib import Path
 
 from bench.measure import run_in_subprocess
 
-ENGINES = ["bookbot_adapter", "zipvoice_adapter", "pockettts_adapter"]
+ENGINES = [
+    "bookbot_adapter",
+    "zipvoice_adapter",
+    "pockettts_adapter",
+    "zipvoice_sherpa_adapter",
+    "pockettts_sherpa_adapter",
+]
 
 
 def main() -> None:

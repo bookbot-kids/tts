@@ -31,3 +31,4 @@ build/
 bench/.venv/
 bench/results/*.wav
 bench/third_party/
+bench/sherpa_models/
