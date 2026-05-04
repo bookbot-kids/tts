@@ -1,16 +1,346 @@
-audio_s,engine,has_phoneme_timings,peak_rss_mb,repeat,rtf,sentence_id,voice_id,wall_s
-0.592108843537415,bookbot_adapter,True,287.90625,0,2.461970912797644,s05,convnext-tts-en/us,1.457754749999367
-0.592108843537415,bookbot_adapter,True,266.28125,1,2.3852238324340833,s05,convnext-tts-en/us,1.412312125000426
-0.592108843537415,bookbot_adapter,True,256.671875,2,2.364406080538138,s05,convnext-tts-en/us,1.399985750000269
-2.4380952380952383,bookbot_adapter,True,268.265625,0,0.6003977416994033,s15,convnext-tts-en/us,1.46382687500045
-2.4380952380952383,bookbot_adapter,True,285.859375,1,0.599289602050721,s15,convnext-tts-en/us,1.4611251249998531
-2.4380952380952383,bookbot_adapter,True,258.140625,2,0.5952063768166838,s15,convnext-tts-en/us,1.4511698330006766
-4.08671201814059,bookbot_adapter,True,267.359375,0,0.35384154635341725,s30,convnext-tts-en/us,1.4460484999999608
-4.08671201814059,bookbot_adapter,True,284.3125,1,0.43637137069703014,s30,convnext-tts-en/us,1.7833241250000356
-4.08671201814059,bookbot_adapter,True,280.71875,2,0.3685241221586866,s30,convnext-tts-en/us,1.5060519590006152
-8.951292517006802,bookbot_adapter,True,290.421875,0,0.17480836762144744,s60,convnext-tts-en/us,1.5647608330000367
-8.951292517006802,bookbot_adapter,True,288.703125,1,0.17035149729528998,s60,convnext-tts-en/us,1.5248660830002336
-8.951292517006802,bookbot_adapter,True,297.59375,2,0.17631691613269546,s60,convnext-tts-en/us,1.5782642920003127
-21.803537414965987,bookbot_adapter,True,310.25,0,0.07961691261202648,s120,convnext-tts-en/us,1.7359303330003968
-21.803537414965987,bookbot_adapter,True,314.859375,1,0.07633629820350415,s120,convnext-tts-en/us,1.6644013340001038
-21.803537414965987,bookbot_adapter,True,312.640625,2,0.07634937516410224,s120,convnext-tts-en/us,1.6646864579997782
+audio_s,engine,error,has_phoneme_timings,peak_rss_mb,repeat,rtf,sentence_id,voice_id,wall_s
+0.592108843537415,bookbot_adapter,,True,263.546875,0,3.2213250364648616,s05,convnext-tts-en/us,1.9073750419993303
+0.592108843537415,bookbot_adapter,,True,278.875,1,2.355644247206983,s05,convnext-tts-en/us,1.3947977909992915
+0.592108843537415,bookbot_adapter,,True,281.359375,2,2.3739733671329706,s05,convnext-tts-en/us,1.4056506250017264
+2.4380952380952383,bookbot_adapter,,True,252.859375,0,0.5786184960931706,s15,convnext-tts-en/us,1.4107269999985874
+2.4380952380952383,bookbot_adapter,,True,281.953125,1,0.5960973387302104,s15,convnext-tts-en/us,1.4533420829993702
+2.4380952380952383,bookbot_adapter,,True,276.90625,2,0.5562547950587771,s15,convnext-tts-en/us,1.356202167000447
+4.08671201814059,bookbot_adapter,,True,269.15625,0,0.34622968139626153,s30,convnext-tts-en/us,1.4149409999990894
+4.08671201814059,bookbot_adapter,,True,250.3125,1,0.34384080081056967,s30,convnext-tts-en/us,1.4051783329996397
+4.08671201814059,bookbot_adapter,,True,278.5625,2,0.34743078951928635,s30,convnext-tts-en/us,1.4198495830005413
+8.951292517006802,bookbot_adapter,,True,290.09375,0,0.16293237789180007,s60,convnext-tts-en/us,1.4584553750009945
+8.951292517006802,bookbot_adapter,,True,295.78125,1,0.16370485940620125,s60,convnext-tts-en/us,1.46537008300038
+8.951292517006802,bookbot_adapter,,True,279.65625,2,0.15719305310669143,s60,convnext-tts-en/us,1.4070809999993799
+21.803537414965987,bookbot_adapter,,True,320.953125,0,0.0718635033012937,s120,convnext-tts-en/us,1.566878583000289
+21.803537414965987,bookbot_adapter,,True,292.203125,1,0.06965840047391454,s120,convnext-tts-en/us,1.5187995409996802
+21.803537414965987,bookbot_adapter,,True,309.765625,2,0.06899390013506267,s120,convnext-tts-en/us,1.5043110829992656
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s05_r0.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s05_r0.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s05_r0.wav, make sure it's a valid path? No such file or directory
+",,,0,,s05,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s05_r1.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s05_r1.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s05_r1.wav, make sure it's a valid path? No such file or directory
+",,,1,,s05,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s15_r0.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s15_r0.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s15_r0.wav, make sure it's a valid path? No such file or directory
+",,,0,,s15,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s15_r1.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s15_r1.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s15_r1.wav, make sure it's a valid path? No such file or directory
+",,,1,,s15,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s30_r0.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s30_r0.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s30_r0.wav, make sure it's a valid path? No such file or directory
+",,,0,,s30,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s30_r1.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s30_r1.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s30_r1.wav, make sure it's a valid path? No such file or directory
+",,,1,,s30,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s60_r0.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s60_r0.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s60_r0.wav, make sure it's a valid path? No such file or directory
+",,,0,,s60,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s60_r1.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s60_r1.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s60_r1.wav, make sure it's a valid path? No such file or directory
+",,,1,,s60,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s120_r0.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s120_r0.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s120_r0.wav, make sure it's a valid path? No such file or directory
+",,,0,,s120,,
+,zipvoice_adapter,"RuntimeError: adapter zipvoice_adapter failed (exit 1):
+WARNING:root:Failed import k2 with error No module named 'k2'. Swoosh functions will fallback to PyTorch implementation, leading to slower speed and higher memory consumption.
+Traceback (most recent call last):
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 338, in save_with_torchcodec
+    encoder.to_file(uri, bit_rate=bit_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchcodec/encoders/_audio_encoder.py"", line 68, in to_file
+    _core.encode_audio_to_file(
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/_ops.py"", line 865, in __call__
+    return self._op(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s120_r1.wav, make sure it's a valid path? No such file or directory
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""<string>"", line 1, in <module>
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/adapters/zipvoice_adapter.py"", line 51, in synthesize
+    zv_main()
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py"", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 871, in main
+    generate_sentence(
+  File ""/Users/ductran/Documents/codes/python/opensource/ZipVoice/zipvoice/bin/infer_zipvoice.py"", line 640, in generate_sentence
+    torchaudio.save(save_path, final_wav.cpu(), sample_rate=sampling_rate)
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/__init__.py"", line 178, in save
+    return save_with_torchcodec(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/Users/ductran/Documents/codes/flutter/bookbot/tts/bench/.venv/lib/python3.11/site-packages/torchaudio/_torchcodec.py"", line 340, in save_with_torchcodec
+    raise RuntimeError(f""Failed to save audio to {uri}: {e}"") from e
+RuntimeError: Failed to save audio to bench/results/zipvoice_adapter_s120_r1.wav: AudioEncoder, /Users/runner/work/torchcodec/torchcodec/meta-pytorch/torchcodec/src/torchcodec/_core/Encoder.cpp:161, avio_open failed. The destination file is bench/results/zipvoice_adapter_s120_r1.wav, make sure it's a valid path? No such file or directory
+",,,1,,s120,,
+0.632,zipvoice_adapter,,False,1278.4375,0,14.260556170886991,s05,zipvoice_distill@bookbot_s15_prompt,9.012671500000579
+0.632,zipvoice_adapter,,False,1281.3125,1,15.244004613926256,s05,zipvoice_distill@bookbot_s15_prompt,9.634210916001393
+2.39,zipvoice_adapter,,False,1266.25,0,3.875873570292569,s15,zipvoice_distill@bookbot_s15_prompt,9.263337832999241
+2.39,zipvoice_adapter,,False,1283.796875,1,3.794431502929267,s15,zipvoice_distill@bookbot_s15_prompt,9.068691292000949
+4.335,zipvoice_adapter,,False,1285.125,0,2.262847962399223,s30,zipvoice_distill@bookbot_s15_prompt,9.80944591700063
+4.335,zipvoice_adapter,,False,1302.234375,1,2.2747915033445913,s30,zipvoice_distill@bookbot_s15_prompt,9.861221166998803
+10.656,zipvoice_adapter,,False,1431.46875,0,1.0608979878002474,s60,zipvoice_distill@bookbot_s15_prompt,11.304928957999437
+10.656,zipvoice_adapter,,False,1447.125,1,1.0973168754693423,s60,zipvoice_distill@bookbot_s15_prompt,11.693008625001312
+25.506,zipvoice_adapter,,False,2518.140625,0,1.1668493426252071,s120,zipvoice_distill@bookbot_s15_prompt,29.761659332998534
+25.506,zipvoice_adapter,,False,2510.453125,1,1.1825457490394313,s120,zipvoice_distill@bookbot_s15_prompt,30.162011874999735
