@@ -75,20 +75,22 @@ Adding the **Android** layer on top closes another 1.5–1.8×.
 
 In short: **sherpa-onnx on Android is the right comparison for mobile**, and it materially closes the gap with Bookbot. Bookbot is still ~4× faster than Pocket-TTS / sherpa Android and ~5× faster than ZipVoice / sherpa Android on long content, with ~2.8× lower memory — but both competitors are now safely in the "fits on a phone" range (peak ~780 MB, RTF < 0.5).
 
-## Phoneme timing support
+## Phoneme and word timing support
 
 - **Bookbot: native, per-phoneme.** The ONNX model returns a `durations` int64 tensor (frames per phoneme). [lib/tts.dart](../../lib/tts.dart) converts it to per-token seconds at `hop=512, sr=44100`. This is what drives the viseme/lip-sync output the rest of the app relies on.
-- **ZipVoice (both runtimes): no.** The flow-matching model only predicts an aggregate feature length; per-token alignment is uniform `floor(features_len / tokens_len)`, not learned. The sherpa-onnx wrapper exposes only `audio.samples` and `audio.sample_rate` — same constraint applies. To recover per-phoneme timestamps you would have to run a forced aligner on the synthesized audio.
-- **Pocket-TTS (both runtimes): no.** Tokenizer is SentencePiece subword (not phonemes), and the public API returns audio only. Same forced-aligner workaround applies.
+- **ZipVoice (all runtimes): no.** The flow-matching model only predicts an aggregate feature length; per-token alignment is uniform `floor(features_len / tokens_len)`, not learned. The sherpa-onnx C API's `GeneratedAudio` struct exposes only `samples` and `sample_rate` — no word or phoneme timestamps. To recover per-phoneme timestamps you would have to run a forced aligner on the synthesized audio.
+- **Pocket-TTS (all runtimes): no.** Tokenizer is SentencePiece subword (not phonemes), and `tts.generate()` returns only audio — no token alignment in PyTorch, in sherpa-onnx host Python, or in the sherpa-onnx Flutter binding. Same forced-aligner workaround applies, with the extra wrinkle that subwords don't map cleanly back to IPA visemes.
 
-This is the single most important axis for Bookbot's current product: visemes/lip-sync depend on per-phoneme timing. Either competitor would need a forced-aligner stage *and* a re-mapping from word-level timestamps back to IPA phonemes.
+**Word timing specifically:** also no. Sherpa-onnx's `GeneratedAudio` (Dart `class GeneratedAudio { Float32List samples; int sampleRate; }` — see `sherpa_onnx/lib/src/tts.dart:612`; same shape in Python's `sherpa_onnx.lib._sherpa_onnx.GeneratedAudio`) does not surface any per-word or per-token timestamp array. The C API call site has no out-parameter for alignment either. So even a "word-level highlight as it speaks" UI would need a forced-aligner pass on top.
+
+This is the single most important axis for Bookbot's current product: visemes/lip-sync depend on per-phoneme timing. Either competitor would need a forced-aligner stage *and* a re-mapping from word-level timestamps back to IPA visemes.
 
 ## Memory
 
 Cold-start measurement (one fresh subprocess per call) so peak RSS reflects model load + one synthesis:
 
 - **Bookbot ~280 MB** — onnxruntime + a 71 MB single ONNX model.
-- **Pocket-TTS / sherpa-onnx ~843 MB** — sherpa-onnx + 5 INT8 ONNX files (lm_main, lm_flow, encoder, decoder, text_conditioner) totaling ~213 MB on disk.
+- **Pocket-TTS / sherpa-onnx ~843 MB** — sherpa-onnx + 5 ONNX files totaling ~213 MB on disk. The archive is **mixed-precision int8**, not full int8 (consistent with upstream's open issue on int8 support): `lm_main.int8.onnx`, `lm_flow.int8.onnx`, `decoder.int8.onnx` are quantized; `encoder.onnx` (Mimi audio codec for prompt encoding) and `text_conditioner.onnx` are FP32. There is no smaller variant available upstream.
 - **Pocket-TTS / PyTorch ~881 MB** — full PyTorch + 100 M-param flow-LM + Mimi codec.
 - **ZipVoice / sherpa-onnx ~715 MB median, ~933 MB peak** — sherpa-onnx + 2 INT8 ONNX files + Vocos vocoder ONNX (~206 MB on disk total).
 - **ZipVoice / PyTorch ~1.3 GB median, peaking 2.5 GB** — full PyTorch + 123 M-param model + Vocos.

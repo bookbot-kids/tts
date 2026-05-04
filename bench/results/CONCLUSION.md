@@ -73,13 +73,15 @@ Per synthesis, peak resident memory:
 
 On a real phone, both sherpa-onnx engines fit in **~780 MB of resident memory** — comfortably under the 1 GB threshold where iOS starts killing apps. Sherpa + INT8 brings ZipVoice all the way from "scary" (1.3 GB on host PyTorch) to "manageable" on Android. Bookbot is still ~3× lighter, which matters on low-end devices and when other parts of the app are also using memory.
 
-### Mouth animation / lip-sync
+### Mouth animation / lip-sync (and word timing too)
 
 This is the one that decides the question.
 
 - **Bookbot tells you exactly how long each phoneme lasts.** That's how the visemes drive the mouth animation. It's a native model output, not a workaround.
 - **ZipVoice doesn't.** It can predict total length only — there's no per-phoneme alignment. You'd have to run a separate forced-aligner on the synthesized audio just to recover what Bookbot already gives you for free. Sherpa-onnx exposes the same ZipVoice model, so it has the same limitation.
 - **Pocket-TTS doesn't either.** It uses subword tokens (not phonemes) and the API only returns audio. Same forced-aligner workaround applies, with the extra wrinkle that subwords don't map cleanly back to IPA visemes. Same on PyTorch and sherpa-onnx.
+
+**What about word-level timing** (the "highlight the word as you speak it" pattern)? Also **no**, in either competitor through any runtime. Sherpa-onnx's `GeneratedAudio` return type has only two fields: a samples buffer and a sample rate. No word, no phoneme, no token offsets. So even a less ambitious lip-sync — synced word highlights instead of mouth shapes — would still need a separate aligner pass.
 
 For an app that animates a character's mouth while speaking, this isn't a "nice to have" — it's the load-bearing feature. Switching engines means rebuilding it from scratch.
 
@@ -153,3 +155,4 @@ If a future Bookbot needs any of those, this comparison is worth revisiting.
 - We did not measure **audio quality**. ZipVoice and Pocket-TTS are likely more natural-sounding to an adult ear than Bookbot's small ConvNext model. For a kids' reading app the trade-off may still favor Bookbot, but a listening test is the next step if quality is in scope.
 - ZipVoice was run with the *fast* configuration in both runtimes (`distill`, 4 steps). The default 16-step `zipvoice` would be roughly 2× slower than reported here.
 - Sherpa-onnx models are INT8-quantized; PyTorch models are FP32. Some of the speed/memory gap between the two ZipVoice rows comes from quantization.
+- The Pocket-TTS sherpa "int8" archive is **mixed-precision, not full int8**. Three of five ONNX files (`lm_main`, `lm_flow`, `decoder`) are int8; the Mimi audio encoder and the text-conditioner embedding are FP32. This matches upstream's open issue noting Pocket-TTS doesn't natively support int8 yet — sherpa did partial quantization where it was safe. There's no smaller variant available than the 93.8 MB archive we used.
