@@ -74,4 +74,69 @@ Technically yes — both via sherpa-onnx. But it is **not "the same way" as Book
 
 > *"Can replacing their TTS model into Bookbot's `example/android/app/src/main/assets` and run on mobile?"*
 
-**No.** See [Task 6 / Drop-in model-swap section below](#drop-in-model-swap-into-exampleandroidappsrcmainassets) — Bookbot's loader hard-codes the ONNX I/O contract `{x, x_lengths, scales, sids, lids}` → `{wav, durations}`. Neither competitor's exported ONNX matches that contract; the load fails immediately.
+**No.** See "Drop-in model swap" section below — Bookbot's loader hard-codes the ONNX I/O contract `{x, x_lengths, scales, sids, lids}` → `{wav, durations}`. Neither competitor's exported ONNX matches that contract; the load fails immediately.
+
+## Drop-in model swap into `example/android/app/src/main/assets/`
+
+**Result: NOT POSSIBLE without rewriting `Opti.kt` / `Opti.swift`.** Verified by inspecting the actual ONNX I/O graphs and reproducing the loader failure.
+
+### What Bookbot's loader expects
+[android/.../module/Opti.kt:30-78](../../android/src/main/kotlin/com/tensorspeech/tensorflowtts/module/Opti.kt) hard-codes:
+- **Inputs:** `x: int64[1,N]`, `x_lengths: int64[1]`, `scales: float32[3]`, optional `sids: int64[1]`, `lids: int64[1]`
+- **Outputs:** `wav: float32[1,T]`, `durations: int64[N]` (and `wav_lengths`)
+
+### What ZipVoice's exported ONNX produces
+From the upstream export script ([zipvoice/bin/onnx_export.py:247,302](../../../python/opensource/ZipVoice/zipvoice/bin/onnx_export.py)):
+
+```
+text_encoder.onnx:
+  inputs:  tokens, prompt_tokens, prompt_features_len, speed
+  outputs: text_condition
+
+fm_decoder.onnx:
+  inputs:  t, x, text_condition, speech_condition, guidance_scale
+  outputs: v   (called iteratively 4-8 times to integrate the flow)
+
+(plus a separate Vocos vocoder ONNX to convert mel features to waveform)
+```
+
+None of those names overlap with `{x, x_lengths, scales, sids, lids}` → `{wav, durations}`. Renaming a file to `convnext-tts-en.onnx` does not change its I/O graph.
+
+### What Pocket-TTS produces
+Pocket-TTS has no first-party ONNX export. The community export ([KevinAHM/pocket-tts-onnx-export](https://github.com/KevinAHM/pocket-tts-onnx-export)) emits two models — an autoregressive flow-LM and a Mimi codec — that take SentencePiece IDs plus KV-cache tensors, **not** a flat phoneme-ID array, and stream codec frames as output. Wholly incompatible.
+
+### Reproduction of the failure mode
+A minimal demonstration: pick *any* non-Bookbot ONNX (here, `lightspeech_quant.onnx`, also shipped in the assets folder for an earlier TFTTS architecture), and feed it the inputs the current loader produces:
+
+```python
+import onnxruntime as ort, numpy as np
+sess = ort.InferenceSession('example/android/app/src/main/assets/lightspeech_quant.onnx',
+                            providers=['CPUExecutionProvider'])
+sess.run(None, {
+    'x': np.array([[1,2,3,4,5]], dtype=np.int64),
+    'x_lengths': np.array([5], dtype=np.int64),
+    'scales': np.array([1.0,1.0,1.0], dtype=np.float32),
+    'sids': np.array([0], dtype=np.int64),
+    'lids': np.array([0], dtype=np.int64),
+})
+```
+
+Output:
+```
+ValueError: Required inputs (['input_ids', 'speaker_ids', 'speed_ratios',
+            'f0_ratios', 'energy_ratios']) are missing from input feed
+            (['x', 'x_lengths', 'scales', 'sids', 'lids']).
+```
+
+This is exactly what `OrtSession.run()` raises in [Opti.kt:66](../../android/src/main/kotlin/com/tensorspeech/tensorflowtts/module/Opti.kt) when given a model with a different I/O contract — the model file format is fine, the *interface* is wrong. Pointing at a ZipVoice or Pocket-TTS ONNX would raise the same kind of error with their respective input-name lists.
+
+### What would actually be needed for a model swap
+
+A swap into the **plugin** (not just the assets folder) requires:
+
+1. New native loader code (or a sherpa-onnx integration) that knows the new I/O shape and runs N-step / autoregressive inference.
+2. New Dart-side request shape — prompt wav + reference text for ZipVoice, voice-state safetensors for Pocket-TTS.
+3. New Method Channel methods for streaming output (Pocket-TTS).
+4. A replacement for the `durations` output that drives visemes — either a forced aligner or a different lip-sync strategy.
+
+In other words: this is a **plugin rewrite**, not a model file replacement.
