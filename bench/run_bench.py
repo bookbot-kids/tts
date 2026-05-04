@@ -11,6 +11,8 @@ ENGINES = [
     "bookbot_adapter",
     "zipvoice_adapter",
     "pockettts_adapter",
+    "pockettts_quant_adapter",
+    "pockettts_quant_attn_adapter",
     "zipvoice_sherpa_adapter",
     "pockettts_sherpa_adapter",
 ]

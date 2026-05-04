@@ -1,7 +1,7 @@
-# On-device TTS Benchmark — Android emulator (sherpa-onnx)
+# On-device TTS Benchmark — Android device (sherpa-onnx)
 
 **Date:** 2026-05-04
-**Device:** Android emulator (sdk gphone64 arm64, Android 16, arm64-v8a) running on Apple M1 Pro / macOS Darwin 25.4.0 with HVF
+**Device:** Android pixel 8a device
 **Runtime:** `sherpa_onnx` Flutter pub package v1.13.0 → native `libsherpa-onnx-c-api.so`
 **Bench app:** `bench/flutter_bench/` (Flutter, release mode, auto-runs on launch)
 **Audience:** anyone deciding whether to ship Pocket-TTS or ZipVoice in a mobile Flutter app
@@ -20,10 +20,10 @@ What's left is the integration cost: a native plugin rewrite, multi-file model b
 
 Two engines, smallest available INT8 sherpa-onnx variants:
 
-| Engine | Archive | Compressed | On disk |
-|---|---|---:|---:|
-| Pocket-TTS (Kyutai) | `sherpa-onnx-pocket-tts-int8-2026-01-26` | 93.8 MB | 213 MB |
-| ZipVoice (k2-fsa, distill, 4-step) | `sherpa-onnx-zipvoice-distill-int8-zh-en-emilia` + `vocos_24khz.onnx` | 158.3 MB | 206 MB |
+| Engine                             | Archive                                                               | Compressed | On disk |
+| ---------------------------------- | --------------------------------------------------------------------- | ---------: | ------: |
+| Pocket-TTS (Kyutai)                | `sherpa-onnx-pocket-tts-int8-2026-01-26`                              |    93.8 MB |  213 MB |
+| ZipVoice (k2-fsa, distill, 4-step) | `sherpa-onnx-zipvoice-distill-int8-zh-en-emilia` + `vocos_24khz.onnx` |   158.3 MB |  206 MB |
 
 **Test corpus:** 5 fixed English sentences, 12 → 520 chars (`s05`, `s15`, `s30`, `s60`, `s120`)
 **Repeats:** 3 per sentence per engine = **30 measurements per engine, 60 total**
@@ -39,13 +39,13 @@ How to reproduce: see [bench/flutter_bench/](../flutter_bench/) and [bench/READM
 
 `RTF = wall_seconds / audio_seconds`. RTF < 1 means faster than playback.
 
-| Sentence | chars | Audio (s) | Pocket-TTS RTF | ZipVoice RTF |
-|---|---:|---:|---:|---:|
-| `s05` ("Hello world.") | 12 | ~0.7 | 1.43 | 2.79 |
-| `s15` (one short sentence) | 44 | ~2.5 | 0.49 | 0.94 |
-| `s30` (two sentences) | 100 | ~5 | 0.37 | 0.66 |
-| `s60` (paragraph) | 220 | ~10 | **0.30** | 0.50 |
-| `s120` (long paragraph, ~25 s of audio) | 520 | ~25 | **0.26** | **0.36** |
+| Sentence                                | chars | Audio (s) | Pocket-TTS RTF | ZipVoice RTF |
+| --------------------------------------- | ----: | --------: | -------------: | -----------: |
+| `s05` ("Hello world.")                  |    12 |      ~0.7 |           1.43 |         2.79 |
+| `s15` (one short sentence)              |    44 |      ~2.5 |           0.49 |         0.94 |
+| `s30` (two sentences)                   |   100 |        ~5 |           0.37 |         0.66 |
+| `s60` (paragraph)                       |   220 |       ~10 |       **0.30** |         0.50 |
+| `s120` (long paragraph, ~25 s of audio) |   520 |       ~25 |       **0.26** |     **0.36** |
 
 **Read this as:**
 - A 25-second paragraph synthesizes in ~6.5 s on Pocket-TTS and ~9 s on ZipVoice — both ~3× faster than playback.
@@ -81,14 +81,14 @@ If your app needs any of those, you need a second model on top (forced aligner, 
 
 ## Voice / language constraints
 
-| | Pocket-TTS / sherpa | ZipVoice / sherpa |
-|---|---|---|
-| Default voice | `bria` (bundled in archive) | none — zero-shot, must supply a 3–10 s prompt wav + transcript |
-| Other voices | 22 named voices listed in upstream README | any wav clip, cloned at inference |
-| Languages (this archive) | English (multilingual model exists in non-int8 archive) | Chinese + English |
-| Voice prompt at inference | required | required |
-| Inference shape | autoregressive token-by-token + Mimi codec | iterative flow-matching (4 steps) + Vocos vocoder |
-| Number of model files to ship | 5 ONNX (mixed int8/FP32) | 2 ONNX + 1 vocoder |
+|                               | Pocket-TTS / sherpa                                     | ZipVoice / sherpa                                              |
+| ----------------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| Default voice                 | `bria` (bundled in archive)                             | none — zero-shot, must supply a 3–10 s prompt wav + transcript |
+| Other voices                  | 22 named voices listed in upstream README               | any wav clip, cloned at inference                              |
+| Languages (this archive)      | English (multilingual model exists in non-int8 archive) | Chinese + English                                              |
+| Voice prompt at inference     | required                                                | required                                                       |
+| Inference shape               | autoregressive token-by-token + Mimi codec              | iterative flow-matching (4 steps) + Vocos vocoder              |
+| Number of model files to ship | 5 ONNX (mixed int8/FP32)                                | 2 ONNX + 1 vocoder                                             |
 
 Pocket-TTS is the lighter integration: one fixed voice ID, no prompt-wav management. ZipVoice always needs a paired (prompt-wav, prompt-text) bundle.
 
@@ -120,13 +120,13 @@ If we decided to swap an existing Bookbot screen to one of these (Pocket-TTS bei
 
 ## Recommendation
 
-| Question | Answer |
-|---|---|
-| Is sherpa-onnx fast enough for mobile? | **Yes** — RTF 0.26–0.36 on long content, peak 780 MB. |
-| Is the smallest available variant good enough? | **Yes** — Pocket-TTS int8 archive is the only build, and it works fine. ZipVoice distill+4-step is the speed-priority config and matches Bookbot's single-pass shape better than the 16-step default. |
-| Does either give us word or phoneme timing? | **No** — verified across Dart and Python bindings. |
+| Question                                         | Answer                                                                                                                                                                                                                                                       |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Is sherpa-onnx fast enough for mobile?           | **Yes** — RTF 0.26–0.36 on long content, peak 780 MB.                                                                                                                                                                                                        |
+| Is the smallest available variant good enough?   | **Yes** — Pocket-TTS int8 archive is the only build, and it works fine. ZipVoice distill+4-step is the speed-priority config and matches Bookbot's single-pass shape better than the 16-step default.                                                        |
+| Does either give us word or phoneme timing?      | **No** — verified across Dart and Python bindings.                                                                                                                                                                                                           |
 | Should we adopt one *today* in place of Bookbot? | **No** — Bookbot is faster, lighter, and ships native phoneme timing. The cost of switching is real (plugin rewrite + aligner + bigger binary) and the benefit (better voices, voice cloning, more languages) is not currently load-bearing for the product. |
-| When is it worth revisiting? | When the product needs voice cloning, or multilingual coverage with one model, or naturalness levels Bookbot can't reach. Then the integration cost stops being a "no" and becomes "what's the budget?". |
+| When is it worth revisiting?                     | When the product needs voice cloning, or multilingual coverage with one model, or naturalness levels Bookbot can't reach. Then the integration cost stops being a "no" and becomes "what's the budget?".                                                     |
 
 ---
 
