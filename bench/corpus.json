@@ -1,0 +1,10 @@
+{
+  "lang": "en",
+  "sentences": [
+    {"id": "s05",  "text": "Hello world."},
+    {"id": "s15",  "text": "The quick brown fox jumps over the lazy dog."},
+    {"id": "s30",  "text": "She sells seashells by the seashore, and the shells she sells are surely seashells from the sea."},
+    {"id": "s60",  "text": "In the beginning the universe was created. This has made a lot of people very angry and been widely regarded as a bad move. Most of the major problems can be solved if everyone just takes a deep breath."},
+    {"id": "s120", "text": "Far out in the uncharted backwaters of the unfashionable end of the western spiral arm of the galaxy lies a small unregarded yellow sun. Orbiting this at a distance of roughly ninety-eight million miles is an utterly insignificant little blue green planet whose ape-descended life forms are so amazingly primitive that they still think digital watches are a pretty neat idea. This planet has, or rather had, a problem, which was this: most of the people on it were unhappy for pretty much of the time."}
+  ]
+}
