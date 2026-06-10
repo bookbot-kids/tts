@@ -15,7 +15,8 @@ class GenerateTask(private val opti: Opti,
                    private val hopSize: Int, private val sampleRate: Int,
                    private val enableLids: Boolean,
                    private val onCompleted: (buffer: FloatArray, durations: DoubleArray) -> Unit,
-                   private val onCancelled: () -> Unit
+                   private val onCancelled: () -> Unit,
+                   private val logEnabled: Boolean = true,
 ): Runnable {
     var stop: Boolean = false
         set(value) {
@@ -33,7 +34,7 @@ class GenerateTask(private val opti: Opti,
             checking
         }
         if (isStopping())  return
-        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, enableLids, isStopping) ?: return
+        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, enableLids, logEnabled, isStopping) ?: return
         if (isStopping())  return
         val audio = output.first
         val durations = output.second

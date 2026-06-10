@@ -177,7 +177,7 @@ class TtsManager {
             val processors = modelMap[key] ?: return
             tasks.clear()
             val task = InputTask(processors, request.inputIds, request.speed.toFloat(),
-                request.speakerId, request.hopSize, request.sampleRate, request.enableLids, player, request.result )
+                request.speakerId, request.hopSize, request.sampleRate, request.enableLids, player, request.result, logEnabled )
             tasks.add(task)
             runningTask = threadPool.submit(task)
         }
@@ -245,7 +245,7 @@ class TtsManager {
         }
 
         val task = GenerateTask(processors, request.inputIds, request.speed.toFloat(), request.speakerId,
-            request.hopSize, request.sampleRate, request.enableLids, onComplete, onCancelled)
+            request.hopSize, request.sampleRate, request.enableLids, onComplete, onCancelled, logEnabled)
         synchronized(generateTasks) {
             if (request.singleThread) {
                 generateTasks.forEach {

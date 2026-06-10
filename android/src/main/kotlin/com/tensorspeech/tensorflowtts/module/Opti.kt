@@ -1,9 +1,11 @@
 package com.tensorspeech.tensorflowtts.module
 
+import android.util.Log
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
+import java.util.Locale
 
 /**
  * Optimised end-to-end ONNX TTS processor (single-model architecture).
@@ -23,8 +25,9 @@ class Opti (modulePath: String, threadCount: Int,
      *         seconds), or `null` if cancelled.
      */
     @Suppress("UNCHECKED_CAST")
-    fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, enableLids: Boolean, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
+    fun process(inputIds: LongArray, speed: Float, speakerId: Long, hopSize: Int, sampleRate: Int, enableLids: Boolean, logEnabled: Boolean = true, isCancelled: () -> Boolean): Pair<FloatArray, DoubleArray>? {
         if (isCancelled()) return null
+        val processStartNs = System.nanoTime()
 
         val x = inputIds
         val xLengths = longArrayOf(inputIds.size.toLong())
@@ -74,9 +77,28 @@ class Opti (modulePath: String, threadCount: Int,
 
             val audioArray = (audioOrtValue.value as Array<FloatArray>)[0]
             val durationsArray = (durationsOrtValue.value as Array<LongArray>)[0]
+            if (logEnabled) {
+                logRealTimeFactor(processStartNs, audioArray.size, sampleRate)
+            }
             // convert to seconds
             val durationsInSeconds = durationsArray.map { it.toDouble() * hopSize / sampleRate }.toDoubleArray()
             return audioArray to durationsInSeconds
         }
+    }
+
+    private fun logRealTimeFactor(processStartNs: Long, audioSampleCount: Int, sampleRate: Int) {
+        if (audioSampleCount <= 0 || sampleRate <= 0) return
+
+        val elapsedSeconds = (System.nanoTime() - processStartNs) / 1_000_000_000.0
+        val audioDurationSeconds = audioSampleCount.toDouble() / sampleRate
+        val rtf = elapsedSeconds / audioDurationSeconds
+        Log.d(TAG, "RTF (Real-Time Factor) ${formatDecimal(elapsedSeconds)}/${formatDecimal(audioDurationSeconds)} = ${formatDecimal(rtf)}")
+    }
+
+    private fun formatDecimal(value: Double): String =
+        String.format(Locale.US, "%.3f", value).replace('.', ',')
+
+    companion object {
+        private const val TAG = "Opti"
     }
 }

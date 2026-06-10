@@ -14,7 +14,8 @@ class InputTask(private val opti: Opti,
                 private val speakerId: Long = 0, private val hopSize: Int, private val sampleRate: Int,
                 private val enableLids: Boolean,
                 private val player: TtsBufferPlayer?,
-                private val result: MethodChannel.Result
+                private val result: MethodChannel.Result,
+                private val logEnabled: Boolean = true,
 ): Runnable {
     var stop: Boolean = false
         set(value) {
@@ -27,7 +28,7 @@ class InputTask(private val opti: Opti,
             stop || Thread.interrupted()
         }
         if (isStopping())  return
-        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, enableLids, isStopping) ?: return
+        val output = opti.process(inputIds.toLongArray(), speed, speakerId, hopSize, sampleRate, enableLids, logEnabled, isStopping) ?: return
 
         if (isStopping())  return
         val audio = output.first
