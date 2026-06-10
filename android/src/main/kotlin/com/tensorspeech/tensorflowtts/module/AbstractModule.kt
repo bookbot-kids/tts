@@ -2,6 +2,8 @@ package com.tensorspeech.tensorflowtts.module
 
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.os.Build
+import android.util.Log
 
 
 /**
@@ -44,14 +46,33 @@ abstract class AbstractModule(
 
     /** Session options configured with the requested thread count and provider. */
     private var sessionOptions: OrtSession.SessionOptions = OrtSession.SessionOptions().apply {
-        setIntraOpNumThreads(threadCount)
-        when (provider) {
+        // 32-bit ARM (armeabi-v7a) devices are memory- and core-constrained;
+        // cap intra-op threads at 2 to preserve headroom and avoid contention.
+        val is32Bit = Build.SUPPORTED_64_BIT_ABIS.isEmpty()
+        val effectiveThreadCount = if (is32Bit) minOf(threadCount, 2) else threadCount
+        setIntraOpNumThreads(effectiveThreadCount)
+        // XNNPACK's 32-bit ARM micro-kernels crash natively inside
+        // libonnxruntime.so during createSession. Fall back to the CPU EP on any
+        // device without a 64-bit ABI. See OrtSession crash on Play Console.
+        val effectiveProvider =
+            if (provider == Provider.XNNPACK && is32Bit) {
+                Log.w(TAG, "XNNPACK unsupported on 32-bit ABI; falling back to CPU EP")
+                Provider.CPU
+            } else {
+                provider
+            }
+        when (effectiveProvider) {
             Provider.CPU -> { /* default EP, nothing to add */ }
-            Provider.XNNPACK -> addXnnpack(mapOf("intra_op_num_threads" to threadCount.toString()))
+            Provider.XNNPACK ->
+                addXnnpack(mapOf("intra_op_num_threads" to effectiveThreadCount.toString()))
             Provider.NNAPI -> addNnapi()
         }
     }
 
     /** ONNX Runtime session used for inference. */
     protected var session: OrtSession = ortEnv.createSession(modulePath, sessionOptions)
+
+    private companion object {
+        const val TAG = "AbstractModule"
+    }
 }
