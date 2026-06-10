@@ -51,12 +51,12 @@ abstract class AbstractModule(
         val is32Bit = Build.SUPPORTED_64_BIT_ABIS.isEmpty()
         val effectiveThreadCount = if (is32Bit) minOf(threadCount, 2) else threadCount
         setIntraOpNumThreads(effectiveThreadCount)
-        // XNNPACK's 32-bit ARM micro-kernels crash natively inside
-        // libonnxruntime.so during createSession. Fall back to the CPU EP on any
+        // 32-bit ARM accelerated EPs (XNNPACK/NNAPI) crash natively inside
+        // libonnxruntime.so during createSession. Force the CPU EP on any
         // device without a 64-bit ABI. See OrtSession crash on Play Console.
         val effectiveProvider =
-            if (provider == Provider.XNNPACK && is32Bit) {
-                Log.w(TAG, "XNNPACK unsupported on 32-bit ABI; falling back to CPU EP")
+            if (is32Bit) {
+                Log.w(TAG, "Accelerated EP unsupported on 32-bit ABI; forcing CPU EP")
                 Provider.CPU
             } else {
                 provider
