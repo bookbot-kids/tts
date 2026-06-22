@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tts/tts_configs.dart';
 import 'package:tts_example/tts_controller.dart';
 
 /// Entry point for the TTS example application.
@@ -24,7 +25,7 @@ class _MyAppState extends State<MyApp> {
 
   /// Text field controller, pre-filled with the default English sample text.
   final _textController = TextEditingController()
-    ..text = Language.en.defaultText;
+    ..text = TTSLanguage.en.defaultText;
 
   @override
   void dispose() {
@@ -57,9 +58,9 @@ class _MyAppState extends State<MyApp> {
                   TextField(
                     controller: _textController,
                   ),
-                  RadioGroup<Language>(
+                  RadioGroup<TTSLanguage>(
                     groupValue: _controller.language,
-                    onChanged: (Language? value) {
+                    onChanged: (TTSLanguage? value) {
                       if (value == null) return;
                       _controller.setLanguage(value);
                       _textController.text = value.defaultText;
@@ -68,19 +69,19 @@ class _MyAppState extends State<MyApp> {
                       children: [
                         ListTile(
                           title: Text('en'),
-                          leading: Radio<Language>(value: Language.en),
+                          leading: Radio<TTSLanguage>(value: TTSLanguage.en),
                         ),
                         ListTile(
                           title: Text('id'),
-                          leading: Radio<Language>(value: Language.id),
+                          leading: Radio<TTSLanguage>(value: TTSLanguage.id),
                         ),
                         ListTile(
                           title: Text('sw'),
-                          leading: Radio<Language>(value: Language.sw),
+                          leading: Radio<TTSLanguage>(value: TTSLanguage.sw),
                         ),
                         ListTile(
                           title: Text('es'),
-                          leading: Radio<Language>(value: Language.es),
+                          leading: Radio<TTSLanguage>(value: TTSLanguage.es),
                         ),
                       ],
                     ),

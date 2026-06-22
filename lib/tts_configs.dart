@@ -15,7 +15,7 @@ class Parameters {
 /// [specialInputIds]. Both are implemented with exhaustive `switch`
 /// statements over this enum, so adding a new language causes a compile-time
 /// error until every token mapping is provided — there is no silent fallback.
-enum Language {
+enum TTSLanguage {
   /// English.
   en('en'),
 
@@ -31,10 +31,10 @@ enum Language {
   /// Language code used in the public API (e.g. `'en'`).
   final String code;
 
-  const Language(this.code);
+  const TTSLanguage(this.code);
 
-  /// Resolves a [Language] from its [code], throwing if unsupported.
-  static Language fromCode(String code) => Language.values.firstWhere(
+  /// Resolves a [TTSLanguage] from its [code], throwing if unsupported.
+  static TTSLanguage fromCode(String code) => TTSLanguage.values.firstWhere(
         (language) => language.code == code,
         orElse: () => throw ArgumentError('Unsupported language code: $code'),
       );
@@ -42,10 +42,10 @@ enum Language {
   /// End-of-sequence token ID for this language.
   int get eos {
     switch (this) {
-      case Language.en:
-      case Language.id:
-      case Language.sw:
-      case Language.es:
+      case TTSLanguage.en:
+      case TTSLanguage.id:
+      case TTSLanguage.sw:
+      case TTSLanguage.es:
         return 2;
     }
   }
@@ -53,10 +53,10 @@ enum Language {
   /// Maps punctuation/special characters to their model input IDs.
   Map<String, int> get specialInputIds {
     switch (this) {
-      case Language.en:
-      case Language.id:
-      case Language.sw:
-      case Language.es:
+      case TTSLanguage.en:
+      case TTSLanguage.id:
+      case TTSLanguage.sw:
+      case TTSLanguage.es:
         return const {
           '!': 4,
           ',': 10,

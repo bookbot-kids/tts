@@ -14,33 +14,22 @@ import 'package:tts/tts_configs.dart';
 
 import 'data.dart';
 
-/// Supported languages for the example TTS app.
+/// App-specific configuration for each [TTSLanguage] in the example app.
 ///
-/// Each variant carries its associated ONNX model name, default speaker,
-/// default speech speed, and sample text for quick testing.
-enum Language {
-  /// English.
-  en,
-
-  /// Indonesian.
-  id,
-
-  /// Swahili.
-  sw,
-
-  /// Spanish
-  es;
-
+/// Augments the package's [TTSLanguage] enum with the associated ONNX model
+/// name, default speaker, default speech speed, and sample text for quick
+/// testing.
+extension TTSLanguageConfig on TTSLanguage {
   /// Returns sample text used as the default input for this language.
   String get defaultText {
     switch (this) {
-      case Language.en:
+      case TTSLanguage.en:
         return defaultEnText;
-      case Language.id:
+      case TTSLanguage.id:
         return defaultIdText;
-      case Language.sw:
+      case TTSLanguage.sw:
         return defaultSwText;
-      case Language.es:
+      case TTSLanguage.es:
         return defaultEsText;
     }
   }
@@ -48,13 +37,13 @@ enum Language {
   /// ONNX model file name for this language (e.g. `'convnext-tts-en.onnx'`).
   String get modelName {
     switch (this) {
-      case Language.en:
+      case TTSLanguage.en:
         return 'convnext-tts-en.onnx';
-      case Language.id:
+      case TTSLanguage.id:
         return 'convnext-tts-id.onnx';
-      case Language.sw:
+      case TTSLanguage.sw:
         return 'convnext-tts-sw.onnx';
-      case Language.es:
+      case TTSLanguage.es:
         return 'convnext-tts-es.onnx';
     }
   }
@@ -62,13 +51,13 @@ enum Language {
   /// Default [Speaker] variant for this language.
   Speaker get speaker {
     switch (this) {
-      case Language.en:
+      case TTSLanguage.en:
         return Speaker.us;
-      case Language.id:
+      case TTSLanguage.id:
         return Speaker.id;
-      case Language.sw:
+      case TTSLanguage.sw:
         return Speaker.sw;
-      case Language.es:
+      case TTSLanguage.es:
         return Speaker.es;
     }
   }
@@ -76,12 +65,12 @@ enum Language {
   /// Default speech speed ratio. Lower values produce slower speech.
   double get defaultSpeed {
     switch (this) {
-      case Language.en:
+      case TTSLanguage.en:
         return 0.82;
-      case Language.id:
-      case Language.sw:
+      case TTSLanguage.id:
+      case TTSLanguage.sw:
         return 0.95;
-      case Language.es:
+      case TTSLanguage.es:
         return 0.9;
     }
   }
@@ -106,14 +95,14 @@ class TtsController extends ChangeNotifier {
   String result = '';
 
   /// Currently selected language.
-  Language language = Language.en;
+  TTSLanguage language = TTSLanguage.en;
 
   /// When true, runs the performance benchmark instead of normal synthesis.
   bool testPerformance = false;
 
   /// In-memory word database loaded from `WordUniversal.json`.
   /// Each entry maps `{ 'word': ..., 'language': ..., 'ipa': ... }`.
-  final _wordDbs = <Language, List>{};
+  final _wordDbs = <TTSLanguage, List>{};
 
   /// Matches content inside square brackets (e.g. `[note]`).
   static final _scriptTagRegex = RegExp(r'\[.*?\]');
@@ -142,7 +131,7 @@ class TtsController extends ChangeNotifier {
 
   /// Loads IPA mappings for all supported languages and the word database.
   Future<void> _init() async {
-    for (final language in Language.values) {
+    for (final language in TTSLanguage.values) {
       await _tts.loadIPAsMapping('assets/tts/${language.name}_tts_mapping.csv',
           language: language.name);
       final assetContent = await rootBundle
@@ -153,9 +142,9 @@ class TtsController extends ChangeNotifier {
   }
 
   /// Updates the active language and disables performance mode for non-English.
-  void setLanguage(Language value) {
+  void setLanguage(TTSLanguage value) {
     language = value;
-    if (value != Language.en) {
+    if (value != TTSLanguage.en) {
       testPerformance = false;
     }
     notifyListeners();
@@ -185,7 +174,7 @@ class TtsController extends ChangeNotifier {
     try {
       final startTime = DateTime.now().millisecondsSinceEpoch;
 
-      if (testPerformance && language == Language.en) {
+      if (testPerformance && language == TTSLanguage.en) {
         await _runPerformanceTest();
         return;
       }
@@ -224,7 +213,7 @@ class TtsController extends ChangeNotifier {
         speed: language.defaultSpeed,
         useEos: false,
         useEndSpace: true,
-        enableLids: language == Language.en,
+        enableLids: language == TTSLanguage.en,
       );
 
       final output = await _tts.speakText(request, debug: true);
@@ -295,7 +284,7 @@ Execute in ${Duration(milliseconds: totalTime).pretty(
   ///
   /// Indonesian removes syllable boundaries before tokenisation, while
   /// English and Swahili replace them with spaces.
-  List<String> _findIPA(String word, Language lang) {
+  List<String> _findIPA(String word, TTSLanguage lang) {
     final item = _wordDbs[lang]?.firstWhereOrNull((e) {
       return e['language'] == lang.name &&
           e['word'] == word &&
@@ -304,7 +293,7 @@ Execute in ${Duration(milliseconds: totalTime).pretty(
     final String ipa = item?['ipa'] ?? '';
 
     switch (lang) {
-      case Language.id:
+      case TTSLanguage.id:
         final normalized = _tts.normalizeIPA(ipa, language: lang.name);
         return _tts.breakIPA(
           normalized
@@ -315,9 +304,9 @@ Execute in ${Duration(milliseconds: totalTime).pretty(
               .join(''),
           language: 'id',
         );
-      case Language.sw:
-      case Language.en:
-      case Language.es:
+      case TTSLanguage.sw:
+      case TTSLanguage.en:
+      case TTSLanguage.es:
         final normalized = _tts.normalizeIPA(ipa, language: lang.name);
         return _tts.breakIPA(normalized
             .replaceAll('.', ' ')

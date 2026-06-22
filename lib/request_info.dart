@@ -30,10 +30,10 @@ class RequestInfo {
   /// Hop size for duration-to-seconds conversion.
   int hopSize;
 
-  /// End-of-sequence token ID, resolved from [Language.eos].
+  /// End-of-sequence token ID, resolved from [TTSLanguage.eos].
   int eos;
 
-  /// Dot (period) token ID, resolved from [Language.dot].
+  /// Dot (period) token ID, resolved from [TTSLanguage.dot].
   int dot;
 
   /// Unique identifier for this request, used for generate/play separation.
@@ -60,7 +60,7 @@ class RequestInfo {
   /// Language code (e.g. 'en', 'id', 'sw').
   final String language;
 
-  /// Space token ID, resolved from [Language.space].
+  /// Space token ID, resolved from [TTSLanguage.space].
   int space;
 
   /// Whether to include language ID (`lids`) input tensor.
@@ -96,7 +96,7 @@ class RequestInfo {
     this.enableLids = false,
     this.provider = OrtProvider.cpu,
   }) {
-    final resolvedLanguage = Language.fromCode(language);
+    final resolvedLanguage = TTSLanguage.fromCode(language);
     eos = resolvedLanguage.eos;
     dot = resolvedLanguage.dot;
     space = resolvedLanguage.space;
