@@ -5,16 +5,12 @@ PODS:
     - onnxruntime-objc/Core (= 1.17.1)
   - onnxruntime-objc/Core (1.17.1):
     - onnxruntime-c (= 1.17.1)
-  - path_provider_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
   - tts (1.0.0):
     - Flutter
     - onnxruntime-objc (~> 1.17.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - tts (from `.symlinks/plugins/tts/ios`)
 
 SPEC REPOS:
@@ -25,8 +21,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  path_provider_foundation:
-    :path: ".symlinks/plugins/path_provider_foundation/darwin"
   tts:
     :path: ".symlinks/plugins/tts/ios"
 
@@ -34,7 +28,6 @@ SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   onnxruntime-c: 58803cb3fcc1fb0a7baa9b16b2bad119d6e3eb78
   onnxruntime-objc: 089530244113a131305642b7e03fa6f8a9ee9ae6
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   tts: aee5583e06de922c4cb4318e1daa435c601cac80
 
 PODFILE CHECKSUM: cc1f88378b4bfcf93a6ce00d2c587857c6008d3b
