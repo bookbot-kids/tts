@@ -25,7 +25,7 @@ flutter run
 The example app requires the following assets:
 
 - **IPA mapping files** (`assets/tts/`): CSV files mapping IPA phonemes to model input IDs and visemes for each language.
-- **Word database** (`assets/WordUniversal.json`): JSON file containing word-to-IPA mappings for all supported languages.
+- **Word database** (`assets/db/{language}/WordUniversal.json`): JSON file containing word-to-IPA mappings for all supported languages.
 - **ONNX models** (Android: `android/app/src/main/assets/`, iOS: bundle resources): Pre-trained TTS models per language (e.g. `convnext-tts-en.onnx`).
 
 ## Usage

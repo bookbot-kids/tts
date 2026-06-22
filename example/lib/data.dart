@@ -11,6 +11,9 @@ const defaultIdText =
 const defaultSwText =
     'ting ajabu chakula vitabu hatafuti panya kutafuta hiki hivyo siwezi ana mkubwa';
 
+/// Default sample text for Spanish TTS testing.
+const defaultEsText = 'ella va a la escuela';
+
 /// Pre-built input ID sequences for performance benchmarking.
 ///
 /// Each inner list is a ready-to-use sequence of phoneme token IDs that

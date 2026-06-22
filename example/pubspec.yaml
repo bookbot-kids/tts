@@ -67,6 +67,10 @@ flutter:
   assets:
     - assets/
     - assets/tts/
+    - assets/db/en/
+    - assets/db/id/
+    - assets/db/sw/
+    - assets/db/es/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

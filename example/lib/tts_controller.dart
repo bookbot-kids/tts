@@ -25,7 +25,10 @@ enum Language {
   id,
 
   /// Swahili.
-  sw;
+  sw,
+
+  /// Spanish
+  es;
 
   /// Returns sample text used as the default input for this language.
   String get defaultText {
@@ -36,6 +39,8 @@ enum Language {
         return defaultIdText;
       case Language.sw:
         return defaultSwText;
+      case Language.es:
+        return defaultEsText;
     }
   }
 
@@ -48,6 +53,8 @@ enum Language {
         return 'convnext-tts-id.onnx';
       case Language.sw:
         return 'convnext-tts-sw.onnx';
+      case Language.es:
+        return 'convnext-tts-es.onnx';
     }
   }
 
@@ -60,6 +67,8 @@ enum Language {
         return Speaker.id;
       case Language.sw:
         return Speaker.sw;
+      case Language.es:
+        return Speaker.es;
     }
   }
 
@@ -71,6 +80,8 @@ enum Language {
       case Language.id:
       case Language.sw:
         return 0.95;
+      case Language.es:
+        return 0.9;
     }
   }
 }
@@ -101,7 +112,7 @@ class TtsController extends ChangeNotifier {
 
   /// In-memory word database loaded from `WordUniversal.json`.
   /// Each entry maps `{ 'word': ..., 'language': ..., 'ipa': ... }`.
-  var _wordDb = <Map>[];
+  final _wordDbs = <Language, List>{};
 
   /// Matches content inside square brackets (e.g. `[note]`).
   static final _scriptTagRegex = RegExp(r'\[.*?\]');
@@ -130,13 +141,14 @@ class TtsController extends ChangeNotifier {
 
   /// Loads IPA mappings for all supported languages and the word database.
   Future<void> _init() async {
-    await _tts.loadIPAsMapping('assets/tts/en_tts_mapping.csv', language: 'en');
-    await _tts.loadIPAsMapping('assets/tts/id_tts_mapping.csv', language: 'id');
-    await _tts.loadIPAsMapping('assets/tts/sw_tts_mapping.csv', language: 'sw');
-
-    final assetContent =
-        await rootBundle.loadString('assets/WordUniversal.json');
-    _wordDb = List<Map>.from(jsonDecode(assetContent));
+    for (final language in Language.values) {
+      await _tts.loadIPAsMapping('assets/tts/${language.name}_tts_mapping.csv',
+          language: language.name);
+      final assetContent = await rootBundle
+          .loadString('assets/db/${language.name}/WordUniversal.json');
+      final jsonData = List<Map>.from(jsonDecode(assetContent));
+      _wordDbs[language] = jsonData;
+    }
   }
 
   /// Updates the active language and disables performance mode for non-English.
@@ -192,7 +204,7 @@ class TtsController extends ChangeNotifier {
           continue;
         }
 
-        final ipas = _findIPA(normalised, lang);
+        final ipas = _findIPA(normalised, language);
         wordIPAs.add(ipas);
         final map = _tts.search(ipas, language: lang);
         inputIds.addAll(map['inputIds'] as List<int>);
@@ -282,17 +294,17 @@ Execute in ${Duration(milliseconds: totalTime).pretty(
   ///
   /// Indonesian removes syllable boundaries before tokenisation, while
   /// English and Swahili replace them with spaces.
-  List<String> _findIPA(String word, String lang) {
-    final item = _wordDb.firstWhereOrNull((e) {
-      return e['language'] == lang &&
+  List<String> _findIPA(String word, Language lang) {
+    final item = _wordDbs[lang]?.firstWhereOrNull((e) {
+      return e['language'] == lang.name &&
           e['word'] == word &&
           e['ipa'].toString().isNotEmpty;
     });
     final String ipa = item?['ipa'] ?? '';
 
     switch (lang) {
-      case 'id':
-        final normalized = _tts.normalizeIPA(ipa, language: lang);
+      case Language.id:
+        final normalized = _tts.normalizeIPA(ipa, language: lang.name);
         return _tts.breakIPA(
           normalized
               .replaceAll('.', '')
@@ -302,10 +314,10 @@ Execute in ${Duration(milliseconds: totalTime).pretty(
               .join(''),
           language: 'id',
         );
-      case 'en':
-      case 'sw':
-      default:
-        final normalized = _tts.normalizeIPA(ipa, language: lang);
+      case Language.sw:
+      case Language.en:
+      case Language.es:
+        final normalized = _tts.normalizeIPA(ipa, language: lang.name);
         return _tts.breakIPA(normalized
             .replaceAll('.', ' ')
             .split(' ')

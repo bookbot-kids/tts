@@ -6,50 +6,74 @@ class Parameters {
   /// Default hop size (frame shift) in samples, used to convert
   /// duration frames to seconds: `duration_sec = frames * hopSize / sampleRate`.
   static const defaultHopSize = 512;
+}
 
-  /// End-of-sequence token IDs per language.
-  static const enEos = 2;
-  static const idEos = 2;
-  static const swEos = 2;
+/// Languages supported by the TTS models.
+///
+/// Each variant carries its [code] (the string used across the public API,
+/// e.g. `'en'`) and resolves its model token IDs via [eos] and
+/// [specialInputIds]. Both are implemented with exhaustive `switch`
+/// statements over this enum, so adding a new language causes a compile-time
+/// error until every token mapping is provided — there is no silent fallback.
+enum Language {
+  /// English.
+  en('en'),
 
-  /// Maps language code to its EOS input ID.
-  static const eosInputIds = <String, int>{
-    'en': enEos,
-    'sw': swEos,
-    'id': idEos,
-  };
+  /// Indonesian.
+  id('id'),
 
-  /// Maps language code to a map of punctuation/special characters to their
-  /// model input IDs.
-  static const specialInputIds = <String, Map<String, int>>{
-    'en': {
-      '!': 4,
-      ',': 10,
-      '.': 12,
-      ':': 13,
-      ';': 14,
-      '?': 15,
-      ' ': 3,
-    },
-    'id': {
-      '!': 4,
-      ',': 10,
-      '.': 12,
-      ':': 13,
-      ';': 14,
-      '?': 15,
-      ' ': 3,
-    },
-    'sw': {
-      '!': 4,
-      ',': 10,
-      '.': 12,
-      ':': 13,
-      ';': 14,
-      '?': 15,
-      ' ': 3,
-    },
-  };
+  /// Swahili.
+  sw('sw'),
+
+  /// Spanish.
+  es('es');
+
+  /// Language code used in the public API (e.g. `'en'`).
+  final String code;
+
+  const Language(this.code);
+
+  /// Resolves a [Language] from its [code], throwing if unsupported.
+  static Language fromCode(String code) => Language.values.firstWhere(
+        (language) => language.code == code,
+        orElse: () => throw ArgumentError('Unsupported language code: $code'),
+      );
+
+  /// End-of-sequence token ID for this language.
+  int get eos {
+    switch (this) {
+      case Language.en:
+      case Language.id:
+      case Language.sw:
+      case Language.es:
+        return 2;
+    }
+  }
+
+  /// Maps punctuation/special characters to their model input IDs.
+  Map<String, int> get specialInputIds {
+    switch (this) {
+      case Language.en:
+      case Language.id:
+      case Language.sw:
+      case Language.es:
+        return const {
+          '!': 4,
+          ',': 10,
+          '.': 12,
+          ':': 13,
+          ';': 14,
+          '?': 15,
+          ' ': 3,
+        };
+    }
+  }
+
+  /// Dot (period) token ID for this language.
+  int get dot => specialInputIds['.']!;
+
+  /// Space token ID for this language.
+  int get space => specialInputIds[' ']!;
 }
 
 /// ONNX Runtime execution provider used for inference.
@@ -89,7 +113,10 @@ enum Speaker {
   id(-1),
 
   /// Swahili (single-speaker, no speaker ID).
-  sw(-1);
+  sw(-1),
+
+  /// Spanish (single-speaker, no speaker ID).
+  es(-1);
 
   /// Numeric ID passed to the model. -1 means speaker ID is omitted.
   final int speakerId;
@@ -127,10 +154,10 @@ class RequestInfo {
   /// Hop size for duration-to-seconds conversion.
   int hopSize;
 
-  /// End-of-sequence token ID, resolved from [Parameters.eosInputIds].
+  /// End-of-sequence token ID, resolved from [Language.eos].
   int eos;
 
-  /// Dot (period) token ID, resolved from [Parameters.specialInputIds].
+  /// Dot (period) token ID, resolved from [Language.dot].
   int dot;
 
   /// Unique identifier for this request, used for generate/play separation.
@@ -157,7 +184,7 @@ class RequestInfo {
   /// Language code (e.g. 'en', 'id', 'sw').
   final String language;
 
-  /// Space token ID, resolved from [Parameters.specialInputIds].
+  /// Space token ID, resolved from [Language.space].
   int space;
 
   /// Whether to include language ID (`lids`) input tensor.
@@ -193,9 +220,10 @@ class RequestInfo {
     this.enableLids = false,
     this.provider = OrtProvider.cpu,
   }) {
-    eos = Parameters.eosInputIds[language]!;
-    dot = Parameters.specialInputIds[language]!['.']!;
-    space = Parameters.specialInputIds[language]![' ']!;
+    final resolvedLanguage = Language.fromCode(language);
+    eos = resolvedLanguage.eos;
+    dot = resolvedLanguage.dot;
+    space = resolvedLanguage.space;
   }
 
   /// Serialises this request to a map for passing over the method channel.

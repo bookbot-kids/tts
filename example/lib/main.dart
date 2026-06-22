@@ -78,6 +78,10 @@ class _MyAppState extends State<MyApp> {
                           title: Text('sw'),
                           leading: Radio<Language>(value: Language.sw),
                         ),
+                        ListTile(
+                          title: Text('es'),
+                          leading: Radio<Language>(value: Language.es),
+                        ),
                       ],
                     ),
                   ),
