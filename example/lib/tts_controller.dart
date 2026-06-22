@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:more/more.dart';
 import 'package:tts/request_info.dart';
 import 'package:tts/tts.dart';
+import 'package:tts/tts_configs.dart';
 
 import 'data.dart';
 
