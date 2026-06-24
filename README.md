@@ -1,3 +1,5 @@
+🌐 **English** • [Bahasa Indonesia](README.id.md) • [Kiswahili](README.sw.md) • [Español](README.es.md)
+
 # TTS
 
 ## Flutter Text-to-Speech Plugin
@@ -11,12 +13,12 @@
     </a>
 </p>
 
-A cross-platform (Android/iOS) Flutter text-to-speech plugin using custom ONNX Runtime models. The library converts IPA (International Phonetic Alphabet) phoneme sequences into speech audio with near-instant inference time, supporting multiple languages including English, Indonesian, and Swahili. It also provides viseme timing data for lip-sync animations.
+A cross-platform (Android/iOS) Flutter text-to-speech plugin using custom ONNX Runtime models. The library converts IPA (International Phonetic Alphabet) phoneme sequences into speech audio with near-instant inference time, supporting multiple languages including English, Indonesian, Swahili, and Spanish. It also provides viseme timing data for lip-sync animations.
 
 ## Features
 
 - Text-to-speech through custom ONNX-based models with ONNX Runtime inference.
-- Multi-language support: English (with US/AU/GB speaker variants), Indonesian, and Swahili.
+- Multi-language support: English (with US/AU/GB speaker variants), Indonesian, Swahili, and Spanish.
 - IPA-to-input ID mapping for phoneme-level control over speech synthesis.
 - Viseme timing output for lip-sync and mouth animation.
 - Separate voice generation and playback APIs for flexible audio pipeline control.
@@ -43,6 +45,7 @@ flutter:
     - assets/tts/en_tts_mapping.csv
     - assets/tts/id_tts_mapping.csv
     - assets/tts/sw_tts_mapping.csv
+    - assets/tts/es_tts_mapping.csv
 ```
 
 ### Android
