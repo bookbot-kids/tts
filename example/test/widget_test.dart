@@ -1,9 +1,7 @@
-// This is a basic Flutter widget test.
+// Basic smoke test for the TTS example app.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Verifies that the app builds and renders its core UI: the title, the
+// language selector options, and the Speak action.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,17 +9,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tts_example/main.dart';
 
 void main() {
-  testWidgets('Verify Platform version', (WidgetTester tester) async {
+  testWidgets('Renders the TTS example UI', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
-    // Verify that platform version is retrieved.
-    expect(
-      find.byWidgetPredicate(
-        (Widget widget) => widget is Text &&
-                           widget.data!.startsWith('Running on:'),
-      ),
-      findsOneWidget,
-    );
+    // App title and primary action are present.
+    expect(find.text('TTS example'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, 'Speak'), findsOneWidget);
+
+    // All four supported languages are offered as options.
+    for (final code in ['en', 'id', 'sw', 'es']) {
+      expect(find.text(code), findsOneWidget);
+    }
   });
 }

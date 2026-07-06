@@ -24,14 +24,16 @@ Contributors should run the same checks locally before opening a pull request:
 ```sh
 flutter pub get
 flutter analyze
-flutter test
+flutter test --coverage
 dart doc --output docs/tts/doc/api
 mkdocs build --strict
 ```
 
 The GitHub Pages workflow also executes the automated test suite before
-generating API documentation and publishing the documentation site. A failed
-test run blocks the documentation deployment.
+generating API documentation and publishing the documentation site. It writes
+line coverage to the GitHub Actions job summary and uploads `coverage/lcov.info`
+as a workflow artifact. A failed test run or missing coverage report blocks the
+documentation deployment.
 
 ## Review Checklist
 
@@ -39,7 +41,6 @@ Before merging changes, maintainers should confirm:
 
 - Public documentation is updated when setup, behavior, or APIs change.
 - Flutter analyzer checks pass.
-- Flutter tests pass.
+- Flutter tests pass with coverage generated.
 - Dart API documentation can be generated.
 - MkDocs builds successfully with strict validation.
-
