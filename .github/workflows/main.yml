@@ -95,6 +95,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    env:
+      # Temporary compatibility switch while actions/deploy-pages@v4 is being
+      # migrated from Node 20 to Node 24 by GitHub.
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
       - name: Deploy Pages artifact
         id: deployment
