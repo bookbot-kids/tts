@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://bookbot-kids.github.io/tts/
+    about: Check the public documentation before opening an issue.
+  - name: Contributing guidelines
+    url: https://github.com/bookbot-kids/tts/blob/main/CONTRIBUTING.md
+    about: Read the contribution process before submitting changes.
