@@ -11,6 +11,9 @@
     <a href="https://github.com/bookbot-kids/tts/blob/main/CONTRIBUTING.md">
         <img alt="contributing guidelines" src="https://img.shields.io/badge/contributing-guidelines-brightgreen">
     </a>
+    <a href="https://bookbot-kids.github.io/tts/coverage/">
+        <img alt="test coverage" src="https://img.shields.io/endpoint?url=https://bookbot-kids.github.io/tts/coverage.json">
+    </a>
 </p>
 
 A cross-platform (Android/iOS) Flutter text-to-speech plugin using custom ONNX Runtime models. The library converts IPA (International Phonetic Alphabet) phoneme sequences into speech audio with near-instant inference time, supporting multiple languages including English, Indonesian, Swahili, and Spanish. It also provides viseme timing data for lip-sync animations.
